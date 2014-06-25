@@ -46,13 +46,13 @@ SelectProfilePage::~SelectProfilePage()
 
 void SelectProfilePage::initializePage()
 {
-    QStringList profiles = Settings::findAllProfiles();
+	QStringList profiles = Settings::instance()->findAllProfiles();
     ui->cbProfile->addItems(profiles);
 
     QRegExpValidator *validatorProfileName = new QRegExpValidator(QRegExp("[^<>:\"/\\|?*]*"), this);
     ui->cbProfile->lineEdit()->setValidator(validatorProfileName);
     connect(ui->cbProfile->lineEdit(), SIGNAL(editingFinished()) /* or returnPressed() */, this, SLOT(profileRename()));
-    ui->cbProfile->setCurrentText(Settings::getCurrentProfileName());
+	ui->cbProfile->setCurrentText(Settings::instance()->getCurrentProfileName());
 
 }
 
@@ -67,7 +67,7 @@ void SelectProfilePage::profileRename()
     // and profileRename() function will be called again here
     this->setFocus(Qt::OtherFocusReason);
 
-    if (Settings::getCurrentProfileName() == configName)
+	if (Settings::instance()->getCurrentProfileName() == configName)
     {
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "Nothing has changed";
         return;
@@ -75,12 +75,12 @@ void SelectProfilePage::profileRename()
 
     if (configName == "")
     {
-        configName = Settings::getCurrentProfileName();
+		configName = Settings::instance()->getCurrentProfileName();
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "Profile name is empty, return back to" << configName;
     }
     else
     {
-        Settings::renameCurrentProfile(configName);
+		Settings::instance()->renameCurrentProfile(configName);
     }
 
     ui->cbProfile->lineEdit()->setText(configName);
@@ -89,8 +89,8 @@ void SelectProfilePage::profileRename()
 
 bool SelectProfilePage::validatePage()
 {
-    if(Settings::getCurrentProfileName().compare(ui->cbProfile->currentText()) != 0)
-        Settings::loadOrCreateProfile(ui->cbProfile->currentText());
+	if(Settings::instance()->getCurrentProfileName().compare(ui->cbProfile->currentText()) != 0)
+		Settings::instance()->loadOrCreateProfile(ui->cbProfile->currentText());
     return true;
 }
 
@@ -113,5 +113,5 @@ void SelectProfilePage::on_pbAddProfile_clicked()
 
     ui->cbProfile->lineEdit()->selectAll();
     ui->cbProfile->lineEdit()->setFocus(Qt::MouseFocusReason);
-    Settings::loadOrCreateProfile(ui->cbProfile->currentText());
+	Settings::instance()->loadOrCreateProfile(ui->cbProfile->currentText());
 }

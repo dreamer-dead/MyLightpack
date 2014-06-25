@@ -73,12 +73,12 @@ void ZonePlacementPage::initializePage()
     _ui->sbNumberOfLeds->setMaximum(device()->maxLedsCount());
 
     if (_isInitFromSettings) {
-        size_t ledCount = Settings::getNumberOfLeds(Settings::getConnectedDevice());
+		size_t ledCount = Settings::instance()->getNumberOfLeds(Settings::instance()->getConnectedDevice());
         _ui->sbNumberOfLeds->setValue(ledCount);
 
         for(size_t i = 0; i < ledCount; i++) {
-            QPoint topLeft = Settings::getLedPosition(i);
-            QSize size = Settings::getLedSize(i);
+			QPoint topLeft = Settings::instance()->getLedPosition(i);
+			QSize size = Settings::instance()->getLedSize(i);
             QRect r(topLeft, size);
             addGrabArea(i, r);
         }
@@ -114,25 +114,25 @@ bool ZonePlacementPage::validatePage()
 
     } else if (deviceName.compare("adalight", Qt::CaseInsensitive) == 0) {
         devType = SupportedDevices::DeviceTypeAdalight;
-        Settings::setAdalightSerialPortName(field("serialPort").toString());
-        Settings::setAdalightSerialPortBaudRate(field("baudRate").toString());
-        Settings::setColorSequence(devType, field("colorFormat").toString());
+		Settings::instance()->setAdalightSerialPortName(field("serialPort").toString());
+		Settings::instance()->setAdalightSerialPortBaudRate(field("baudRate").toString());
+		Settings::instance()->setColorSequence(devType, field("colorFormat").toString());
 
     } else if (deviceName.compare("ardulight", Qt::CaseInsensitive) == 0) {
         devType = SupportedDevices::DeviceTypeArdulight;
-        Settings::setArdulightSerialPortName(field("serialPort").toString());
-        Settings::setArdulightSerialPortBaudRate(field("baudRate").toString());
-        Settings::setColorSequence(devType, field("colorFormat").toString());
+		Settings::instance()->setArdulightSerialPortName(field("serialPort").toString());
+		Settings::instance()->setArdulightSerialPortBaudRate(field("baudRate").toString());
+		Settings::instance()->setColorSequence(devType, field("colorFormat").toString());
 
     } else {
         devType = SupportedDevices::DeviceTypeVirtual;
     }
-    Settings::setConnectedDevice(devType);
-    Settings::setNumberOfLeds(devType, field("numberOfLeds").toInt());
+	Settings::instance()->setConnectedDevice(devType);
+	Settings::instance()->setNumberOfLeds(devType, field("numberOfLeds").toInt());
 
     for(int i = 0; i < _grabAreas.size(); i++) {
-        Settings::setLedPosition(i, _grabAreas[i]->geometry().topLeft());
-        Settings::setLedSize(i, _grabAreas[i]->geometry().size());
+		Settings::instance()->setLedPosition(i, _grabAreas[i]->geometry().topLeft());
+		Settings::instance()->setLedSize(i, _grabAreas[i]->geometry().size());
     }
 
     cleanupGrabAreas();

@@ -33,7 +33,7 @@ void PluginsManager::dropPlugins(){
 void PluginsManager::reloadPlugins(){
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     dropPlugins();
-    LoadPlugins(QString(Settings::getApplicationDirPath() + "Plugins"));
+	LoadPlugins(QString(Settings::instance()->getApplicationDirPath() + "Plugins"));
     StartPlugins();
 }
 
