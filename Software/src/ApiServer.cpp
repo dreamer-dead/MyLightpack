@@ -188,9 +188,9 @@ void ApiServer::firstStart()
 {
     // Call this function after connect all nesessary signals/slots
 
-    if (Settings::isApiEnabled())
+	if (m_settings->isApiEnabled())
     {
-        updateApiKey(Settings::getApiAuthKey());
+		updateApiKey(m_settings->getApiAuthKey());
         startListening();
     }
 }
@@ -200,7 +200,7 @@ void ApiServer::apiServerSettingsChanged()
     initPrivateVariables();
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-    if (Settings::isApiEnabled()) {
+	if (m_settings->isApiEnabled()) {
         stopListening();
         startListening();
     }
@@ -379,7 +379,7 @@ void ApiServer::clientProcessCommands()
         {
             API_DEBUG_OUT << CmdGetDevices;
 
-            QStringList devices = Settings::getSupportedDevices();
+			QStringList devices = m_settings->getSupportedDevices();
 
             result = ApiServer::CmdResultDevices;
             for (int i = 0; i < devices.count(); i++)
@@ -390,7 +390,7 @@ void ApiServer::clientProcessCommands()
         {
             API_DEBUG_OUT << CmdGetDevice;
             result = ApiServer::CmdResultDevice;
-            result += Settings::getConnectedDeviceName();
+			result += m_settings->getConnectedDeviceName();
             result += "\r\n";
         }
         else if (cmdBuffer == CmdGetMaxLeds)
@@ -398,7 +398,7 @@ void ApiServer::clientProcessCommands()
             API_DEBUG_OUT << CmdGetMaxLeds;
 
             int max = MaximumNumberOfLeds::AbsoluteMaximum;
-            switch (Settings::getConnectedDevice())
+			switch (m_settings->getConnectedDevice())
             {
             case SupportedDevices::DeviceTypeAdalight:
                 max = MaximumNumberOfLeds::Adalight;
@@ -432,10 +432,10 @@ void ApiServer::clientProcessCommands()
 
             result = ApiServer::CmdResultLeds;
 
-            for (int i = 0; i < Settings::getNumberOfLeds(Settings::getConnectedDevice()); i++)
+			for (int i = 0; i < m_settings->getNumberOfLeds(m_settings->getConnectedDevice()); i++)
             {
-                QSize size = Settings::getLedSize(i);
-                QPoint pos = Settings::getLedPosition(i);
+				QSize size = m_settings->getLedSize(i);
+				QPoint pos = m_settings->getLedPosition(i);
                 result += QString("%1-%2,%3,%4,%5;").arg(i).arg(pos.x()).arg(pos.y()).arg(size.width()).arg(size.height());
             }
             result += "\r\n";
@@ -514,7 +514,7 @@ void ApiServer::clientProcessCommands()
         {
             API_DEBUG_OUT << CmdGetBacklight;
 
-            Lightpack::Mode mode =  Settings::getLightpackMode();
+			Lightpack::Mode mode =  m_settings->getLightpackMode();
 
             switch (mode)
             {
@@ -1057,10 +1057,11 @@ void ApiServer::taskSetColorIsSuccess(bool isSuccess)
 
 void ApiServer::initPrivateVariables()
 {
-    m_apiPort = Settings::getApiPort();
-    m_listenOnlyOnLoInterface = Settings::isListenOnlyOnLoInterface();
-    m_apiAuthKey = Settings::getApiAuthKey();
-    m_isAuthEnabled = Settings::isApiAuthEnabled();
+	m_settings = SettingsScope::Settings::instance();
+	m_apiPort = m_settings->getApiPort();
+	m_listenOnlyOnLoInterface = m_settings->isListenOnlyOnLoInterface();
+	m_apiAuthKey = m_settings->getApiAuthKey();
+	m_isAuthEnabled = m_settings->isApiAuthEnabled();
 }
 
 void ApiServer::initApiSetColorTask()
@@ -1069,7 +1070,7 @@ void ApiServer::initApiSetColorTask()
 
     m_apiSetColorTaskThread = new QThread();
     m_apiSetColorTask = new ApiServerSetColorTask();
-    m_apiSetColorTask->setApiDeviceNumberOfLeds(Settings::getNumberOfLeds(Settings::getConnectedDevice()));
+	m_apiSetColorTask->setApiDeviceNumberOfLeds(m_settings->getNumberOfLeds(m_settings->getConnectedDevice()));
 
     //connect(m_apiSetColorTask, SIGNAL(taskParseSetColorDone(QList<QRgb>)), this, SIGNAL(updateLedsColors(QList<QRgb>)), Qt::QueuedConnection);
     connect(m_apiSetColorTask, SIGNAL(taskParseSetColorIsSuccess(bool)), this, SLOT(taskSetColorIsSuccess(bool)), Qt::QueuedConnection);

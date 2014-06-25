@@ -52,11 +52,7 @@ public:
      int GetBacklight();
 
 // Settings
-     QString GetPluginsDir();
-     void SetSettingProfile(QString key, QVariant value);
-     QVariant GetSettingProfile(QString key);
-     void SetSettingMain(QString key, QVariant value);
-     QVariant GetSettingMain(QString key);
+	 QString GetPluginsDir();
 
      bool VerifySessionKey(QString sessionKey);
      void SetLockAlive(QString sessionKey);

@@ -267,7 +267,8 @@ HEADERS += \
     wizard/PegasusDistributor.hpp \
     systrayicon/SysTrayIcon.hpp \
     systrayicon/SysTrayIcon_p.hpp \
-    UpdatesProcessor.hpp
+    UpdatesProcessor.hpp \
+    BaseVersion.hpp
 
 !contains(DEFINES,UNITY_DESKTOP) {
     HEADERS += systrayicon/SysTrayIcon_qt_p.hpp
