@@ -102,23 +102,23 @@ void GrabWidget::saveSizeAndPosition()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-    Settings::setLedPosition(m_selfId, pos());
-    Settings::setLedSize(m_selfId, size());
+	Settings::instance()->setLedPosition(m_selfId, pos());
+	Settings::instance()->setLedSize(m_selfId, size());
 }
 
 void GrabWidget::settingsProfileChanged()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << m_selfId;
 
-    m_coefRed = Settings::getLedCoefRed(m_selfId);
-    m_coefGreen = Settings::getLedCoefGreen(m_selfId);
-    m_coefBlue = Settings::getLedCoefBlue(m_selfId);
+	m_coefRed = Settings::instance()->getLedCoefRed(m_selfId);
+	m_coefGreen = Settings::instance()->getLedCoefGreen(m_selfId);
+	m_coefBlue = Settings::instance()->getLedCoefBlue(m_selfId);
 
-    m_configWidget->setIsAreaEnabled(Settings::isLedEnabled(m_selfId));
+	m_configWidget->setIsAreaEnabled(Settings::instance()->isLedEnabled(m_selfId));
     m_configWidget->setCoefs(m_coefRed, m_coefGreen, m_coefBlue);
 
-    move(Settings::getLedPosition(m_selfId));
-    resize(Settings::getLedSize(m_selfId));
+	move(Settings::instance()->getLedPosition(m_selfId));
+	resize(Settings::instance()->getLedSize(m_selfId));
 
     emit resizeOrMoveCompleted(m_selfId);
 }
@@ -552,7 +552,7 @@ void GrabWidget::onIsAreaEnabled_Toggled(bool state)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << state;
 
-    Settings::setLedEnabled(m_selfId, state);
+	Settings::instance()->setLedEnabled(m_selfId, state);
 
     fillBackgroundColored();    
 }
@@ -570,22 +570,22 @@ void GrabWidget::onOpenConfigButton_Clicked()
 void GrabWidget::onRedCoef_ValueChanged(double value)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << value;
-    Settings::setLedCoefRed(m_selfId, value);
-    m_coefRed = Settings::getLedCoefRed(m_selfId);
+	Settings::instance()->setLedCoefRed(m_selfId, value);
+	m_coefRed = Settings::instance()->getLedCoefRed(m_selfId);
 }
 
 void GrabWidget::onGreenCoef_ValueChanged(double value)
 {
     DEBUG_LOW_LEVEL << value;
-    Settings::setLedCoefGreen(m_selfId, value);
-    m_coefGreen = Settings::getLedCoefGreen(m_selfId);
+	Settings::instance()->setLedCoefGreen(m_selfId, value);
+	m_coefGreen = Settings::instance()->getLedCoefGreen(m_selfId);
 }
 
 void GrabWidget::onBlueCoef_ValueChanged(double value)
 {
     DEBUG_LOW_LEVEL << value;
-    Settings::setLedCoefBlue(m_selfId, value);
-    m_coefBlue = Settings::getLedCoefBlue(m_selfId);
+	Settings::instance()->setLedCoefBlue(m_selfId, value);
+	m_coefBlue = Settings::instance()->getLedCoefBlue(m_selfId);
 }
 
 void GrabWidget::setBackgroundColor(QColor color)

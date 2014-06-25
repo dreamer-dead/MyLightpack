@@ -52,7 +52,7 @@ public:
     HWND getMainWindowHandle();
 #endif
     SettingsWindow * settingsWnd() { return m_settingsWindow; }
-    const SettingsScope::Settings * settings() { return SettingsScope::Settings::settingsSingleton(); }
+	const SettingsScope::Settings * settings() { return SettingsScope::Settings::instance(); }
     enum ErrorCodes {
         OK_ErrorCode                            = 0,
         WrongCommandLineArgument_ErrorCode      = 1,

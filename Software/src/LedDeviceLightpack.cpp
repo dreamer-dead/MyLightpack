@@ -238,9 +238,9 @@ void LedDeviceLightpack::updateDeviceSettings()
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << sender();
 
     AbstractLedDevice::updateDeviceSettings();
-    setRefreshDelay(Settings::getDeviceRefreshDelay());
-    setColorDepth(Settings::getDeviceColorDepth());
-    setSmoothSlowdown(Settings::getDeviceSmooth());
+	setRefreshDelay(Settings::instance()->getDeviceRefreshDelay());
+	setColorDepth(Settings::instance()->getDeviceColorDepth());
+	setSmoothSlowdown(Settings::instance()->getDeviceSmooth());
 
     requestFirmwareVersion();
 }
@@ -457,7 +457,7 @@ void LedDeviceLightpack::restartPingDevice(bool isSuccess)
 {
     Q_UNUSED(isSuccess);
 
-    if (Settings::isBacklightEnabled() && Settings::isPingDeviceEverySecond())
+	if (Settings::instance()->isBacklightEnabled() && Settings::instance()->isPingDeviceEverySecond())
     {
         // Start ping device with PingDeviceInterval ms after last data transfer complete
         m_timerPingDevice->start(kPingDeviceInterval);

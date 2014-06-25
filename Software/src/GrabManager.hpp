@@ -128,4 +128,5 @@ private:
 
     bool m_isGrabWidgetsVisible;
     GrabberContext * m_grabberContext;
+	SettingsScope::Settings *m_settings;
 };

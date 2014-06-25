@@ -47,6 +47,8 @@ GrabManager::GrabManager(QWidget *parent) : QObject(parent)
 
     qRegisterMetaType<GrabResult>("GrabResult");
 
+	m_settings = SettingsScope::Settings::instance();
+	Q_ASSERT(m_settings);
     m_parentWidget = parent;
 
     m_timerGrab = new QTimer(this);
@@ -56,11 +58,11 @@ GrabManager::GrabManager(QWidget *parent) : QObject(parent)
 
     m_grabberContext = new GrabberContext();
 
-    m_isSendDataOnlyIfColorsChanged = Settings::isSendDataOnlyIfColorsChanges();
+	m_isSendDataOnlyIfColorsChanged = m_settings->isSendDataOnlyIfColorsChanges();
 
 //    m_grabbersThread = new QThread();
     initGrabbers();
-    m_grabber = queryGrabber(Settings::getGrabberType());
+	m_grabber = queryGrabber(m_settings->getGrabberType());
 
     m_timerUpdateFPS = new QTimer(this);
     connect(m_timerUpdateFPS, SIGNAL(timeout()), this, SLOT(timeoutUpdateFPS()));
@@ -79,7 +81,7 @@ GrabManager::GrabManager(QWidget *parent) : QObject(parent)
 
     updateScreenGeometry();
 
-    settingsProfileChanged(Settings::getCurrentProfileName());
+	settingsProfileChanged(m_settings->getCurrentProfileName());
 
 
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "initialized";
@@ -153,7 +155,7 @@ void GrabManager::onGrabberTypeChanged(const Grab::GrabberType grabberType)
 
     if (isStartNeeded) {
 #ifdef D3D10_GRAB_SUPPORT
-        if (Settings::isDx1011GrabberEnabled())
+		if (m_settings->isDx1011GrabberEnabled())
             m_d3d10Grabber->startGrabbing();
         else
             m_grabber->startGrabbing();
@@ -168,7 +170,7 @@ void GrabManager::onGrabberStateChangeRequested(bool isStartRequested) {
     D3D10Grabber *grabber = static_cast<D3D10Grabber *>(sender());
     if (grabber != m_grabber) {
         if (isStartRequested) {
-            if (Settings::isDx1011GrabberEnabled()) {
+			if (m_settings->isDx1011GrabberEnabled()) {
                 m_grabber->stopGrabbing();
                 grabber->startGrabbing();
             }
@@ -229,10 +231,10 @@ void GrabManager::settingsProfileChanged(const QString &profileName)
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     Q_UNUSED(profileName)
 
-    m_isSendDataOnlyIfColorsChanged = Settings::isSendDataOnlyIfColorsChanges();
-    m_avgColorsOnAllLeds = Settings::isGrabAvgColorsEnabled();
+	m_isSendDataOnlyIfColorsChanged = m_settings->isSendDataOnlyIfColorsChanges();
+	m_avgColorsOnAllLeds = m_settings->isGrabAvgColorsEnabled();
 
-    setNumberOfLeds(Settings::getNumberOfLeds(Settings::getConnectedDevice()));
+	setNumberOfLeds(m_settings->getNumberOfLeds(m_settings->getConnectedDevice()));
 }
 
 void GrabManager::setVisibleLedWidgets(bool state)
@@ -497,7 +499,7 @@ void GrabManager::initGrabbers()
 }
 
 GrabberBase *GrabManager::initGrabber(GrabberBase * grabber) {
-    QMetaObject::invokeMethod(grabber, "setGrabInterval", Qt::QueuedConnection, Q_ARG(int, Settings::getGrabSlowdown()));
+	QMetaObject::invokeMethod(grabber, "setGrabInterval", Qt::QueuedConnection, Q_ARG(int, m_settings->getGrabSlowdown()));
 //    QMetaObject::invokeMethod(grabber, "startGrabbing", Qt::QueuedConnection);
     bool isConnected = connect(grabber, SIGNAL(frameGrabAttempted(GrabResult)), this, SLOT(onFrameGrabAttempted(GrabResult)), Qt::QueuedConnection);
     Q_ASSERT_X(isConnected, "connecting grabber to grabManager", "failed");
@@ -517,7 +519,7 @@ GrabberBase *GrabManager::queryGrabber(Grab::GrabberType grabberType)
         result = m_grabbers[Grab::GrabberTypeQt];
     }
 
-    result->setGrabInterval(Settings::getGrabSlowdown());
+	result->setGrabInterval(m_settings->getGrabSlowdown());
 
     return result;
 }

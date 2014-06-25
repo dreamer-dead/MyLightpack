@@ -28,9 +28,10 @@
 
 #include <QColor>
 #include <QVariant>
-#include <QSettings>
 #include <QMap>
 #include <QMutex>
+#include <QScopedPointer>
+#include <QSettings>
 
 #include "SettingsDefaults.hpp"
 #include "enums.hpp"
@@ -41,13 +42,50 @@
 namespace SettingsScope
 {
 
-struct LedInfo {
-    bool isEnabled;
-    QPoint position;
-    QSize size;
-    double wbRed;
-    double wbGreen;
-    double wbBlue;
+class SettingsSource
+{
+public:
+	virtual QVariant value(const QString & key) const = 0;
+	virtual void setValue(const QString & key, const QVariant & value) = 0;
+	virtual bool contains(const QString& key) const = 0;
+	virtual void remove(const QString& key) = 0;
+	virtual void sync() {}
+	virtual ~SettingsSource() {}
+};
+
+class ConfigurationProfile
+{
+public:
+	ConfigurationProfile();
+
+	bool init(const QString& path, const QString& name);
+	bool isInitialized() const { return m_settings; }
+	const QString& name() const { return m_name; }
+	const QString& path() const { return m_path; }
+
+	QVariant value(const QString & key) const;
+	QVariant valueOrDefault(const QString & key, const QVariant& defaultValue) const;
+	void setValue(const QString & key, const QVariant & value, bool force = true);
+	void remove(const QString& key);
+
+	bool beginBatchUpdate();
+	void endBatchUpdate();
+
+	struct ScopedBatchUpdateGuard {
+		ConfigurationProfile& m_profile;
+
+		ScopedBatchUpdateGuard(ConfigurationProfile& profile)
+			: m_profile(profile) { m_profile.beginBatchUpdate(); }
+
+		~ScopedBatchUpdateGuard() { m_profile.endBatchUpdate(); }
+	};
+
+private:
+	mutable QMutex m_mutex;
+	bool m_isInBatchUpdate;
+	QString m_name;
+	QString m_path;
+	QScopedPointer<SettingsSource> m_settings;
 };
 
 /*!
@@ -65,10 +103,20 @@ public:
 
 		void setProfile(const QString& profileName);
 		void setDebuglevel(Debug::DebugLevels level);
-		void apply(QSettings& settings) const;
+		void apply(ConfigurationProfile& profile) const;
 
-	private:
-		typedef QMap<QString, QVariant> OverridesMap;
+	protected:
+		struct OverridingValue {
+			QVariant value;
+			bool force;
+		};
+
+		void setValue(const QString & key, const QVariant& value, bool force = true) {
+			const OverridingValue overridingValue = {value, force};
+			m_overrides.insert(key, overridingValue);
+		}
+
+		typedef QMap<QString, OverridingValue> OverridesMap;
 
 		OverridesMap m_overrides;
 	};
@@ -82,169 +130,170 @@ public:
      * \return is settings file was present before initialization
      */
     static bool Initialize(const QString & applicationDirPath, const Overrides& overrides);
-    static void resetDefaults();
-    static const Settings * settingsSingleton() { return m_this; }
-    static bool isPresent(const QString & applicationDirPath);
+	static Settings * instance() { return m_instance; }
 
-    static QStringList findAllProfiles();
-    static void loadOrCreateProfile(const QString & configName);
-    static void renameCurrentProfile(const QString & configName);
-    static void removeCurrentProfile();
-    static bool isProfileLoaded();
+	static QStringList getSupportedDevices();
+	static QPoint getDefaultPosition(int ledIndex);
+	static QStringList getSupportedSerialPortBaudRates();
 
-    static QString getCurrentProfileName();
+	void resetDefaults();
+
+	QStringList findAllProfiles() const;
+	void loadOrCreateProfile(const QString & configName);
+	void renameCurrentProfile(const QString & configName);
+	void removeCurrentProfile();
+	bool isProfileLoaded() const;
+
+	QString getCurrentProfileName() const;
     /*!
       use with caution: if there is no profile loaded then it will throw access violation exception
      \see SettingsScope#Settings#getProfilesPath()
      \return QString path to current profile
     */
-    static QString getCurrentProfilePath();
-    static QString getProfilesPath();
-    static QString getApplicationDirPath();
-    static QString getMainConfigPath();
-    static QPoint getDefaultPosition(int ledIndex);
+	QString getCurrentProfilePath() const;
+	QString getProfilesPath() const;
+	QString getApplicationDirPath() const;
+	QString getMainConfigPath() const;
 
     // Main
-    static QString getLastProfileName();
-    static QString getLanguage();
-    static void setLanguage(const QString & language);
-    static int getDebugLevel();
-    static void setDebugLevel(int debugLvl);
-    static bool isApiEnabled();
-    static void setIsApiEnabled(bool isEnabled);
-    static bool isListenOnlyOnLoInterface();
-    static void setListenOnlyOnLoInterface(bool localOnly);
-    static int getApiPort();
-    static void setApiPort(int apiPort);
-    static QString getApiAuthKey();
-    static void setApiKey(const QString & apiKey);
-    static bool isApiAuthEnabled();
-    static void setIsApiAuthEnabled(bool isEnabled);
-    static bool isExpertModeEnabled();
-    static void setExpertModeEnabled(bool isEnabled);
-    static bool isKeepLightsOnAfterExit();
-    static void setKeepLightsOnAfterExit(bool isEnabled);
-	static bool isKeepLightsOnAfterLock();
-	static void setKeepLightsOnAfterLock(bool isEnabled);
-    static bool isPingDeviceEverySecond();
-    static void setPingDeviceEverySecond(bool isEnabled);
-    static bool isUpdateFirmwareMessageShown();
-    static void setUpdateFirmwareMessageShown(bool isShown);
-    static SupportedDevices::DeviceType getConnectedDevice();
-    static void setConnectedDevice(SupportedDevices::DeviceType device);
-    static QString getConnectedDeviceName();
-    static void setConnectedDeviceName(const QString & deviceName);
-    static QStringList getSupportedDevices();
-    static QKeySequence getHotkey(const QString &actionName);
-    static void setHotkey(const QString &actionName, const QKeySequence &keySequence);
-    static QString getAdalightSerialPortName();
-    static void setAdalightSerialPortName(const QString & port);
-    static int getAdalightSerialPortBaudRate();
-    static void setAdalightSerialPortBaudRate(const QString & baud);
-    static QString getArdulightSerialPortName();
-    static void setArdulightSerialPortName(const QString & port);
-    static int getArdulightSerialPortBaudRate();
-    static void setArdulightSerialPortBaudRate(const QString & baud);
-    static QStringList getSupportedSerialPortBaudRates();
-    static bool isConnectedDeviceUsesSerialPort();
+	QString getLastProfileName() const;
+	QString getLanguage() const;
+	void setLanguage(const QString & language);
+	int getDebugLevel() const;
+	void setDebugLevel(int debugLvl);
+	bool isApiEnabled() const;
+	void setIsApiEnabled(bool isEnabled);
+	bool isListenOnlyOnLoInterface() const;
+	void setListenOnlyOnLoInterface(bool localOnly);
+	int getApiPort() const;
+	void setApiPort(int apiPort);
+	QString getApiAuthKey() const;
+	void setApiKey(const QString & apiKey);
+	bool isApiAuthEnabled() const;
+	void setIsApiAuthEnabled(bool isEnabled);
+	bool isExpertModeEnabled() const;
+	void setExpertModeEnabled(bool isEnabled);
+	bool isKeepLightsOnAfterExit() const;
+	void setKeepLightsOnAfterExit(bool isEnabled);
+	bool isKeepLightsOnAfterLock() const;
+	void setKeepLightsOnAfterLock(bool isEnabled);
+	bool isPingDeviceEverySecond() const;
+	void setPingDeviceEverySecond(bool isEnabled);
+	bool isUpdateFirmwareMessageShown() const;
+	void setUpdateFirmwareMessageShown(bool isShown);
+	SupportedDevices::DeviceType getConnectedDevice() const;
+	void setConnectedDevice(SupportedDevices::DeviceType device);
+	QString getConnectedDeviceName() const;
+	void setConnectedDeviceName(const QString & deviceName);
+	QKeySequence getHotkey(const QString &actionName) const;
+	void setHotkey(const QString &actionName, const QKeySequence &keySequence);
+	QString getAdalightSerialPortName() const;
+	void setAdalightSerialPortName(const QString & port);
+	int getAdalightSerialPortBaudRate() const;
+	void setAdalightSerialPortBaudRate(const QString & baud);
+	QString getArdulightSerialPortName() const;
+	void setArdulightSerialPortName(const QString & port);
+	int getArdulightSerialPortBaudRate() const;
+	void setArdulightSerialPortBaudRate(const QString & baud);
+	bool isConnectedDeviceUsesSerialPort() const;
     // [Adalight | Ardulight | Lightpack | ... | Virtual]
-    static void setNumberOfLeds(SupportedDevices::DeviceType device, int numberOfLeds);
-    static int getNumberOfLeds(SupportedDevices::DeviceType device);
+	void setNumberOfLeds(SupportedDevices::DeviceType device, int numberOfLeds);
+	int getNumberOfLeds(SupportedDevices::DeviceType device) const;
 
-    static void setColorSequence(SupportedDevices::DeviceType device, QString colorSequence);
-    static QString getColorSequence(SupportedDevices::DeviceType device);
+	void setColorSequence(SupportedDevices::DeviceType device, QString colorSequence);
+	QString getColorSequence(SupportedDevices::DeviceType device) const;
 
     // Profile
-    static int getGrabSlowdown();
-    static void setGrabSlowdown(int value);
-    static bool isBacklightEnabled();
-    static void setIsBacklightEnabled(bool isEnabled);
-    static bool isGrabAvgColorsEnabled();
-    static void setGrabAvgColorsEnabled(bool isEnabled);
-    static bool isSendDataOnlyIfColorsChanges();
-    static void setSendDataOnlyIfColorsChanges(bool isEnabled);
-    static int getLuminosityThreshold();
-    static void setLuminosityThreshold(int value);
-    static bool isMinimumLuminosityEnabled();
-    static void setMinimumLuminosityEnabled(bool value);
+	int getGrabSlowdown() const;
+	void setGrabSlowdown(int value);
+	bool isBacklightEnabled() const;
+	void setIsBacklightEnabled(bool isEnabled);
+	bool isGrabAvgColorsEnabled() const;
+	void setGrabAvgColorsEnabled(bool isEnabled);
+	bool isSendDataOnlyIfColorsChanges() const;
+	void setSendDataOnlyIfColorsChanges(bool isEnabled);
+	int getLuminosityThreshold() const;
+	void setLuminosityThreshold(int value);
+	bool isMinimumLuminosityEnabled() const;
+	void setMinimumLuminosityEnabled(bool value);
     // [Device]
-    static int getDeviceRefreshDelay();
-    static void setDeviceRefreshDelay(int value);
-    static int getDeviceBrightness();
-    static void setDeviceBrightness(int value);
-    static int getDeviceSmooth();
-    static void setDeviceSmooth(int value);
-    static int getDeviceColorDepth();
-    static void setDeviceColorDepth(int value);
-    static double getDeviceGamma();
-    static void setDeviceGamma(double gamma);
+	int getDeviceRefreshDelay() const;
+	void setDeviceRefreshDelay(int value);
+	int getDeviceBrightness() const;
+	void setDeviceBrightness(int value);
+	int getDeviceSmooth() const;
+	void setDeviceSmooth(int value);
+	int getDeviceColorDepth() const;
+	void setDeviceColorDepth(int value);
+	double getDeviceGamma() const;
+	void setDeviceGamma(double gamma);
 
-    static Grab::GrabberType getGrabberType();
-    static void setGrabberType(Grab::GrabberType grabMode);
+	Grab::GrabberType getGrabberType();
+	void setGrabberType(Grab::GrabberType grabMode);
 
 #ifdef D3D10_GRAB_SUPPORT
-    static bool isDx1011GrabberEnabled();
-    static void setDx1011GrabberEnabled(bool isEnabled);
+	bool isDx1011GrabberEnabled() const;
+	void setDx1011GrabberEnabled(bool isEnabled);
 #endif
 
-    static Lightpack::Mode getLightpackMode();
-    static void setLightpackMode(Lightpack::Mode mode);
-    static bool isMoodLampLiquidMode();
-    static void setMoodLampLiquidMode(bool isLiquidMode);
-    static QColor getMoodLampColor();
-    static void setMoodLampColor(QColor color);
-    static int getMoodLampSpeed();
-    static void setMoodLampSpeed(int value);
+	Lightpack::Mode getLightpackMode();
+	void setLightpackMode(Lightpack::Mode mode);
+	bool isMoodLampLiquidMode() const;
+	void setMoodLampLiquidMode(bool isLiquidMode);
+	QColor getMoodLampColor() const;
+	void setMoodLampColor(QColor color);
+	int getMoodLampSpeed() const;
+	void setMoodLampSpeed(int value);
 
-    static QList<WBAdjustment> getLedCoefs();
+	QList<WBAdjustment> getLedCoefs() const;
 
-    static double getLedCoefRed(int ledIndex);
-    static double getLedCoefGreen(int ledIndex);
-    static double getLedCoefBlue(int ledIndex);
+	double getLedCoefRed(int ledIndex);
+	double getLedCoefGreen(int ledIndex);
+	double getLedCoefBlue(int ledIndex);
 
-    static void setLedCoefRed(int ledIndex, double value);
-    static void setLedCoefGreen(int ledIndex, double value);
-    static void setLedCoefBlue(int ledIndex, double value);
+	void setLedCoefRed(int ledIndex, double value);
+	void setLedCoefGreen(int ledIndex, double value);
+	void setLedCoefBlue(int ledIndex, double value);
 
-    static QSize getLedSize(int ledIndex);
-    static void setLedSize(int ledIndex, QSize size);
-    static QPoint getLedPosition(int ledIndex);
-    static void setLedPosition(int ledIndex, QPoint position);
-    static bool isLedEnabled(int ledIndex);
-    static void setLedEnabled(int ledIndex, bool isEnabled);
+	QSize getLedSize(int ledIndex) const;
+	void setLedSize(int ledIndex, QSize size);
+	QPoint getLedPosition(int ledIndex) const;
+	void setLedPosition(int ledIndex, QPoint position);
+	bool isLedEnabled(int ledIndex) const;
+	void setLedEnabled(int ledIndex, bool isEnabled);
 
-    static uint getLastReadUpdateId();
-    static void setLastReadUpdateId(const uint updateId);
+	uint getLastReadUpdateId() const;
+	void setLastReadUpdateId(const uint updateId);
 
 private:        
-    static int getValidDeviceRefreshDelay(int value);
-    static int getValidDeviceBrightness(int value);
-    static int getValidDeviceSmooth(int value);
-    static int getValidDeviceColorDepth(int value);
-    static double getValidDeviceGamma(double value);
-    static int getValidGrabSlowdown(int value);
-    static int getValidMoodLampSpeed(int value);
-    static int getValidLuminosityThreshold(int value);
-    static void setValidLedCoef(int ledIndex, const QString & keyCoef, double coef);
-    static double getValidLedCoef(int ledIndex, const QString & keyCoef);
+	static int getValidDeviceRefreshDelay(int value);
+	static int getValidDeviceBrightness(int value);
+	static int getValidDeviceSmooth(int value);
+	static int getValidDeviceColorDepth(int value);
+	static double getValidDeviceGamma(double value);
+	static int getValidGrabSlowdown(int value);
+	static int getValidMoodLampSpeed(int value);
+	static int getValidLuminosityThreshold(int value);
 
-    static void initCurrentProfile(bool isResetDefault);
-    static void initDevicesMap();
+	void setValidLedCoef(int ledIndex, const QString & keyCoef, double coef);
+	double getValidLedCoef(int ledIndex, const QString & keyCoef);
 
-    static void migrateSettings();
+	void initDevicesMap();
+
+	void migrateSettings();
 
 
 public:
-    static void setNewOption(const QString & name, const QVariant & value,
-                            bool isForceSetOption = false, QSettings * settings = m_currentProfile);
-    static void setNewOptionMain(const QString & name, const QVariant & value,
-                                bool isForceSetOption = false);
+	QVariant pluginValue(const QString & pluginId, const QString & key) const;
+	void setPluginValue(const QString & pluginId, const QString & key, const QVariant& value);
+
+private:
     // forwarding to m_mainConfig object
-    static void setValueMain(const QString & key, const QVariant & value);
-    static QVariant valueMain(const QString & key);
+	QVariant valueMain(const QString & key) const;
+	void setValueMain(const QString & key, const QVariant & value);
     // forwarding to m_currentProfile object
-    static void setValue(const QString & key, const QVariant & value);
-    static QVariant value(const QString & key);
+	void setValue(const QString & key, const QVariant & value);
+	QVariant value(const QString & key) const;
 
 signals:
     void profileLoaded(const QString &);
@@ -297,12 +346,18 @@ signals:
     void ledEnabledChanged(int ledIndex, bool isEnabled);
 
 private:
-    static QMutex m_mutex; // for thread-safe access to QSettings* variables
-    static QSettings * m_currentProfile; // using profile
-    static QSettings * m_mainConfig;     // store last used profile name, locale and so on
-    static QString m_applicationDirPath; // path to store app generated stuff
-    static Settings *m_this;
-    static QMap<SupportedDevices::DeviceType, QString> m_devicesTypeToNameMap;
-    static QMap<SupportedDevices::DeviceType, QString> m_devicesTypeToKeyNumberOfLedsMap;
+	Settings(const QString & mainConfigPath);
+	void applyMainProfileOverrides(const Overrides& overrides);
+	void applyCurrentProfileOverrides(const Overrides& overrides);
+	void verifyMainProfile();
+	void verifyCurrentProfile();
+
+	ConfigurationProfile m_mainProfile;
+	ConfigurationProfile m_currentProfile;
+	QString m_applicationDirPath; // path to store app generated stuff
+	QMap<SupportedDevices::DeviceType, QString> m_devicesTypeToNameMap;
+	QMap<SupportedDevices::DeviceType, QString> m_devicesTypeToKeyNumberOfLedsMap;
+
+	static Settings * m_instance;
 };
 } /*SettingsScope*/

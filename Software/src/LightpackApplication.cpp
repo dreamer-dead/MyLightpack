@@ -105,7 +105,7 @@ void LightpackApplication::initializeAll(const QString & appDirPath)
     qRegisterMetaType< QList<Plugin*> >("QList<Plugin*>");
 
 
-    if (Settings::isBacklightEnabled())
+	if (Settings::instance()->isBacklightEnabled())
     {
         m_backlightStatus = Backlight::StatusOn;
     } else {
@@ -196,7 +196,7 @@ void LightpackApplication::setStatusChanged(Backlight::Status status)
 void LightpackApplication::setBacklightChanged(Lightpack::Mode mode)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << mode;
-    Settings::setLightpackMode(mode);
+	Settings::instance()->setLightpackMode(mode);
     if (!m_noGui)
         m_settingsWindow->setModeChanged(mode);
     startBacklight();
@@ -227,9 +227,9 @@ void LightpackApplication::startBacklight()
 
     m_pluginInterface->resultBacklightStatus(m_backlightStatus);
 
-    Settings::setIsBacklightEnabled(isBacklightEnabled);
+	Settings::instance()->setIsBacklightEnabled(isBacklightEnabled);
 
-    const Lightpack::Mode lightpackMode = Settings::getLightpackMode();
+	const Lightpack::Mode lightpackMode = Settings::instance()->getLightpackMode();
     switch (lightpackMode)
     {
     case Lightpack::AmbilightMode:
@@ -346,7 +346,7 @@ void LightpackApplication::processCommandLineArguments(SettingsScope::Settings::
         else if (argument.startsWith(kSetProfileOption))
         {
 			const QString profileName(argument.mid(kSetProfileOption.length()).trimmed());
-            DEBUG_LOW_LEVEL << "Overriding last used profile with value=" << profileName;
+			DEBUG_LOW_LEVEL << Q_FUNC_INFO << "Overriding last used profile with value=" << profileName;
 			overrides.setProfile(profileName);
         } else {
             qDebug() << "Wrong argument:" << argument;
@@ -580,7 +580,7 @@ void LightpackApplication::startPluginManager()
         connect(m_pluginManager,SIGNAL(updatePlugin(QList<Plugin*>)),m_pluginInterface,SLOT(updatePlugin(QList<Plugin*>)), Qt::QueuedConnection);
     }
 
-    m_pluginManager->LoadPlugins(QString(Settings::getApplicationDirPath() + "Plugins"));
+	m_pluginManager->LoadPlugins(QString(Settings::instance()->getApplicationDirPath() + "Plugins"));
     m_pluginManager->StartPlugins();
 
     //m_PluginThread = new QThread();
@@ -651,29 +651,29 @@ void LightpackApplication::commitData(QSessionManager &sessionManager)
 void LightpackApplication::profileSwitch(const QString & configName)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << configName;
-    Settings::loadOrCreateProfile(configName);
+	Settings::instance()->loadOrCreateProfile(configName);
 }
 
 void LightpackApplication::settingsChanged()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-    m_pluginInterface->changeProfile(Settings::getCurrentProfileName());
+	m_pluginInterface->changeProfile(Settings::instance()->getCurrentProfileName());
 
-    m_grabManager->onSendDataOnlyIfColorsEnabledChanged(Settings::isSendDataOnlyIfColorsChanges());
+	m_grabManager->onSendDataOnlyIfColorsEnabledChanged(Settings::instance()->isSendDataOnlyIfColorsChanges());
 
-    m_moodlampManager->setSendDataOnlyIfColorsChanged(Settings::isSendDataOnlyIfColorsChanges());
+	m_moodlampManager->setSendDataOnlyIfColorsChanged(Settings::instance()->isSendDataOnlyIfColorsChanges());
 
-    m_moodlampManager->setCurrentColor(Settings::getMoodLampColor());
-    m_moodlampManager->setLiquidModeSpeed(Settings::getMoodLampSpeed());
-    m_moodlampManager->setLiquidMode(Settings::isMoodLampLiquidMode());
+	m_moodlampManager->setCurrentColor(Settings::instance()->getMoodLampColor());
+	m_moodlampManager->setLiquidModeSpeed(Settings::instance()->getMoodLampSpeed());
+	m_moodlampManager->setLiquidMode(Settings::instance()->isMoodLampLiquidMode());
 
-    bool isBacklightEnabled = Settings::isBacklightEnabled();
+	bool isBacklightEnabled = Settings::instance()->isBacklightEnabled();
     bool isCanStart =(isBacklightEnabled && m_deviceLockStatus == DeviceLocked::Unlocked);
 
 //    numberOfLedsChanged(Settings::getNumberOfLeds(Settings::getConnectedDevice()));
 
-    switch (Settings::getLightpackMode())
+	switch (Settings::instance()->getLightpackMode())
     {
     case Lightpack::AmbilightMode:
         m_grabManager->start(isCanStart);
