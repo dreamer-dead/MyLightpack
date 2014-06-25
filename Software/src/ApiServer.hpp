@@ -212,4 +212,5 @@ private:
 
     QString m_helpMessage;
     QString m_shortHelpMessage;
+	SettingsScope::Settings *m_settings;
 };

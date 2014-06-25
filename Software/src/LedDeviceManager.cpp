@@ -331,7 +331,7 @@ void LedDeviceManager::initLedDevice()
 
     m_isLastCommandCompleted = true;
 
-    SupportedDevices::DeviceType connectedDevice = Settings::getConnectedDevice();
+	SupportedDevices::DeviceType connectedDevice = Settings::instance()->getConnectedDevice();
 
     if (m_ledDevices[connectedDevice] == NULL)
     {
@@ -359,8 +359,8 @@ AbstractLedDevice * LedDeviceManager::createLedDevice(SupportedDevices::DeviceTy
 #       if !defined(Q_OS_WIN)
         qWarning() << Q_FUNC_INFO << "AlienFx not supported on current platform";
 
-        Settings::setConnectedDevice(SupportedDevices::DefaultDeviceType);
-        deviceType = Settings::getConnectedDevice();
+		Settings::instance()->setConnectedDevice(SupportedDevices::DefaultDeviceType);
+		deviceType = Settings::instance()->getConnectedDevice();
 #       endif /* Q_OS_WIN */
     }
 
@@ -381,11 +381,11 @@ AbstractLedDevice * LedDeviceManager::createLedDevice(SupportedDevices::DeviceTy
 
     case SupportedDevices::DeviceTypeAdalight:
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "SupportedDevices::AdalightDevice";
-        return (AbstractLedDevice *)new LedDeviceAdalight(Settings::getAdalightSerialPortName(), Settings::getAdalightSerialPortBaudRate());
+		return (AbstractLedDevice *)new LedDeviceAdalight(Settings::instance()->getAdalightSerialPortName(), Settings::instance()->getAdalightSerialPortBaudRate());
 
     case SupportedDevices::DeviceTypeArdulight:
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "SupportedDevices::ArdulightDevice";
-        return (AbstractLedDevice *)new LedDeviceArdulight(Settings::getArdulightSerialPortName(), Settings::getArdulightSerialPortBaudRate());
+		return (AbstractLedDevice *)new LedDeviceArdulight(Settings::instance()->getArdulightSerialPortName(), Settings::instance()->getArdulightSerialPortBaudRate());
 
     case SupportedDevices::DeviceTypeVirtual:
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "SupportedDevices::VirtualDevice";

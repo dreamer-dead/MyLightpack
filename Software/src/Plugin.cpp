@@ -16,6 +16,11 @@ using namespace SettingsScope;
     const QString kOsSpecificExecuteKey = "ExecuteOnNix";
 #endif
 
+namespace {
+static const QString kPriorityKey("Priority");
+static const QString kEnableKey("Enable");
+}
+
 Plugin::Plugin(QString name, QString path, QObject *parent) :
     QObject(parent)
 {
@@ -78,26 +83,21 @@ QIcon Plugin::Icon() const  {
    return QIcon(":/icons/plugins.png");
 }
 
-
 int Plugin::getPriority() const {
-    QString key = this->_name+"/Priority";
-    return Settings::valueMain(key).toInt();
+	return Settings::instance()->pluginValue(this->_name, kPriorityKey).toInt();
 }
 
 void Plugin::setPriority(int priority) {
-    QString key = this->_name+"/Priority";
-    Settings::setValueMain(key,priority);
+	Settings::instance()->setPluginValue(this->_name, kPriorityKey, priority);
 }
 
 bool Plugin::isEnabled() const {
-    QString key = this->_name+"/Enable";
-    return Settings::valueMain(key).toBool();
+	return Settings::instance()->pluginValue(this->_name, kEnableKey).toBool();
 }
 
 void Plugin::setEnabled(bool enable){
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << enable;
-    QString key = this->_name+"/Enable";
-    Settings::setValueMain(key,enable);
+	Settings::instance()->setPluginValue(this->_name, kEnableKey, enable);
     if (!enable) this->Stop();
     if (enable) this->Start();
 }
