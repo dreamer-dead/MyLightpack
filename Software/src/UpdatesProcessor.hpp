@@ -70,10 +70,10 @@ public:
 
 	int compare(const AppVersion &other) const {
 		const int base = static_cast<const BaseVersion*>(this)->compare(other);
-		if (!base)
+        if (base)
 			return base;
 		const int drc = this->_rc - other._rc;
-		if (drc != 0)
+		if (drc)
 			return drc;
 		const int dbuild = this->_build - other._build;
 		return dbuild;
