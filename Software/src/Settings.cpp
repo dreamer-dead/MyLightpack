@@ -460,6 +460,19 @@ void ConfigurationProfile::endBatchUpdate() {
 	m_isInBatchUpdate = false;
 }
 
+void ConfigurationProfile::reset() {
+    DEBUG_MID_LEVEL << Q_FUNC_INFO;
+
+    if (!isInitialized())
+        return;
+
+    Q_ASSERT(!m_isInBatchUpdate);
+    m_settings->sync();
+    m_name.clear();
+    m_path.clear();
+    m_settings.reset();
+}
+
 void Settings::Overrides::setProfile(const QString& profileName)
 {
 	setValue(Main::Key::ProfileLast, profileName);
@@ -591,39 +604,26 @@ void Settings::loadOrCreateProfile(const QString & profileName)
 {
     DEBUG_MID_LEVEL << Q_FUNC_INFO << profileName;
 
-	//QMutexLocker locker(&m_mutex);
-	//QString currentProfileFileName = m_currentProfile != NULL ? m_currentProfile->fileName() : NULL;
-
 	if (m_currentProfile.isInitialized() && m_currentProfile.name() == profileName)
         return; //nothing to change, profile is already loaded
 
-	// TODO: implement.
-	Q_ASSERT(false);
-	/*
-	if (m_currentProfile.isInitialized())
-    {
+    const QString profileNewPath = getProfilesPath() + profileName + ".ini";
+    if (m_currentProfile.isInitialized()) {
         // Copy current settings to new one
-		const QString profileNewPath = getProfilesPath() + profileName + ".ini";
-
-		QFile::copy(currentProfileFileName, profileNewPath);
-
-        delete m_currentProfile;
+        QFile::copy(m_currentProfile.path(), profileNewPath);
     }
 
+    if (m_currentProfile.init(profileNewPath, profileName)) {
+        // Initialize profile with default values without reset exists values
+        m_instance->applyCurrentProfileOverrides(CurrentProfileOverrides(false));
 
-    m_currentProfile = new QSettings(getProfilesPath() + profileName + ".ini", QSettings::IniFormat );
-    m_currentProfile->setIniCodec("UTF-8");
+        // Verify initial settings.
+        m_instance->verifyCurrentProfile();
 
-    locker.unlock();
-    initCurrentProfile(false);
-    locker.relock();
-
-    DEBUG_LOW_LEVEL << "Settings file:" << m_currentProfile->fileName();
-
-    m_mainConfig->setValue(Main::Key::ProfileLast, profileName);
-    locker.unlock();
-	//*/
-	this->profileLoaded(profileName);
+        DEBUG_LOW_LEVEL << "Settings file:" << m_currentProfile.path();
+        m_mainProfile.setValue(Main::Key::ProfileLast, profileName);
+        this->profileLoaded(profileName);
+    }
 }
 
 void Settings::renameCurrentProfile(const QString & profileName)
@@ -633,67 +633,51 @@ void Settings::renameCurrentProfile(const QString & profileName)
 	// TODO: implement.
 	Q_ASSERT(false);
 
-	/*
-    QMutexLocker locker(&m_mutex);
-
-    if (m_currentProfile == NULL)
+    if (!m_currentProfile.isInitialized())
     {
         qWarning() << "void Settings::renameCurrentConfig(): fail, m_currentProfile not initialized";
         return;
     }
 
-    // Copy current settings to new one
-    QString profilesDir = QFileInfo( m_currentProfile->fileName() ).absoluteDir().absolutePath();
-    QString profileNewPath = profilesDir + "/" + profileName + ".ini";
+    if (m_currentProfile.name() == profileName)
+        return;
 
-    if (m_currentProfile->fileName() != profileNewPath)
-    {
-        QFile::rename(m_currentProfile->fileName(), profileNewPath);
+    // Rename current settings to new one
+    const QString profileNewPath = getProfilesPath() + profileName + ".ini";
+    QFile::rename(m_currentProfile.path(), profileNewPath);
 
-        delete m_currentProfile;
+    if (m_currentProfile.init(profileNewPath, profileName)) {
+        // Initialize profile with default values without reset exists values
+        m_instance->applyCurrentProfileOverrides(CurrentProfileOverrides(false));
 
-        // Update m_currentProfile point to new QSettings with configName
-        m_currentProfile = new QSettings(getProfilesPath() + profileName + ".ini", QSettings::IniFormat );
-        m_currentProfile->setIniCodec("UTF-8");
+        // Verify initial settings.
+        m_instance->verifyCurrentProfile();
 
-        DEBUG_LOW_LEVEL << "Settings file renamed:" << m_currentProfile->fileName();
+        DEBUG_LOW_LEVEL << "Settings file renamed:" << m_currentProfile.path();
 
-        m_mainConfig->setValue(Main::Key::ProfileLast, profileName);
+        m_mainProfile.setValue(Main::Key::ProfileLast, profileName);
+        this->currentProfileNameChanged(profileName);
     }
-
-    m_currentProfile->sync();
-	//*/
-	this->currentProfileNameChanged(profileName);
 }
 
 void Settings::removeCurrentProfile()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-	// TODO: implement.
-	Q_ASSERT(false);
-
-	/*
-    QMutexLocker locker(&m_mutex);
-
-    if (m_currentProfile == NULL)
+    if (!m_currentProfile.isInitialized())
     {
         qWarning() << Q_FUNC_INFO << "current profile not loaded, nothing to remove";
+        m_mainProfile.setValue(Main::Key::ProfileLast, Main::ProfileNameDefault);
         return;
     }
 
-    bool result = QFile::remove( m_currentProfile->fileName() );
-
-    if (result == false)
+    if (QFile::remove( m_currentProfile.path() ) == false)
     {
-        qWarning() << Q_FUNC_INFO << "QFile::remove(" << m_currentProfile->fileName() << ") fail";
+        qWarning() << Q_FUNC_INFO << "QFile::remove(" << m_currentProfile.path() << ") fail";
         return;
     }
 
-    delete m_currentProfile;
-    m_currentProfile = NULL;
-	//*/
-
+    m_currentProfile.reset();
 	m_mainProfile.setValue(Main::Key::ProfileLast, Main::ProfileNameDefault);
 	this->currentProfileRemoved();
 }

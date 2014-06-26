@@ -70,6 +70,7 @@ public:
 
 	bool beginBatchUpdate();
 	void endBatchUpdate();
+    void reset();
 
 	struct ScopedBatchUpdateGuard {
 		ConfigurationProfile& m_profile;
