@@ -52,7 +52,7 @@ LightpackApiTest::LightpackApiTest()
 
 void LightpackApiTest::initTestCase()
 {
-    Settings::Initialize(QDir::currentPath(), true);
+    Settings::Initialize(QDir::currentPath(), Settings::Overrides());
 
     m_socket = NULL;
 
@@ -199,8 +199,8 @@ void LightpackApiTest::testCase_GetProfiles()
 
     QString utf8Check = trUtf8("\u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430"); // Russian word "Proverka"
 
-    Settings::loadOrCreateProfile("ApiTestProfile");
-    Settings::loadOrCreateProfile("ApiTestProfile-UTF-8-" + utf8Check);
+    Settings::instance()->loadOrCreateProfile("ApiTestProfile");
+    Settings::instance()->loadOrCreateProfile("ApiTestProfile-UTF-8-" + utf8Check);
 
     QString cmdProfilesCheckResultWithUtf8 = getProfilesResultString();
 
@@ -215,7 +215,7 @@ void LightpackApiTest::testCase_GetProfiles()
 void LightpackApiTest::testCase_GetProfile()
 {
     QString cmdProfileCheckResult = ApiServer::CmdResultProfile +
-            Settings::getCurrentProfileName().toUtf8();
+            Settings::instance()->getCurrentProfileName().toUtf8();
 
     // Test GetProfile command:
 
@@ -634,7 +634,7 @@ void LightpackApiTest::testCase_SetProfile()
 {
     QVERIFY(lock(m_socket));
 
-    QStringList profiles = Settings::findAllProfiles();
+    QStringList profiles = Settings::instance()->findAllProfiles();
     QVERIFY(profiles.count() > 0);
 
     QByteArray setProfileCmd = ApiServer::CmdSetProfile;
@@ -720,7 +720,7 @@ bool LightpackApiTest::writeCommandWithCheck(QTcpSocket * socket, const QByteArr
 
 QString LightpackApiTest::getProfilesResultString()
 {
-    QStringList profiles = Settings::findAllProfiles();
+    QStringList profiles = Settings::instance()->findAllProfiles();
 
     QString cmdProfilesCheckResult = ApiServer::CmdResultProfiles;
     for (int i = 0; i < profiles.count(); i++)

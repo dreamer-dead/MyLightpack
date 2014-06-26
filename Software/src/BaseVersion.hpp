@@ -66,10 +66,9 @@ public:
 
 	int compare(const BaseVersion &other) const {
 		const int dmj = this->_major - other._major;
-		if (dmj != 0)
+		if (dmj)
 			return dmj;
-		const int dmn = this->_minor - other._minor;
-		return dmn;
+        return this->_minor - other._minor;
 	}
 
 	bool operator== (const BaseVersion &other) const {
