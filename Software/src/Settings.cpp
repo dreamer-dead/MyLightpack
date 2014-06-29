@@ -365,6 +365,48 @@ inline T clamp_value(T value, const T minInclusive, const T maxInclusive) {
 	return value;
 }
 
+bool validateGrabberType(const QString& grabberTypeName, Grab::GrabberType& resultType) {
+	// Set it with the invalid value.
+	Grab::GrabberType grabberType = Grab::GrabbersCount;
+
+#ifdef QT_GRAB_SUPPORT
+	if (grabberTypeName == Profile::Value::GrabberType::Qt)
+		grabberType = Grab::GrabberTypeQt;
+	if (grabberTypeName == Profile::Value::GrabberType::QtEachWidget)
+		grabberType = Grab::GrabberTypeQtEachWidget;
+#endif
+
+#ifdef WINAPI_GRAB_SUPPORT
+	if (grabberTypeName == Profile::Value::GrabberType::WinAPI)
+		grabberType = Grab::GrabberTypeWinAPI;
+#endif
+#ifdef WINAPI_EACH_GRAB_SUPPORT
+	if (grabberTypeName == Profile::Value::GrabberType::WinAPIEachWidget)
+		grabberType = Grab::GrabberTypeWinAPIEachWidget;
+#endif
+
+#ifdef D3D9_GRAB_SUPPORT
+	if (grabberTypeName == Profile::Value::GrabberType::D3D9)
+		grabberType = Grab::GrabberTypeD3D9;
+#endif
+
+#ifdef X11_GRAB_SUPPORT
+	if (grabberTypeName == Profile::Value::GrabberType::X11)
+		grabberType = Grab::GrabberTypeX11;
+#endif
+
+#ifdef MAC_OS_CG_GRAB_SUPPORT
+	if (grabberTypeName == Profile::Value::GrabberType::MacCoreGraphics)
+		grabberType = Grab::GrabberTypeMacCoreGraphics;
+#endif
+	if (grabberType == Grab::GrabbersCount)
+		resultType = Profile::Grab::GrabberDefault;
+	else
+		resultType = grabberType;
+
+	return (grabberType != Grab::GrabbersCount);
+}
+
 static SettingsSource* (*g_settingsSourceFabric)(const QString& path) = NULL;
 }
 
@@ -532,14 +574,13 @@ bool Settings::Initialize(const QString & applicationDirPath,
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
+	// Shouldn't do this twice.
+	Q_ASSERT(!m_instance);
 	if (m_instance != NULL)
         return true;
 
 	const QDir applicationDir(applicationDirPath);
 	Q_ASSERT(applicationDir.exists());
-
-	QString mainConfigPath = applicationDir.absoluteFilePath("main.conf");
-    bool settingsWasPresent = QFileInfo(mainConfigPath).exists();
 
 	m_instance = new Settings(applicationDirPath);
 	m_instance->applyMainProfileOverrides(MainProfileOverrides());
@@ -571,7 +612,7 @@ bool Settings::Initialize(const QString & applicationDirPath,
 	m_instance->verifyMainProfile();
 	m_instance->verifyCurrentProfile();
 
-    return settingsWasPresent;
+	return QFileInfo(applicationDir.absoluteFilePath("main.conf")).exists();
 }
 
 //
@@ -588,13 +629,12 @@ QStringList Settings::findAllProfiles() const
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-	QFileInfo setsFile(getProfilesPath());
-    QFileInfoList iniFiles = setsFile.absoluteDir().entryInfoList(QStringList("*.ini"));
+	const QFileInfo setsFile(getProfilesPath());
+	const QFileInfoList& iniFiles = setsFile.absoluteDir().entryInfoList(QStringList("*.ini"));
 
     QStringList settingsFiles;
     for(int i=0; i<iniFiles.count(); i++){
-        QString compBaseName = iniFiles.at(i).completeBaseName();
-        settingsFiles.append(compBaseName);
+		settingsFiles.append(iniFiles.at(i).completeBaseName());
     }
 
     return settingsFiles;
@@ -666,7 +706,7 @@ void Settings::removeCurrentProfile()
 
     if (!m_currentProfile.isInitialized())
     {
-        qWarning() << Q_FUNC_INFO << "current profile not loaded, nothing to remove";
+		qWarning() << Q_FUNC_INFO << "current profile wasn't' loaded, nothing to remove";
         m_mainProfile.setValue(Main::Key::ProfileLast, Main::ProfileNameDefault);
         return;
     }
@@ -910,14 +950,32 @@ void Settings::verifyMainProfile() {
 	}
 }
 
-void Settings::verifyCurrentProfile() {
+namespace {
+Grab::GrabberType checkedGrabberType(const QString& grabberTypeName, bool& isTypeValid) {
+	Grab::GrabberType grabberType;
+	isTypeValid = validateGrabberType(grabberTypeName, grabberType);
+	Q_ASSERT(isTypeValid || grabberType == Profile::Grab::GrabberDefault);
 
+	if (!isTypeValid) {
+		qWarning() << Q_FUNC_INFO
+			<< Profile::Key::Grab::Grabber << "contains invalid value:" << grabberTypeName
+			<< ", reset it to default:" << Profile::Grab::GrabberDefaultString;
+	}
+	return Profile::Grab::GrabberDefault;
+}
+}
+
+void Settings::verifyCurrentProfile() {
+	bool isTypeValid = false;
+	checkedGrabberType(m_currentProfile.value(Profile::Key::Grab::Grabber).toString(), isTypeValid);
+	if (!isTypeValid)
+		setGrabberType(Profile::Grab::GrabberDefault);
 }
 
 SupportedDevices::DeviceType Settings::getConnectedDevice() const
 {
 	const QString deviceName = m_mainProfile.value(Main::Key::ConnectedDevice).toString();
-    return m_devicesTypeToNameMap.key(deviceName, SupportedDevices::DefaultDeviceType);
+	return m_devicesTypeToNameMap.key(deviceName, SupportedDevices::DefaultDeviceType);
 }
 
 void Settings::setConnectedDevice(SupportedDevices::DeviceType device)
@@ -968,7 +1026,7 @@ void Settings::setHotkey(const QString &actionName, const QKeySequence &keySeque
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 	const QString key = Main::Key::Hotkeys::SettingsPrefix + actionName;
-    QKeySequence oldKeySequence = getHotkey(actionName);
+	const QKeySequence oldKeySequence = getHotkey(actionName);
     if( keySequence.isEmpty() ) {
 		m_mainProfile.setValue(key, Main::HotKeys::HotkeyDefault);
     } else {
@@ -1107,6 +1165,10 @@ int Settings::getNumberOfLeds(SupportedDevices::DeviceType device) const
 
     // TODO: validator on maximum number of leds for current 'device'
 	return m_mainProfile.value(key).toInt();
+}
+
+int Settings::getNumberOfConnectedDeviceLeds() const {
+	return getNumberOfLeds(getConnectedDevice());
 }
 
 void Settings::setColorSequence(SupportedDevices::DeviceType device, QString colorSequence)
@@ -1278,47 +1340,14 @@ void Settings::setDeviceGamma(double gamma)
 	this->deviceGammaChanged(gamma);
 }
 
-Grab::GrabberType Settings::getGrabberType()
+Grab::GrabberType Settings::getGrabberType() const
 {
-    DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-
-	const QString strGrabber = m_currentProfile.value(Profile::Key::Grab::Grabber).toString();
-
-#ifdef QT_GRAB_SUPPORT
-    if (strGrabber == Profile::Value::GrabberType::Qt)
-        return Grab::GrabberTypeQt;
-    if (strGrabber == Profile::Value::GrabberType::QtEachWidget)
-        return Grab::GrabberTypeQtEachWidget;
-#endif
-
-#ifdef WINAPI_GRAB_SUPPORT
-    if (strGrabber == Profile::Value::GrabberType::WinAPI)
-        return Grab::GrabberTypeWinAPI;
-#endif
-#ifdef WINAPI_EACH_GRAB_SUPPORT
-    if (strGrabber == Profile::Value::GrabberType::WinAPIEachWidget)
-        return Grab::GrabberTypeWinAPIEachWidget;
-#endif
-
-#ifdef D3D9_GRAB_SUPPORT
-    if (strGrabber == Profile::Value::GrabberType::D3D9)
-        return Grab::GrabberTypeD3D9;
-#endif
-
-#ifdef X11_GRAB_SUPPORT
-    if (strGrabber == Profile::Value::GrabberType::X11)
-        return Grab::GrabberTypeX11;
-#endif
-
-#ifdef MAC_OS_CG_GRAB_SUPPORT
-    if (strGrabber == Profile::Value::GrabberType::MacCoreGraphics)
-        return Grab::GrabberTypeMacCoreGraphics;
-#endif
-
-    qWarning() << Q_FUNC_INFO << Profile::Key::Grab::Grabber << "contains invalid value:" << strGrabber << ", reset it to default:" << Profile::Grab::GrabberDefaultString;
-    setGrabberType(Profile::Grab::GrabberDefault);
-
-    return Profile::Grab::GrabberDefault;
+	DEBUG_LOW_LEVEL << Q_FUNC_INFO;
+	bool isTypeValid = false;
+	const QString grabberTypeName = m_currentProfile.value(Profile::Key::Grab::Grabber).toString();
+	const Grab::GrabberType grabberType = checkedGrabberType(grabberTypeName, isTypeValid);
+	Q_ASSERT(isTypeValid);
+	return grabberType;
 }
 
 void Settings::setGrabberType(Grab::GrabberType grabberType)
@@ -1326,7 +1355,7 @@ void Settings::setGrabberType(Grab::GrabberType grabberType)
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << grabberType;
 
     QString strGrabber;
-    switch (grabberType)
+	switch (grabberType)
     {
     case Grab::GrabberTypeQt:
         strGrabber = Profile::Value::GrabberType::Qt;
