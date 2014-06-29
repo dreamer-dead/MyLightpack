@@ -200,6 +200,7 @@ public:
     // [Adalight | Ardulight | Lightpack | ... | Virtual]
 	void setNumberOfLeds(SupportedDevices::DeviceType device, int numberOfLeds);
 	int getNumberOfLeds(SupportedDevices::DeviceType device) const;
+	int getNumberOfConnectedDeviceLeds() const;
 
 	void setColorSequence(SupportedDevices::DeviceType device, QString colorSequence);
 	QString getColorSequence(SupportedDevices::DeviceType device) const;
@@ -229,7 +230,7 @@ public:
 	double getDeviceGamma() const;
 	void setDeviceGamma(double gamma);
 
-	Grab::GrabberType getGrabberType();
+	Grab::GrabberType getGrabberType() const;
 	void setGrabberType(Grab::GrabberType grabMode);
 
 #ifdef D3D10_GRAB_SUPPORT

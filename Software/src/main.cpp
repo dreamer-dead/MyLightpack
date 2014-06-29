@@ -141,7 +141,8 @@ private:
         static const LogWriter::Level s_msgType2Loglevel[] = {
             LogWriter::Debug, LogWriter::Warn, LogWriter::Critical, LogWriter::Fatal, LogWriter::Debug
         };
-        Q_ASSERT(type >= 0 && type < sizeof(s_msgType2Loglevel)/sizeof(s_msgType2Loglevel[0]));
+		// Prevent warnings from compiler about possible value of |type| with static_cast.
+		Q_ASSERT(type >= 0 && static_cast<size_t>(type) < sizeof(s_msgType2Loglevel)/sizeof(s_msgType2Loglevel[0]));
         Q_UNUSED(ctx);
         if (g_logWriter)
             g_logWriter->writeMessage(msg, s_msgType2Loglevel[type]);
