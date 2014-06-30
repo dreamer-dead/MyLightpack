@@ -407,7 +407,13 @@ bool validateGrabberType(const QString& grabberTypeName, Grab::GrabberType& resu
 	return (grabberType != Grab::GrabbersCount);
 }
 
-static SettingsSource* (*g_settingsSourceFabric)(const QString& path) = NULL;
+static ConfigurationProfile::SettingsSourceFabricFunc g_settingsSourceFabric = NULL;
+}
+
+// static
+void ConfigurationProfile::setSourceFabric(SettingsSourceFabricFunc fabric) {
+	Q_ASSERT(!g_settingsSourceFabric);
+	g_settingsSourceFabric = fabric;
 }
 
 ConfigurationProfile::ConfigurationProfile() : m_isInBatchUpdate(false) {

@@ -20,6 +20,9 @@ MOC_DIR     = stuff
 UI_DIR      = stuff
 RCC_DIR     = stuff
 
+# Grabber types configuration
+include(../grab/configure-grabbers.prf)
+DEFINES += $${SUPPORTED_GRABBERS}
 
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
@@ -54,7 +57,8 @@ HEADERS += \
     LightpackApiTest.hpp \
     lightpackmathtest.hpp \
     AppVersionTest.hpp \
-    ../src/UpdatesProcessor.hpp
+    ../src/UpdatesProcessor.hpp \
+    SettingsTest.hpp
 
 SOURCES += \
     ../src/ApiServerSetColorTask.cpp \
@@ -68,7 +72,8 @@ SOURCES += \
     lightpackmathtest.cpp \
     TestsMain.cpp \
     AppVersionTest.cpp \
-    ../src/UpdatesProcessor.cpp
+    ../src/UpdatesProcessor.cpp \
+    SettingsTest.cpp
 
 win32{
     HEADERS += \

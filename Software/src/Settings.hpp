@@ -56,6 +56,10 @@ public:
 class ConfigurationProfile
 {
 public:
+	typedef SettingsSource* (*SettingsSourceFabricFunc)(const QString&);
+
+	static void setSourceFabric(SettingsSourceFabricFunc fabric);
+
 	ConfigurationProfile();
 
 	bool init(const QString& path, const QString& name);
