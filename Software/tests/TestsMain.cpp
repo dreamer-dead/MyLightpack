@@ -4,6 +4,7 @@
 #include "GrabCalculationTest.hpp"
 #include "lightpackmathtest.hpp"
 #include "AppVersionTest.hpp"
+#include "SettingsTest.hpp"
 #ifdef Q_OS_WIN
 #include "HooksTest.h"
 #endif
@@ -23,16 +24,18 @@ int main(int argc, char *argv[])
     QList<QObject *> tests;
     QStringList summary;
 
+#if 0
     tests.append(new GrabCalculationTest());
 
 #ifdef Q_OS_WIN
     tests.append(new HooksTest());
 #endif
 
-    tests.append(new LightpackMathTest());
-    tests.append(new LightpackApiTest());
-    tests.append(new AppVersionTest());
-
+	tests.append(new LightpackMathTest());
+	tests.append(new LightpackApiTest());
+	tests.append(new AppVersionTest());
+#endif
+	tests.append(new SettingsTest());
 
 
 
