@@ -38,5 +38,5 @@ unix:!macx {
     SUBDIRS += qtserialport
 }
 
-win32:SUBDIRS += libraryinjector hooks tests
-SUBDIRS += src
+win32:SUBDIRS += libraryinjector hooks
+SUBDIRS += src tests
