@@ -107,9 +107,9 @@ win32 {
                 cp -f \"$${QTDIR}/bin/Qt5SerialPort$${DEBUG_EXT}.dll\" ./ && \
                 cp -f \"$${QTDIR}/bin/Qt5Widgets$${DEBUG_EXT}.dll\" ./ && \
                 cp -f \"$${QTDIR}/bin/Qt5Network$${DEBUG_EXT}.dll\" ./ && \
-                cp -f \"$${QTDIR}/bin/icudt51.dll\" ./ && \
-                cp -f \"$${QTDIR}/bin/icuin51.dll\" ./ && \
-                cp -f \"$${QTDIR}/bin/icuuc51.dll\" ./
+                cp -f \"$${QTDIR}/bin/icudt52.dll\" ./ && \
+                cp -f \"$${QTDIR}/bin/icuin52.dll\" ./ && \
+                cp -f \"$${QTDIR}/bin/icuuc52.dll\" ./
     } else {
         QMAKE_POST_LINK = cd $(DESTDIR) && \
                 cp -f \"../../lib/prismatik-hooks.dll\" ./ && \
