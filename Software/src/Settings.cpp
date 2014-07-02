@@ -42,7 +42,7 @@
 
 namespace
 {
-inline const WBAdjustment getLedAdjustment(size_t ledIndex)
+inline const WBAdjustment getLedAdjustment(int ledIndex)
 {
     using namespace SettingsScope;
 
@@ -1502,9 +1502,9 @@ void Settings::setMoodLampSpeed(int value)
 QList<WBAdjustment> Settings::getLedCoefs() const
 {
     QList<WBAdjustment> result;
-    const size_t numOfLeds = getNumberOfLeds(getConnectedDevice());
+    const int numOfLeds = getNumberOfLeds(getConnectedDevice());
 
-    for(size_t led = 0; led < numOfLeds; ++led)
+    for(int led = 0; led < numOfLeds; ++led)
         result.append(getLedAdjustment(led));
 
     return result;
@@ -1785,9 +1785,9 @@ void Settings::migrateSettings()
 
 			const int remap[] = {3, 4, 2, 1, 0, 5, 6, 7, 8, 9};
 
-			const size_t ledCount = getNumberOfLeds(SupportedDevices::DeviceTypeLightpack);
+            const int ledCount = getNumberOfLeds(SupportedDevices::DeviceTypeLightpack);
             QMap<int, LedInfo> ledInfoMap;
-            for(size_t i = 0; i < ledCount; i++){
+            for(int i = 0; i < ledCount; i++){
                 LedInfo ledInfo;
                 ledInfo.isEnabled = isLedEnabled(i);
                 ledInfo.position = getLedPosition(i);
