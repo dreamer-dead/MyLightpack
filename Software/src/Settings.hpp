@@ -33,11 +33,14 @@
 #include <QScopedPointer>
 #include <QSettings>
 
+#include "BaseVersion.hpp"
 #include "SettingsDefaults.hpp"
 #include "enums.hpp"
 #include "../common/defs.h"
 #include "debug.h"
 #include "types.h"
+
+class BaseVersion;
 
 namespace SettingsScope
 {
@@ -111,11 +114,6 @@ public:
 		void apply(ConfigurationProfile& profile) const;
 
 	protected:
-        friend class SettingsTest;
-
-        void setConnectedDeviceForTests(SupportedDevices::DeviceType deviceType);
-        void setConfigVersionForTests(const BaseVersion& version);
-
 		struct OverridingValue {
 			QVariant value;
 			bool force;
@@ -215,6 +213,7 @@ public:
 
 	void setColorSequence(SupportedDevices::DeviceType device, QString colorSequence);
 	QString getColorSequence(SupportedDevices::DeviceType device) const;
+	BaseVersion getVersion() const;
 
     // Profile
 	int getGrabSlowdown() const;
@@ -359,6 +358,15 @@ signals:
     void ledEnabledChanged(int ledIndex, bool isEnabled);
 
 private:
+	// For testing only.
+	friend class SettingsTest;
+
+	class TestingOverrides : public Overrides {
+	public:
+		TestingOverrides& setConnectedDeviceForTests(SupportedDevices::DeviceType deviceType);
+		TestingOverrides& setConfigVersionForTests(const BaseVersion& version);
+	};
+
 	Settings(const QString & mainConfigPath);
 	void applyMainProfileOverrides(const Overrides& overrides);
 	void applyCurrentProfileOverrides(const Overrides& overrides);
