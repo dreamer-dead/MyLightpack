@@ -37,8 +37,6 @@ int main(int argc, char *argv[])
 #endif
 	tests.append(new SettingsTest());
 
-
-
     for(int i=0; i < tests.size(); i++) {
         if (QTest::qExec(tests[i], argc, argv)) {
             summary << QString(tests[i]->metaObject()->className()).append("\tFAILED");

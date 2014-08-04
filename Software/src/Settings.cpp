@@ -542,12 +542,16 @@ void Settings::Overrides::apply(ConfigurationProfile& profile) const
 	}
 }
 
-void Settings::Overrides::setConnectedDeviceForTests(SupportedDevices::DeviceType deviceType) {
-    setValue(Main::Key::ConnectedDevice, deviceType);
+Settings::TestingOverrides& Settings::TestingOverrides::setConnectedDeviceForTests(
+		SupportedDevices::DeviceType deviceType) {
+	setValue(Main::Key::ConnectedDevice, deviceType);
+	return *this;
 }
 
-void Settings::Overrides::setConfigVersionForTests(const BaseVersion& version) {
-    setValue(Main::Key::MainConfigVersion, version.toString());
+Settings::TestingOverrides& Settings::TestingOverrides::setConfigVersionForTests(
+		const BaseVersion& version) {
+	setValue(Main::Key::MainConfigVersion, version.toString());
+	return *this;
 }
 
 // static
@@ -1228,6 +1232,11 @@ QString Settings::getColorSequence(SupportedDevices::DeviceType device) const
     return NULL;
 }
 
+BaseVersion Settings::getVersion() const
+{
+	return BaseVersion(m_mainProfile.value(Main::Key::MainConfigVersion).toString());
+}
+
 int Settings::getGrabSlowdown() const
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
@@ -1784,8 +1793,6 @@ void Settings::initDevicesMap()
 /*
  * --------------------------- Migration --------------------------------
  */
-
-
 void Settings::migrateSettings()
 {
 	static const BaseVersion kVersion_1_0(1, 0);
@@ -1793,7 +1800,7 @@ void Settings::migrateSettings()
 	static const BaseVersion kVersion_3_0(3, 0);
 	static const BaseVersion kVersion_4_0(4, 0);
 
-    const BaseVersion configVersion(m_mainProfile.value(Main::Key::MainConfigVersion).toString());
+	BaseVersion configVersion(m_mainProfile.value(Main::Key::MainConfigVersion).toString());
 	if (configVersion == kVersion_1_0) {
 
 		if (getConnectedDevice() == SupportedDevices::DeviceTypeLightpack) {
@@ -1823,7 +1830,7 @@ void Settings::migrateSettings()
                 Settings::setLedCoefBlue(i, remappedLeds[i].wbBlue);
             }
         }
-		setValueMain(Main::Key::MainConfigVersion, kVersion_2_0.toString());
+		configVersion = kVersion_2_0;
     }
 	if (configVersion == kVersion_2_0) {
         // Disable ApiAuth by default
@@ -1833,7 +1840,7 @@ void Settings::migrateSettings()
 		const QString authEnabledKey = "API/IsAuthEnabled";
 		m_mainProfile.remove(authEnabledKey);
 
-		setValueMain(Main::Key::MainConfigVersion, kVersion_3_0.toString());
+		configVersion = kVersion_3_0;
     }
 	if (configVersion == kVersion_3_0) {
 #ifdef WINAPI_GRAB_SUPPORT
@@ -1848,7 +1855,8 @@ void Settings::migrateSettings()
         Settings::setGrabberType(Grab::GrabberTypeMacCoreGraphics);
 #endif
 
-		setValueMain(Main::Key::MainConfigVersion, kVersion_4_0.toString());
+		configVersion = kVersion_4_0;
     }
+	setValueMain(Main::Key::MainConfigVersion, configVersion.toString());
 }
 } /*SettingsScope*/
