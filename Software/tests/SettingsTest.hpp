@@ -18,7 +18,7 @@ private Q_SLOTS:
 
 	void testCase_initMockSettings();
     void testCase_verifyMainSettings();
-    void testCase_migrateMainSettings();
+	void testCase_migrateMainSettingsFrom1_0();
 };
 
 #endif // SETTINGSTEST_HPP

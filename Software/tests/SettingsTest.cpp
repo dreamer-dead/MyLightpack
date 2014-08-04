@@ -67,21 +67,20 @@ void SettingsTest::testCase_verifyMainSettings() {
     g_debugLevel = Debug::MidLevel;
 
     // There is no settings files.
-    Settings::Overrides overrides;
     // Set invalid device.
-    overrides.setConnectedDeviceForTests(SupportedDevices::DeviceTypesCount);
+	const Settings::Overrides& overrides = Settings::TestingOverrides()
+			.setConnectedDeviceForTests(SupportedDevices::DeviceTypesCount);
     QVERIFY(!Settings::Initialize("./", overrides));
     QVERIFY(Settings::instance()->getConnectedDevice() != SupportedDevices::DeviceTypesCount);
     QCOMPARE(Settings::instance()->getConnectedDevice(), SupportedDevices::DefaultDeviceType);
 }
 
-void SettingsTest::testCase_migrateMainSettings() {
+void SettingsTest::testCase_migrateMainSettingsFrom1_0() {
     g_debugLevel = Debug::MidLevel;
 
-    // There is no settings files.
-    Settings::Overrides overrides;
-    // Set invalid device.
-    overrides.setConfigVersionForTests(BaseVersion(1, 0));
+	// Set minimal config version.
+	const Settings::Overrides& overrides = Settings::TestingOverrides()
+			.setConfigVersionForTests(BaseVersion(1, 0));
     QVERIFY(!Settings::Initialize("./", overrides));
-    QVERIFY(Settings::instance()->getco);
+	QCOMPARE(Settings::instance()->getVersion(), BaseVersion(4, 0));
 }
