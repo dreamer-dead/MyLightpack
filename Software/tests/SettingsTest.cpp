@@ -3,6 +3,7 @@
 
 #include "SettingsTest.hpp"
 #include "Settings.hpp"
+#include "BaseVersion.hpp"
 
 using namespace SettingsScope;
 
@@ -42,15 +43,45 @@ SettingsTest::SettingsTest() : QObject() {
 void SettingsTest::initTestCase() {
 }
 
+void SettingsTest::cleanupTestCase() {
+}
+
 void SettingsTest::init() {
+    ConfigurationProfile::setSourceFabric(&SettingsSourceQMapFabricFunc);
 }
 
 void SettingsTest::cleanup() {
+    Settings::Shutdown();
+    ConfigurationProfile::setSourceFabric(NULL);
 }
 
 void SettingsTest::testCase_initMockSettings() {
-	ConfigurationProfile::setSourceFabric(&SettingsSourceQMapFabricFunc);
+    g_debugLevel = Debug::MidLevel;
 
 	// There is no settings files.
 	QVERIFY(!Settings::Initialize("./", Settings::Overrides()));
+    QVERIFY(Settings::instance());
+}
+
+void SettingsTest::testCase_verifyMainSettings() {
+    g_debugLevel = Debug::MidLevel;
+
+    // There is no settings files.
+    Settings::Overrides overrides;
+    // Set invalid device.
+    overrides.setConnectedDeviceForTests(SupportedDevices::DeviceTypesCount);
+    QVERIFY(!Settings::Initialize("./", overrides));
+    QVERIFY(Settings::instance()->getConnectedDevice() != SupportedDevices::DeviceTypesCount);
+    QCOMPARE(Settings::instance()->getConnectedDevice(), SupportedDevices::DefaultDeviceType);
+}
+
+void SettingsTest::testCase_migrateMainSettings() {
+    g_debugLevel = Debug::MidLevel;
+
+    // There is no settings files.
+    Settings::Overrides overrides;
+    // Set invalid device.
+    overrides.setConfigVersionForTests(BaseVersion(1, 0));
+    QVERIFY(!Settings::Initialize("./", overrides));
+    QVERIFY(Settings::instance()->getco);
 }

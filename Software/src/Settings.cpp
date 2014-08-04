@@ -412,7 +412,7 @@ static ConfigurationProfile::SettingsSourceFabricFunc g_settingsSourceFabric = N
 
 // static
 void ConfigurationProfile::setSourceFabric(SettingsSourceFabricFunc fabric) {
-	Q_ASSERT(!g_settingsSourceFabric);
+    Q_ASSERT((fabric && !g_settingsSourceFabric) || (!fabric && g_settingsSourceFabric));
 	g_settingsSourceFabric = fabric;
 }
 
@@ -542,7 +542,16 @@ void Settings::Overrides::apply(ConfigurationProfile& profile) const
 	}
 }
 
-Settings * Settings::m_instance = NULL;
+void Settings::Overrides::setConnectedDeviceForTests(SupportedDevices::DeviceType deviceType) {
+    setValue(Main::Key::ConnectedDevice, deviceType);
+}
+
+void Settings::Overrides::setConfigVersionForTests(const BaseVersion& version) {
+    setValue(Main::Key::MainConfigVersion, version.toString());
+}
+
+// static
+QScopedPointer<Settings> Settings::m_instance;
 
 Settings::Settings(const QString& applicationDirPath)
 	: QObject(NULL) {
@@ -582,18 +591,18 @@ bool Settings::Initialize(const QString & applicationDirPath,
 
 	// Shouldn't do this twice.
 	Q_ASSERT(!m_instance);
-	if (m_instance != NULL)
+    if (m_instance)
         return true;
 
 	const QDir applicationDir(applicationDirPath);
 	Q_ASSERT(applicationDir.exists());
 
-	m_instance = new Settings(applicationDirPath);
-	m_instance->applyMainProfileOverrides(MainProfileOverrides());
-	m_instance->applyMainProfileOverrides(overrides);
+    QScopedPointer<Settings> settings(new Settings(applicationDirPath));
+    settings->applyMainProfileOverrides(MainProfileOverrides());
+    settings->applyMainProfileOverrides(overrides);
 
     bool ok = false;
-	const uint debugLevel = m_instance->m_mainProfile.value(Main::Key::DebugLevel).toUInt(&ok);
+    const uint debugLevel = settings->m_mainProfile.value(Main::Key::DebugLevel).toUInt(&ok);
 
 	if (ok && debugLevel <= Debug::HighLevel)
     {
@@ -601,24 +610,30 @@ bool Settings::Initialize(const QString & applicationDirPath,
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "debugLevel =" << g_debugLevel;
     } else {
         qWarning() << "DebugLevel in config has an invalid value, set the default" << Main::DebugLevelDefault;
-		m_instance->m_mainProfile.setValue(Main::Key::DebugLevel, Main::DebugLevelDefault);
+        settings->m_mainProfile.setValue(Main::Key::DebugLevel, Main::DebugLevelDefault);
         g_debugLevel = Main::DebugLevelDefault;
     }
 
     // Initialize m_devicesMap for mapping DeviceType on DeviceName
-	m_instance->initDevicesMap();
+    settings->initDevicesMap();
 
     // Initialize profile with default values without reset exists values
-	m_instance->applyCurrentProfileOverrides(CurrentProfileOverrides(false));
+    settings->applyCurrentProfileOverrides(CurrentProfileOverrides(false));
 
     // Do changes to settings if necessary
-	m_instance->migrateSettings();
+    settings->migrateSettings();
 
 	// Verify initial settings.
-	m_instance->verifyMainProfile();
-	m_instance->verifyCurrentProfile();
+    settings->verifyMainProfile();
+    settings->verifyCurrentProfile();
 
-	return QFileInfo(applicationDir.absoluteFilePath("main.conf")).exists();
+    m_instance.swap(settings);
+    return QFileInfo(m_instance->m_mainProfile.path()).exists();
+}
+
+// static
+void Settings::Shutdown() {
+    Settings::m_instance.reset();
 }
 
 //
@@ -1778,7 +1793,7 @@ void Settings::migrateSettings()
 	static const BaseVersion kVersion_3_0(3, 0);
 	static const BaseVersion kVersion_4_0(4, 0);
 
-	const BaseVersion configVersion(valueMain(Main::Key::MainConfigVersion).toString());
+    const BaseVersion configVersion(m_mainProfile.value(Main::Key::MainConfigVersion).toString());
 	if (configVersion == kVersion_1_0) {
 
 		if (getConnectedDevice() == SupportedDevices::DeviceTypeLightpack) {

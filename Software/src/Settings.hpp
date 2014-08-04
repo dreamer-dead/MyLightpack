@@ -111,6 +111,11 @@ public:
 		void apply(ConfigurationProfile& profile) const;
 
 	protected:
+        friend class SettingsTest;
+
+        void setConnectedDeviceForTests(SupportedDevices::DeviceType deviceType);
+        void setConfigVersionForTests(const BaseVersion& version);
+
 		struct OverridingValue {
 			QVariant value;
 			bool force;
@@ -135,7 +140,8 @@ public:
      * \return is settings file was present before initialization
      */
     static bool Initialize(const QString & applicationDirPath, const Overrides& overrides);
-	static Settings * instance() { return m_instance; }
+    static Settings * instance() { return m_instance.data(); }
+    static void Shutdown();
 
 	static QStringList getSupportedDevices();
 	static QPoint getDefaultPosition(int ledIndex);
@@ -365,6 +371,6 @@ private:
 	QMap<SupportedDevices::DeviceType, QString> m_devicesTypeToNameMap;
 	QMap<SupportedDevices::DeviceType, QString> m_devicesTypeToKeyNumberOfLedsMap;
 
-	static Settings * m_instance;
+    static QScopedPointer<Settings> m_instance;
 };
 } /*SettingsScope*/
