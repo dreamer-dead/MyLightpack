@@ -11,11 +11,14 @@ public:
 
 private Q_SLOTS:
 	void initTestCase();
+    void cleanupTestCase();
 
 	void init();
 	void cleanup();
 
 	void testCase_initMockSettings();
+    void testCase_verifyMainSettings();
+    void testCase_migrateMainSettings();
 };
 
 #endif // SETTINGSTEST_HPP
