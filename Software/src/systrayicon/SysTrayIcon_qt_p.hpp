@@ -149,7 +149,7 @@ public:
         switch (_status)
         {
         case SysTrayIcon::StatusOn:
-			_qsystray->setToolTip(tr("Enabled profile: %1").arg(SettingsScope::Settings::instance()->getCurrentProfileName()));
+            _qsystray->setToolTip(tr("Enabled profile: %1").arg(SettingsScope::Settings::instance()->getCurrentProfileName()));
             break;
         case SysTrayIcon::StatusOff:
             _qsystray->setToolTip(tr("Disabled"));
@@ -177,8 +177,8 @@ public:
             _switchOffBacklightAction->setEnabled(true);
             _qsystray->setIcon(QIcon(*_pixmapCache["on16"]));
 
-			if(SettingsScope::Settings::instance()->isProfileLoaded())
-				_qsystray->setToolTip(tr("Enabled profile: %1").arg(SettingsScope::Settings::instance()->getCurrentProfileName()));
+            if(SettingsScope::Settings::instance()->isProfileLoaded())
+                _qsystray->setToolTip(tr("Enabled profile: %1").arg(SettingsScope::Settings::instance()->getCurrentProfileName()));
             break;
 
         case SysTrayIcon::StatusLockedByApi:
@@ -217,7 +217,7 @@ public:
     {
         fillProfilesFromSettings();
         if (_status == SysTrayIcon::StatusOn) {
-			QString profileName = SettingsScope::Settings::instance()->getCurrentProfileName();
+            QString profileName = SettingsScope::Settings::instance()->getCurrentProfileName();
             setStatus(_status, &profileName);
         }
 
@@ -229,7 +229,7 @@ private slots:
     void onCheckUpdate_Finished()
     {
         using namespace SettingsScope;
-		QList<UpdateInfo> updates = _updatesProcessor.readUpdates(Settings::instance()->getLastReadUpdateId());
+        QList<UpdateInfo> updates = _updatesProcessor.readUpdates(Settings::instance()->getLastReadUpdateId());
         if (updates.size() > 0) {
             if(updates.size() > 1) {
                 _trayMessage = SysTrayIcon::MessageGeneric;
@@ -241,7 +241,7 @@ private slots:
                 _trayMsgUrl = QUrl(update.url);
                 _qsystray->showMessage(update.title, update.text);
             }
-			Settings::instance()->setLastReadUpdateId(updates.last().id);
+            Settings::instance()->setLastReadUpdateId(updates.last().id);
         }
     }
 
@@ -260,7 +260,7 @@ private slots:
         switch(_trayMessage)
         {
         case SysTrayIcon::MessageUpdateFirmware:
-			if (SettingsScope::Settings::instance()->getConnectedDevice() == SupportedDevices::DeviceTypeLightpack)
+            if (SettingsScope::Settings::instance()->getConnectedDevice() == SupportedDevices::DeviceTypeLightpack)
             {
                 // Open lightpack downloads page
                 QDesktopServices::openUrl(QUrl(SysTrayIcon::LightpackDownloadsPageUrl, QUrl::TolerantMode));
@@ -358,12 +358,12 @@ private:
 
         _profilesMenu->clear();
 
-		QStringList profiles = Settings::instance()->findAllProfiles();
+        QStringList profiles = Settings::instance()->findAllProfiles();
 
         for(int i=0; i < profiles.count(); i++) {
             profileAction = new QAction(profiles[i], _profilesMenu);
             profileAction->setCheckable(true);
-			if( SettingsScope::Settings::instance()->isProfileLoaded() && profiles[i].compare(Settings::instance()->getCurrentProfileName()) == 0 ) {
+            if( SettingsScope::Settings::instance()->isProfileLoaded() && profiles[i].compare(Settings::instance()->getCurrentProfileName()) == 0 ) {
                 profileAction->setChecked(true);
             }
             _profilesMenu->addAction(profileAction);

@@ -190,7 +190,7 @@ void LedDeviceArdulight::updateDeviceSettings()
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
     AbstractLedDevice::updateDeviceSettings();
-	setColorSequence(Settings::instance()->getColorSequence(SupportedDevices::DeviceTypeArdulight));
+    setColorSequence(Settings::instance()->getColorSequence(SupportedDevices::DeviceTypeArdulight));
 
 }
 

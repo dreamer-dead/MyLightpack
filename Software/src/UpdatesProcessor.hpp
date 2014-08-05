@@ -40,72 +40,72 @@ class QXmlStreamReader;
 class AppVersion : public BaseVersion
 {
 public:
-	AppVersion()
-		: _rc(0)
-		, _build(0)
-	{}
+    AppVersion()
+        : _rc(0)
+        , _build(0)
+    {}
 
-	AppVersion(const QString &version)
-	{
-	   initWith(version);
-	}
+    AppVersion(const QString &version)
+    {
+        initWith(version);
+    }
 
-	void initWith(const QString &version)
-	{
-		const QStringList splittedVer = version.split(".");
-		if (splittedVer.size() > 4 || splittedVer.size() < 1)
-		{
-			return;
-		}
+    void initWith(const QString &version)
+    {
+        const QStringList splittedVer = version.split(".");
+        if (splittedVer.size() > 4 || splittedVer.size() < 1)
+        {
+            return;
+        }
 
-		_major = splittedVer[0].toInt();
-		_minor = splittedVer.size() > 1 ? splittedVer[1].toInt() : 0;
-		_rc = splittedVer.size() > 2 ? splittedVer[2].toInt() : 0;
-		_build = splittedVer.size() > 3 ? splittedVer[3].toInt() : 0;
-	}
+        _major = splittedVer[0].toInt();
+        _minor = splittedVer.size() > 1 ? splittedVer[1].toInt() : 0;
+        _rc = splittedVer.size() > 2 ? splittedVer[2].toInt() : 0;
+        _build = splittedVer.size() > 3 ? splittedVer[3].toInt() : 0;
+    }
 
-	bool isValid() const {
-		return BaseVersion::isValid() || _rc != 0 || _build != 0;
-	}
+    bool isValid() const {
+        return BaseVersion::isValid() || _rc != 0 || _build != 0;
+    }
 
-	int compare(const AppVersion &other) const {
-		const int base = static_cast<const BaseVersion*>(this)->compare(other);
+    int compare(const AppVersion &other) const {
+        const int base = static_cast<const BaseVersion*>(this)->compare(other);
         if (base)
-			return base;
-		const int drc = this->_rc - other._rc;
-		if (drc)
-			return drc;
-		const int dbuild = this->_build - other._build;
-		return dbuild;
-	}
+            return base;
+        const int drc = this->_rc - other._rc;
+        if (drc)
+            return drc;
+        const int dbuild = this->_build - other._build;
+        return dbuild;
+    }
 
-	bool operator== (const AppVersion &other) const {
-		return this->compare(other) == 0;
-	}
+    bool operator== (const AppVersion &other) const {
+        return this->compare(other) == 0;
+    }
 
-	bool operator!= (const AppVersion &other) const {
-		return this->compare(other) != 0;
-	}
+    bool operator!= (const AppVersion &other) const {
+        return this->compare(other) != 0;
+    }
 
-	bool operator< (const AppVersion &other) const {
-		return this->compare(other) < 0;
-	}
+    bool operator< (const AppVersion &other) const {
+        return this->compare(other) < 0;
+    }
 
-	bool operator> (const AppVersion &other) const {
-		return this->compare(other) > 0;
-	}
+    bool operator> (const AppVersion &other) const {
+        return this->compare(other) > 0;
+    }
 
-	bool operator>= (const AppVersion &other) const {
-		return *this > other || *this == other ;
-	}
+    bool operator>= (const AppVersion &other) const {
+        return *this > other || *this == other ;
+    }
 
-	bool operator<= (const AppVersion &other) const {
-		return *this < other || *this == other ;
-	}
+    bool operator<= (const AppVersion &other) const {
+        return *this < other || *this == other ;
+    }
 
 private:
-	uint _rc;
-	uint _build;
+    uint _rc;
+    uint _build;
 };
 
 struct UpdateInfo
