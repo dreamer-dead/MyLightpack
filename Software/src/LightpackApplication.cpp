@@ -196,7 +196,7 @@ void LightpackApplication::setStatusChanged(Backlight::Status status)
 void LightpackApplication::setBacklightChanged(Lightpack::Mode mode)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << mode;
-	Settings::instance()->setLightpackMode(mode);
+    Settings::instance()->setLightpackMode(mode);
     if (!m_noGui)
         m_settingsWindow->setModeChanged(mode);
     startBacklight();
@@ -227,9 +227,9 @@ void LightpackApplication::startBacklight()
 
     m_pluginInterface->resultBacklightStatus(m_backlightStatus);
 
-	Settings::instance()->setIsBacklightEnabled(isBacklightEnabled);
+    Settings::instance()->setIsBacklightEnabled(isBacklightEnabled);
 
-	const Lightpack::Mode lightpackMode = Settings::instance()->getLightpackMode();
+    const Lightpack::Mode lightpackMode = Settings::instance()->getLightpackMode();
     switch (lightpackMode)
     {
     case Lightpack::AmbilightMode:
@@ -289,7 +289,6 @@ void LightpackApplication::quitFromWizard(int result)
 void LightpackApplication::processCommandLineArguments()
 {
     g_debugLevel = SettingsScope::Main::DebugLevelDefault;
-
     m_isDebugLevelObtainedFromCmdArgs = false;
 
     QCommandLineParser parser;
@@ -336,11 +335,13 @@ void LightpackApplication::processCommandLineArguments()
 
     // these two options are mutually exclusive
     if (parser.isSet(optionNogui)) {
-            m_noGui = true;
-            DEBUG_LOW_LEVEL <<  "Application running no_GUI mode";
+        m_noGui = true;
+        DEBUG_LOW_LEVEL <<  "Application running no_GUI mode";
     }
     else if (parser.isSet(optionWizard)) {
-        bool isInitFromSettings = Settings::Initialize(m_applicationDirPath, false);
+        SettingsScope::Settings::Overrides overrides;
+        overrides.setDebuglevel(static_cast<Debug::DebugLevels>(g_debugLevel));
+        bool isInitFromSettings = Settings::Initialize(m_applicationDirPath, overrides);
         runWizardLoop(isInitFromSettings);
     }
 

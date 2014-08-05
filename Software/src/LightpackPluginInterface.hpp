@@ -52,7 +52,7 @@ public:
      int GetBacklight();
 
 // Settings
-	 QString GetPluginsDir();
+    QString GetPluginsDir();
 
      bool VerifySessionKey(QString sessionKey);
      void SetLockAlive(QString sessionKey);
