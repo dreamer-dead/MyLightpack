@@ -1,24 +1,25 @@
 #ifndef SETTINGSTEST_HPP
 #define SETTINGSTEST_HPP
 
-#include <QObject>
+#include <QTest>
 
 class SettingsTest : public QObject
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	SettingsTest();
+    SettingsTest();
 
-private Q_SLOTS:
-	void initTestCase();
+private slots:
+    void initTestCase();
     void cleanupTestCase();
 
-	void init();
-	void cleanup();
+    void init();
+    void cleanup();
 
-	void testCase_initMockSettings();
+    void testCase_initMockSettings();
     void testCase_verifyMainSettings();
-	void testCase_migrateMainSettingsFrom1_0();
+    void testCase_migrateMainSettingsFrom1_0();
+    void testCase_resetDefault();
 };
 
 #endif // SETTINGSTEST_HPP

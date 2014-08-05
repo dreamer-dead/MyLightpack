@@ -47,19 +47,19 @@ inline const WBAdjustment getLedAdjustment(int ledIndex)
     using namespace SettingsScope;
 
     WBAdjustment wba;
-	wba.red = Settings::instance()->getLedCoefRed(ledIndex);
-	wba.green = Settings::instance()->getLedCoefGreen(ledIndex);
-	wba.blue = Settings::instance()->getLedCoefBlue(ledIndex);
+    wba.red = Settings::instance()->getLedCoefRed(ledIndex);
+    wba.green = Settings::instance()->getLedCoefGreen(ledIndex);
+    wba.blue = Settings::instance()->getLedCoefBlue(ledIndex);
     return wba;
 }
 
 struct LedInfo {
-	bool isEnabled;
-	QPoint position;
-	QSize size;
-	double wbRed;
-	double wbGreen;
-	double wbBlue;
+    bool isEnabled;
+    QPoint position;
+    QSize size;
+    double wbRed;
+    double wbGreen;
+    double wbBlue;
 };
 }
 
@@ -220,295 +220,332 @@ namespace
 class QSettingsSource : public SettingsSource
 {
 public:
-	QSettingsSource(const QString& path) : m_settings(path, QSettings::IniFormat)
-	{
-		m_settings.setIniCodec("UTF-8");
-		DEBUG_LOW_LEVEL << "Settings file:" << m_settings.fileName();
-	}
+    QSettingsSource(const QString& path) : m_settings(path, QSettings::IniFormat)
+    {
+        m_settings.setIniCodec("UTF-8");
+        DEBUG_LOW_LEVEL << "Settings file:" << m_settings.fileName();
+    }
 
-	virtual QVariant value(const QString & key) const
-	{
-		return m_settings.value(key);
-	}
+    virtual QVariant value(const QString & key) const
+    {
+        return m_settings.value(key);
+    }
 
-	virtual void setValue(const QString & key, const QVariant & value)
-	{
-		m_settings.setValue(key, value);
-	}
+    virtual void setValue(const QString & key, const QVariant & value)
+    {
+        m_settings.setValue(key, value);
+    }
 
-	virtual bool contains(const QString& key) const
-	{
-		return m_settings.contains(key);
-	}
+    virtual bool contains(const QString& key) const
+    {
+        return m_settings.contains(key);
+    }
 
-	virtual void remove(const QString& key) {
-		m_settings.remove(key);
-	}
+    virtual void remove(const QString& key)
+    {
+        m_settings.remove(key);
+    }
 
-	virtual void sync() { m_settings.sync(); }
+    virtual void sync() { m_settings.sync(); }
 
 private:
-	QSettings m_settings;
+    QSettings m_settings;
 };
 
-class MainProfileOverrides : public Settings::Overrides {
+class MainProfileOverrides : public Settings::Overrides
+{
 public:
-	MainProfileOverrides() {
-		setValue(Main::Key::MainConfigVersion,      Main::Value::MainConfigVersion /* rewrite */);
-		setValue(Main::Key::ProfileLast,            Main::ProfileNameDefault);
-		setValue(Main::Key::Language,               Main::LanguageDefault);
-		setValue(Main::Key::DebugLevel,             Main::DebugLevelDefault);
-		setValue(Main::Key::IsExpertModeEnabled,    Main::IsExpertModeEnabledDefault);
-		setValue(Main::Key::IsKeepLightsOnAfterExit,   Main::IsKeepLightsOnAfterExit);
-		setValue(Main::Key::IsKeepLightsOnAfterLock, Main::IsKeepLightsOnAfterLock);
-		setValue(Main::Key::IsPingDeviceEverySecond,Main::IsPingDeviceEverySecond);
-		setValue(Main::Key::IsUpdateFirmwareMessageShown, Main::IsUpdateFirmwareMessageShown);
-		setValue(Main::Key::ConnectedDevice,        Main::ConnectedDeviceDefault);
-		setValue(Main::Key::SupportedDevices,       Main::SupportedDevices, true /* always rewrite this information to main config */);
-		setValue(Main::Key::Api::IsEnabled,         Main::Api::IsEnabledDefault);
-		setValue(Main::Key::Api::ListenOnlyOnLoInterface, Main::Api::ListenOnlyOnLoInterfaceDefault);
-		setValue(Main::Key::Api::Port,              Main::Api::PortDefault);
+    MainProfileOverrides()
+    {
+        setValue(Main::Key::MainConfigVersion,      Main::Value::MainConfigVersion /* rewrite */);
+        setValue(Main::Key::ProfileLast,            Main::ProfileNameDefault);
+        setValue(Main::Key::Language,               Main::LanguageDefault);
+        setValue(Main::Key::DebugLevel,             Main::DebugLevelDefault);
+        setValue(Main::Key::IsExpertModeEnabled,    Main::IsExpertModeEnabledDefault);
+        setValue(Main::Key::IsKeepLightsOnAfterExit,   Main::IsKeepLightsOnAfterExit);
+        setValue(Main::Key::IsKeepLightsOnAfterLock, Main::IsKeepLightsOnAfterLock);
+        setValue(Main::Key::IsPingDeviceEverySecond,Main::IsPingDeviceEverySecond);
+        setValue(Main::Key::IsUpdateFirmwareMessageShown, Main::IsUpdateFirmwareMessageShown);
+        setValue(Main::Key::ConnectedDevice,        Main::ConnectedDeviceDefault);
+        setValue(Main::Key::SupportedDevices,       Main::SupportedDevices, true /* always rewrite this information to main config */);
+        setValue(Main::Key::Api::IsEnabled,         Main::Api::IsEnabledDefault);
+        setValue(Main::Key::Api::ListenOnlyOnLoInterface, Main::Api::ListenOnlyOnLoInterfaceDefault);
+        setValue(Main::Key::Api::Port,              Main::Api::PortDefault);
 
-		// Generation AuthKey as new UUID
-		setValue(Main::Key::Api::AuthKey,           Main::Api::AuthKey);
+        // Generation AuthKey as new UUID
+        setValue(Main::Key::Api::AuthKey,           Main::Api::AuthKey);
 
-		// Serial device configuration
-		setValue(Main::Key::Adalight::Port,             Main::Adalight::PortDefault);
-		setValue(Main::Key::Adalight::BaudRate,         Main::Adalight::BaudRateDefault);
-		setValue(Main::Key::Adalight::NumberOfLeds,     Main::Adalight::NumberOfLedsDefault);
-		setValue(Main::Key::Adalight::ColorSequence,    Main::Adalight::ColorSequence);
+        // Serial device configuration
+        setValue(Main::Key::Adalight::Port,             Main::Adalight::PortDefault);
+        setValue(Main::Key::Adalight::BaudRate,         Main::Adalight::BaudRateDefault);
+        setValue(Main::Key::Adalight::NumberOfLeds,     Main::Adalight::NumberOfLedsDefault);
+        setValue(Main::Key::Adalight::ColorSequence,    Main::Adalight::ColorSequence);
 
-		setValue(Main::Key::Ardulight::Port,            Main::Ardulight::PortDefault);
-		setValue(Main::Key::Ardulight::BaudRate,        Main::Ardulight::BaudRateDefault);
-		setValue(Main::Key::Ardulight::NumberOfLeds,    Main::Ardulight::NumberOfLedsDefault);
-		setValue(Main::Key::Ardulight::ColorSequence,   Main::Ardulight::ColorSequence);
+        setValue(Main::Key::Ardulight::Port,            Main::Ardulight::PortDefault);
+        setValue(Main::Key::Ardulight::BaudRate,        Main::Ardulight::BaudRateDefault);
+        setValue(Main::Key::Ardulight::NumberOfLeds,    Main::Ardulight::NumberOfLedsDefault);
+        setValue(Main::Key::Ardulight::ColorSequence,   Main::Ardulight::ColorSequence);
 
-		setValue(Main::Key::AlienFx::NumberOfLeds,      Main::AlienFx::NumberOfLedsDefault);
-		setValue(Main::Key::Lightpack::NumberOfLeds,    Main::Lightpack::NumberOfLedsDefault);
-		setValue(Main::Key::Virtual::NumberOfLeds,      Main::Virtual::NumberOfLedsDefault);
-		setValue(Main::Key::LastReadUpdateId,           Main::LastReadUpdateId);
-	}
+        setValue(Main::Key::AlienFx::NumberOfLeds,      Main::AlienFx::NumberOfLedsDefault);
+        setValue(Main::Key::Lightpack::NumberOfLeds,    Main::Lightpack::NumberOfLedsDefault);
+        setValue(Main::Key::Virtual::NumberOfLeds,      Main::Virtual::NumberOfLedsDefault);
+        setValue(Main::Key::LastReadUpdateId,           Main::LastReadUpdateId);
+    }
 };
 
-class CurrentProfileOverrides : public Settings::Overrides {
+class CurrentProfileOverrides : public Settings::Overrides
+{
 public:
-	CurrentProfileOverrides(bool resetDefault) {
-		DEBUG_LOW_LEVEL << Q_FUNC_INFO << resetDefault;
+    CurrentProfileOverrides(bool resetDefault)
+    {
+        DEBUG_LOW_LEVEL << Q_FUNC_INFO << resetDefault;
 
-		// [General]
-		setValue(Profile::Key::LightpackMode, Profile::LightpackModeDefault, resetDefault);
-		setValue(Profile::Key::IsBacklightEnabled, Profile::IsBacklightEnabledDefault, resetDefault);
-		// [Grab]
-		setValue(Profile::Key::Grab::Grabber,       Profile::Grab::GrabberDefaultString, resetDefault);
-		setValue(Profile::Key::Grab::IsAvgColorsEnabled, Profile::Grab::IsAvgColorsEnabledDefault, resetDefault);
-		setValue(Profile::Key::Grab::IsSendDataOnlyIfColorsChanges, Profile::Grab::IsSendDataOnlyIfColorsChangesDefault, resetDefault);
-		setValue(Profile::Key::Grab::Slowdown,      Profile::Grab::SlowdownDefault, resetDefault);
-		setValue(Profile::Key::Grab::LuminosityThreshold, Profile::Grab::MinimumLevelOfSensitivityDefault, resetDefault);
-		setValue(Profile::Key::Grab::IsMinimumLuminosityEnabled, Profile::Grab::IsMinimumLuminosityEnabledDefault, resetDefault);
-		// [MoodLamp]
-		setValue(Profile::Key::MoodLamp::IsLiquidMode,  Profile::MoodLamp::IsLiquidMode, resetDefault);
-		setValue(Profile::Key::MoodLamp::Color,         Profile::MoodLamp::ColorDefault, resetDefault);
-		setValue(Profile::Key::MoodLamp::Speed,         Profile::MoodLamp::SpeedDefault, resetDefault);
-		// [Device]
-		setValue(Profile::Key::Device::RefreshDelay,Profile::Device::RefreshDelayDefault, resetDefault);
-		setValue(Profile::Key::Device::Brightness,  Profile::Device::BrightnessDefault, resetDefault);
-		setValue(Profile::Key::Device::Smooth,      Profile::Device::SmoothDefault, resetDefault);
-		setValue(Profile::Key::Device::Gamma,       Profile::Device::GammaDefault, resetDefault);
-		setValue(Profile::Key::Device::ColorDepth,  Profile::Device::ColorDepthDefault, resetDefault);
+        // [General]
+        setValue(Profile::Key::LightpackMode, Profile::LightpackModeDefault, resetDefault);
+        setValue(Profile::Key::IsBacklightEnabled, Profile::IsBacklightEnabledDefault, resetDefault);
+        // [Grab]
+        setValue(Profile::Key::Grab::Grabber,       Profile::Grab::GrabberDefaultString, resetDefault);
+        setValue(Profile::Key::Grab::IsAvgColorsEnabled, Profile::Grab::IsAvgColorsEnabledDefault, resetDefault);
+        setValue(Profile::Key::Grab::IsSendDataOnlyIfColorsChanges, Profile::Grab::IsSendDataOnlyIfColorsChangesDefault, resetDefault);
+        setValue(Profile::Key::Grab::Slowdown,      Profile::Grab::SlowdownDefault, resetDefault);
+        setValue(Profile::Key::Grab::LuminosityThreshold, Profile::Grab::MinimumLevelOfSensitivityDefault, resetDefault);
+        setValue(Profile::Key::Grab::IsMinimumLuminosityEnabled, Profile::Grab::IsMinimumLuminosityEnabledDefault, resetDefault);
+        // [MoodLamp]
+        setValue(Profile::Key::MoodLamp::IsLiquidMode,  Profile::MoodLamp::IsLiquidMode, resetDefault);
+        setValue(Profile::Key::MoodLamp::Color,         Profile::MoodLamp::ColorDefault, resetDefault);
+        setValue(Profile::Key::MoodLamp::Speed,         Profile::MoodLamp::SpeedDefault, resetDefault);
+        // [Device]
+        setValue(Profile::Key::Device::RefreshDelay,Profile::Device::RefreshDelayDefault, resetDefault);
+        setValue(Profile::Key::Device::Brightness,  Profile::Device::BrightnessDefault, resetDefault);
+        setValue(Profile::Key::Device::Smooth,      Profile::Device::SmoothDefault, resetDefault);
+        setValue(Profile::Key::Device::Gamma,       Profile::Device::GammaDefault, resetDefault);
+        setValue(Profile::Key::Device::ColorDepth,  Profile::Device::ColorDepthDefault, resetDefault);
 
-		for (int i = 0; i < MaximumNumberOfLeds::AbsoluteMaximum; i++)
-		{
-			const QPoint ledPosition = Settings::getDefaultPosition(i);
-			const QString prefix = Profile::Key::Led::Prefix + QString::number(i + 1) + "/";
+        for (int i = 0; i < MaximumNumberOfLeds::AbsoluteMaximum; i++)
+        {
+            const QPoint ledPosition = Settings::getDefaultPosition(i);
+            const QString prefix = Profile::Key::Led::Prefix + QString::number(i + 1) + "/";
 
-			setValue(prefix + Profile::Key::Led::IsEnabled, Profile::Led::IsEnabledDefault, resetDefault);
-			setValue(prefix + Profile::Key::Led::Position,	ledPosition, resetDefault);
-			setValue(prefix + Profile::Key::Led::Size,		Profile::Led::SizeDefault, resetDefault);
-			setValue(prefix + Profile::Key::Led::CoefRed,	Profile::Led::CoefDefault, resetDefault);
-			setValue(prefix + Profile::Key::Led::CoefGreen, Profile::Led::CoefDefault, resetDefault);
-			setValue(prefix + Profile::Key::Led::CoefBlue,	Profile::Led::CoefDefault, resetDefault);
-		}
+            setValue(prefix + Profile::Key::Led::IsEnabled, Profile::Led::IsEnabledDefault, resetDefault);
+            setValue(prefix + Profile::Key::Led::Position,	ledPosition, resetDefault);
+            setValue(prefix + Profile::Key::Led::Size,		Profile::Led::SizeDefault, resetDefault);
+            setValue(prefix + Profile::Key::Led::CoefRed,	Profile::Led::CoefDefault, resetDefault);
+            setValue(prefix + Profile::Key::Led::CoefGreen, Profile::Led::CoefDefault, resetDefault);
+            setValue(prefix + Profile::Key::Led::CoefBlue,	Profile::Led::CoefDefault, resetDefault);
+        }
 
-		DEBUG_LOW_LEVEL << Q_FUNC_INFO << "led";
-	}
+        DEBUG_LOW_LEVEL << Q_FUNC_INFO << "led";
+    }
 };
 
-struct ConditionalMutexLocker {
-	QMutex& m_mutex;
-	const bool m_shouldLock;
+struct ConditionalMutexLocker
+{
+    QMutex& m_mutex;
+    const bool m_shouldLock;
 
-	ConditionalMutexLocker(QMutex& mutex, bool lock)
-		: m_mutex(mutex), m_shouldLock(lock) {
-		if (lock)
-			m_mutex.lock();
-	}
+    ConditionalMutexLocker(QMutex& mutex, bool lock)
+        : m_mutex(mutex), m_shouldLock(lock)
+    {
+        if (lock)
+            m_mutex.lock();
+    }
 
-	~ConditionalMutexLocker() { if (m_shouldLock) m_mutex.unlock(); }
+    ~ConditionalMutexLocker() { if (m_shouldLock) m_mutex.unlock(); }
 };
 
 template <typename T>
-static inline bool between(T value, T min, T max) {
-	return value >= min && value <= max;
+static inline bool between(T value, T min, T max)
+{
+    return value >= min && value <= max;
 }
 
 template <typename T>
-static inline bool between_exclusive(T value, T min, T max) {
-	return value > min && value < max;
+static inline bool between_exclusive(T value, T min, T max)
+{
+    return value > min && value < max;
 }
 
 template <typename T>
-inline T clamp_value(T value, const T minInclusive, const T maxInclusive) {
-	if (value < minInclusive)
-		value = minInclusive;
-	else if (value > maxInclusive)
-		value = maxInclusive;
-	return value;
+inline T clamp_value(T value, const T minInclusive, const T maxInclusive)
+{
+    if (value < minInclusive)
+        value = minInclusive;
+    else if (value > maxInclusive)
+        value = maxInclusive;
+    return value;
 }
 
-bool validateGrabberType(const QString& grabberTypeName, Grab::GrabberType& resultType) {
-	// Set it with the invalid value.
-	Grab::GrabberType grabberType = Grab::GrabbersCount;
+bool validateGrabberType(const QString& grabberTypeName, Grab::GrabberType& resultType)
+{
+    // Set it with the invalid value.
+    Grab::GrabberType grabberType = Grab::GrabbersCount;
 
 #ifdef QT_GRAB_SUPPORT
-	if (grabberTypeName == Profile::Value::GrabberType::Qt)
-		grabberType = Grab::GrabberTypeQt;
-	if (grabberTypeName == Profile::Value::GrabberType::QtEachWidget)
-		grabberType = Grab::GrabberTypeQtEachWidget;
+    if (grabberTypeName == Profile::Value::GrabberType::Qt)
+        grabberType = Grab::GrabberTypeQt;
+    if (grabberTypeName == Profile::Value::GrabberType::QtEachWidget)
+        grabberType = Grab::GrabberTypeQtEachWidget;
 #endif
 
 #ifdef WINAPI_GRAB_SUPPORT
-	if (grabberTypeName == Profile::Value::GrabberType::WinAPI)
-		grabberType = Grab::GrabberTypeWinAPI;
+    if (grabberTypeName == Profile::Value::GrabberType::WinAPI)
+        grabberType = Grab::GrabberTypeWinAPI;
 #endif
 #ifdef WINAPI_EACH_GRAB_SUPPORT
-	if (grabberTypeName == Profile::Value::GrabberType::WinAPIEachWidget)
-		grabberType = Grab::GrabberTypeWinAPIEachWidget;
+    if (grabberTypeName == Profile::Value::GrabberType::WinAPIEachWidget)
+        grabberType = Grab::GrabberTypeWinAPIEachWidget;
 #endif
 
 #ifdef D3D9_GRAB_SUPPORT
-	if (grabberTypeName == Profile::Value::GrabberType::D3D9)
-		grabberType = Grab::GrabberTypeD3D9;
+    if (grabberTypeName == Profile::Value::GrabberType::D3D9)
+        grabberType = Grab::GrabberTypeD3D9;
 #endif
 
 #ifdef X11_GRAB_SUPPORT
-	if (grabberTypeName == Profile::Value::GrabberType::X11)
-		grabberType = Grab::GrabberTypeX11;
+    if (grabberTypeName == Profile::Value::GrabberType::X11)
+        grabberType = Grab::GrabberTypeX11;
 #endif
 
 #ifdef MAC_OS_CG_GRAB_SUPPORT
-	if (grabberTypeName == Profile::Value::GrabberType::MacCoreGraphics)
-		grabberType = Grab::GrabberTypeMacCoreGraphics;
+    if (grabberTypeName == Profile::Value::GrabberType::MacCoreGraphics)
+        grabberType = Grab::GrabberTypeMacCoreGraphics;
 #endif
-	if (grabberType == Grab::GrabbersCount)
-		resultType = Profile::Grab::GrabberDefault;
-	else
-		resultType = grabberType;
+    if (grabberType == Grab::GrabbersCount)
+        resultType = Profile::Grab::GrabberDefault;
+    else
+        resultType = grabberType;
 
-	return (grabberType != Grab::GrabbersCount);
+    return (grabberType != Grab::GrabbersCount);
 }
 
 static ConfigurationProfile::SettingsSourceFabricFunc g_settingsSourceFabric = NULL;
 }
 
 // static
-void ConfigurationProfile::setSourceFabric(SettingsSourceFabricFunc fabric) {
+void ConfigurationProfile::setSourceFabric(SettingsSourceFabricFunc fabric)
+{
     Q_ASSERT((fabric && !g_settingsSourceFabric) || (!fabric && g_settingsSourceFabric));
-	g_settingsSourceFabric = fabric;
+    g_settingsSourceFabric = fabric;
 }
 
-ConfigurationProfile::ConfigurationProfile() : m_isInBatchUpdate(false) {
-
+ConfigurationProfile::ConfigurationProfile()
+    : m_isInBatchUpdate(false)
+{
 }
 
 bool ConfigurationProfile::init(const QString& path, const QString& name)
 {
-	if (g_settingsSourceFabric) {
-		m_settings.reset(g_settingsSourceFabric(path));
-	}
-	else {
-		m_settings.reset(new QSettingsSource(path));
-	}
-	m_name = name;
-	m_path = path;
-	return isInitialized();
+    if (g_settingsSourceFabric)
+    {
+        m_settings.reset(g_settingsSourceFabric(path));
+    }
+    else
+    {
+        m_settings.reset(new QSettingsSource(path));
+    }
+    m_name = name;
+    m_path = path;
+    return isInitialized();
 }
 
-QVariant ConfigurationProfile::value(const QString & key) const {
-	if (!m_settings) {
-		qWarning() << Q_FUNC_INFO << "m_settings == NULL";
-		return QVariant();
-	}
+QVariant ConfigurationProfile::value(const QString & key) const
+{
+    if (!m_settings)
+    {
+        qWarning() << Q_FUNC_INFO << "m_settings == NULL";
+        return QVariant();
+    }
 
-	QVariant value;
-	{
-		ConditionalMutexLocker locker(m_mutex, !m_isInBatchUpdate);
-		value = m_settings->value(key);
-	}
-	DEBUG_MID_LEVEL << Q_FUNC_INFO << key << "= " << value;
-	return value;
+    QVariant value;
+    {
+        ConditionalMutexLocker locker(m_mutex, !m_isInBatchUpdate);
+        value = m_settings->value(key);
+    }
+    DEBUG_MID_LEVEL << Q_FUNC_INFO << key << "= " << value;
+    return value;
 }
 
-QVariant ConfigurationProfile::valueOrDefault(const QString & key, const QVariant& defaultValue) const {
-	if (!m_settings) {
-		qWarning() << Q_FUNC_INFO << "m_settings == NULL";
-		return defaultValue;
-	}
+QVariant ConfigurationProfile::valueOrDefault(const QString & key, const QVariant& defaultValue) const
+{
+    if (!m_settings)
+    {
+        qWarning() << Q_FUNC_INFO << "m_settings == NULL";
+        return defaultValue;
+    }
 
-	QVariant value = defaultValue;
-	{
-		ConditionalMutexLocker locker(m_mutex, !m_isInBatchUpdate);
-		if (m_settings->contains(key))
-			value = m_settings->value(key);
-	}
-	DEBUG_MID_LEVEL << Q_FUNC_INFO << key << "= " << value;
-	return value;
+    QVariant value = defaultValue;
+    {
+        ConditionalMutexLocker locker(m_mutex, !m_isInBatchUpdate);
+        if (m_settings->contains(key))
+            value = m_settings->value(key);
+    }
+    DEBUG_MID_LEVEL << Q_FUNC_INFO << key << "= " << value;
+    return value;
 }
 
-void ConfigurationProfile::setValue(const QString & key, const QVariant & value, bool force) {
-	if (!m_settings) {
-		qWarning() << "ConfigurationProfile wasn't initialized.";
-		return;
-	}
+bool ConfigurationProfile::contains(const QString& key) const
+{
+    if (!m_settings)
+        return false;
 
-	ConditionalMutexLocker locker(m_mutex, !m_isInBatchUpdate);
-	if (force) {
-		m_settings->setValue(key, value);
-	} else {
-		if (!m_settings->contains(key)) {
-			DEBUG_LOW_LEVEL << "Settings:"<< key << "not found."
-					<< "Set it to default value: " << value.toString();
-
-			m_settings->setValue(key, value);
-		}
-		// else option exists do nothing
-	}
+    return m_settings->contains(key);
 }
 
-void ConfigurationProfile::remove(const QString& key) {
-	Q_ASSERT(isInitialized());
-	if (!isInitialized())
-		return;
+void ConfigurationProfile::setValue(const QString & key, const QVariant & value, bool force)
+{
+    if (!m_settings)
+    {
+        qWarning() << "ConfigurationProfile wasn't initialized.";
+        return;
+    }
 
-	m_settings->remove(key);
+    ConditionalMutexLocker locker(m_mutex, !m_isInBatchUpdate);
+    if (force)
+    {
+        m_settings->setValue(key, value);
+    }
+    else
+    {
+        if (!m_settings->contains(key))
+        {
+            DEBUG_LOW_LEVEL << "Settings:"<< key << "not found."
+                            << "Set it to default value: " << value.toString();
+
+            m_settings->setValue(key, value);
+        }
+        // else option exists do nothing
+    }
 }
 
-bool ConfigurationProfile::beginBatchUpdate() {
-	Q_ASSERT(!m_isInBatchUpdate);
-	if (m_isInBatchUpdate)
-		return false;
-	m_mutex.lock();
-	m_isInBatchUpdate = true;
-	return true;
+void ConfigurationProfile::remove(const QString& key)
+{
+    Q_ASSERT(isInitialized());
+    if (!isInitialized())
+        return;
+
+    m_settings->remove(key);
 }
 
-void ConfigurationProfile::endBatchUpdate() {
-	Q_ASSERT(m_isInBatchUpdate);
-	m_mutex.unlock();
-	m_settings->sync();
-	m_isInBatchUpdate = false;
+bool ConfigurationProfile::beginBatchUpdate()
+{
+    Q_ASSERT(!m_isInBatchUpdate);
+    if (m_isInBatchUpdate)
+        return false;
+    m_mutex.lock();
+    m_isInBatchUpdate = true;
+    return true;
 }
 
-void ConfigurationProfile::reset() {
+void ConfigurationProfile::endBatchUpdate()
+{
+    Q_ASSERT(m_isInBatchUpdate);
+    m_mutex.unlock();
+    m_settings->sync();
+    m_isInBatchUpdate = false;
+}
+
+void ConfigurationProfile::reset()
+{
     DEBUG_MID_LEVEL << Q_FUNC_INFO;
 
     if (!isInitialized())
@@ -523,52 +560,58 @@ void ConfigurationProfile::reset() {
 
 void Settings::Overrides::setProfile(const QString& profileName)
 {
-	setValue(Main::Key::ProfileLast, profileName);
+    setValue(Main::Key::ProfileLast, profileName);
 }
 
 void Settings::Overrides::setDebuglevel(Debug::DebugLevels level)
 {
-	setValue(Main::Key::DebugLevel, QVariant(static_cast<uint>(level)));
+    setValue(Main::Key::DebugLevel, QVariant(static_cast<uint>(level)));
 }
 
 void Settings::Overrides::apply(ConfigurationProfile& profile) const
 {
-	ConfigurationProfile::ScopedBatchUpdateGuard guard(profile);
-	for (OverridesMap::const_iterator it = m_overrides.cbegin(); it != m_overrides.cend(); ++it)
-	{
-		const OverridingValue& value = it.value();
-		//DEBUG_LOW_LEVEL << "Overriding setting[" << it.key() << "] with value = " << value.value;
-		profile.setValue(it.key(), value.value, value.force);
-	}
+    if (m_overrides.isEmpty())
+        return;
+
+    ConfigurationProfile::ScopedBatchUpdateGuard guard(profile);
+    for (OverridesMap::const_iterator it = m_overrides.cbegin(); it != m_overrides.cend(); ++it)
+    {
+        const OverridingValue& value = it.value();
+        //DEBUG_LOW_LEVEL << "Overriding setting[" << it.key() << "] with value = " << value.value;
+        profile.setValue(it.key(), value.value, value.force);
+    }
 }
 
 Settings::TestingOverrides& Settings::TestingOverrides::setConnectedDeviceForTests(
-		SupportedDevices::DeviceType deviceType) {
-	setValue(Main::Key::ConnectedDevice, deviceType);
-	return *this;
+        SupportedDevices::DeviceType deviceType)
+{
+    setValue(Main::Key::ConnectedDevice, deviceType);
+    return *this;
 }
 
 Settings::TestingOverrides& Settings::TestingOverrides::setConfigVersionForTests(
-		const BaseVersion& version) {
-	setValue(Main::Key::MainConfigVersion, version.toString());
-	return *this;
+        const BaseVersion& version)
+{
+    setValue(Main::Key::MainConfigVersion, version.toString());
+    return *this;
 }
 
 // static
 QScopedPointer<Settings> Settings::m_instance;
 
 Settings::Settings(const QString& applicationDirPath)
-	: QObject(NULL) {
-	const QDir applicationDir(applicationDirPath);
-	Q_ASSERT(applicationDir.exists());
+    : QObject(NULL)
+{
+    const QDir applicationDir(applicationDirPath);
+    Q_ASSERT(applicationDir.exists());
 
-	m_applicationDirPath = applicationDir.absolutePath() + "/";
-	DEBUG_LOW_LEVEL << "Settings applicationDirPath = " << m_applicationDirPath;
-	m_mainProfile.init(applicationDir.absoluteFilePath("main.conf"), "main");
+    m_applicationDirPath = applicationDir.absolutePath() + "/";
+    DEBUG_LOW_LEVEL << "Settings applicationDirPath = " << m_applicationDirPath;
+    m_mainProfile.init(applicationDir.absoluteFilePath("main.conf"), "main");
 
-	const QString profileName = m_mainProfile.valueOrDefault(Main::Key::ProfileLast, Main::ProfileNameDefault).toString();
-	DEBUG_LOW_LEVEL << "Current profile name = " << profileName;
-	m_currentProfile.init(applicationDir.absoluteFilePath(profileName + ".ini"), profileName);
+    const QString profileName = m_mainProfile.valueOrDefault(Main::Key::ProfileLast, Main::ProfileNameDefault).toString();
+    DEBUG_LOW_LEVEL << "Current profile name = " << profileName;
+    m_currentProfile.init(applicationDir.absoluteFilePath(profileName + ".ini"), profileName);
 
     qRegisterMetaType<Grab::GrabberType>("Grab::GrabberType");
     qRegisterMetaType<QColor>("QColor");
@@ -576,14 +619,22 @@ Settings::Settings(const QString& applicationDirPath)
     qRegisterMetaType<Lightpack::Mode>("Lightpack::Mode");
 }
 
-void Settings::applyMainProfileOverrides(const Overrides& overrides) {
-	overrides.apply(m_mainProfile);
+Settings::~Settings()
+{
+    m_currentProfile.reset();
+    m_mainProfile.reset();
 }
 
-void Settings::applyCurrentProfileOverrides(const Overrides& overrides) {
-	overrides.apply(m_currentProfile);
+void Settings::applyMainProfileOverrides(const Overrides& overrides)
+{
+    overrides.apply(m_mainProfile);
+}
 
-	this->currentProfileInited(getCurrentProfileName());
+void Settings::applyCurrentProfileOverrides(const Overrides& overrides)
+{
+    overrides.apply(m_currentProfile);
+
+    this->currentProfileInited(getCurrentProfileName());
 }
 
 // Desktop should be initialized before call Settings::Initialize()
@@ -593,13 +644,11 @@ bool Settings::Initialize(const QString & applicationDirPath,
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-	// Shouldn't do this twice.
-	Q_ASSERT(!m_instance);
     if (m_instance)
         return true;
 
-	const QDir applicationDir(applicationDirPath);
-	Q_ASSERT(applicationDir.exists());
+    const QDir applicationDir(applicationDirPath);
+    Q_ASSERT(applicationDir.exists());
 
     QScopedPointer<Settings> settings(new Settings(applicationDirPath));
     settings->applyMainProfileOverrides(MainProfileOverrides());
@@ -608,9 +657,9 @@ bool Settings::Initialize(const QString & applicationDirPath,
     bool ok = false;
     const uint debugLevel = settings->m_mainProfile.value(Main::Key::DebugLevel).toUInt(&ok);
 
-	if (ok && debugLevel <= Debug::HighLevel)
+    if (ok && debugLevel <= Debug::HighLevel)
     {
-		g_debugLevel = debugLevel;
+        g_debugLevel = debugLevel;
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "debugLevel =" << g_debugLevel;
     } else {
         qWarning() << "DebugLevel in config has an invalid value, set the default" << Main::DebugLevelDefault;
@@ -620,6 +669,7 @@ bool Settings::Initialize(const QString & applicationDirPath,
 
     // Initialize m_devicesMap for mapping DeviceType on DeviceName
     settings->initDevicesMap();
+    settings->verifyMainProfile();
 
     // Initialize profile with default values without reset exists values
     settings->applyCurrentProfileOverrides(CurrentProfileOverrides(false));
@@ -627,8 +677,7 @@ bool Settings::Initialize(const QString & applicationDirPath,
     // Do changes to settings if necessary
     settings->migrateSettings();
 
-	// Verify initial settings.
-    settings->verifyMainProfile();
+    // Verify initial settings.
     settings->verifyCurrentProfile();
 
     m_instance.swap(settings);
@@ -636,7 +685,8 @@ bool Settings::Initialize(const QString & applicationDirPath,
 }
 
 // static
-void Settings::Shutdown() {
+void Settings::Shutdown()
+{
     Settings::m_instance.reset();
 }
 
@@ -647,19 +697,19 @@ void Settings::resetDefaults()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-	applyCurrentProfileOverrides(CurrentProfileOverrides(true /* = reset to default values */));
+    applyCurrentProfileOverrides(CurrentProfileOverrides(true /* = reset to default values */));
 }
 
 QStringList Settings::findAllProfiles() const
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-	const QFileInfo setsFile(getProfilesPath());
-	const QFileInfoList& iniFiles = setsFile.absoluteDir().entryInfoList(QStringList("*.ini"));
+    const QFileInfo setsFile(getProfilesPath());
+    const QFileInfoList& iniFiles = setsFile.absoluteDir().entryInfoList(QStringList("*.ini"));
 
     QStringList settingsFiles;
     for(int i=0; i<iniFiles.count(); i++){
-		settingsFiles.append(iniFiles.at(i).completeBaseName());
+        settingsFiles.append(iniFiles.at(i).completeBaseName());
     }
 
     return settingsFiles;
@@ -669,16 +719,18 @@ void Settings::loadOrCreateProfile(const QString & profileName)
 {
     DEBUG_MID_LEVEL << Q_FUNC_INFO << profileName;
 
-	if (m_currentProfile.isInitialized() && m_currentProfile.name() == profileName)
+    if (m_currentProfile.isInitialized() && m_currentProfile.name() == profileName)
         return; //nothing to change, profile is already loaded
 
     const QString profileNewPath = getProfilesPath() + profileName + ".ini";
-    if (m_currentProfile.isInitialized()) {
+    if (m_currentProfile.isInitialized())
+    {
         // Copy current settings to new one
         QFile::copy(m_currentProfile.path(), profileNewPath);
     }
 
-    if (m_currentProfile.init(profileNewPath, profileName)) {
+    if (m_currentProfile.init(profileNewPath, profileName))
+    {
         // Initialize profile with default values without reset exists values
         m_instance->applyCurrentProfileOverrides(CurrentProfileOverrides(false));
 
@@ -695,8 +747,8 @@ void Settings::renameCurrentProfile(const QString & profileName)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "from" << getCurrentProfileName() << "to" << profileName;
 
-	// TODO: implement.
-	Q_ASSERT(false);
+    // TODO: implement.
+    Q_ASSERT(false);
 
     if (!m_currentProfile.isInitialized())
     {
@@ -711,7 +763,8 @@ void Settings::renameCurrentProfile(const QString & profileName)
     const QString profileNewPath = getProfilesPath() + profileName + ".ini";
     QFile::rename(m_currentProfile.path(), profileNewPath);
 
-    if (m_currentProfile.init(profileNewPath, profileName)) {
+    if (m_currentProfile.init(profileNewPath, profileName))
+    {
         // Initialize profile with default values without reset exists values
         m_instance->applyCurrentProfileOverrides(CurrentProfileOverrides(false));
 
@@ -731,7 +784,7 @@ void Settings::removeCurrentProfile()
 
     if (!m_currentProfile.isInitialized())
     {
-		qWarning() << Q_FUNC_INFO << "current profile wasn't' loaded, nothing to remove";
+        qWarning() << Q_FUNC_INFO << "current profile wasn't' loaded, nothing to remove";
         m_mainProfile.setValue(Main::Key::ProfileLast, Main::ProfileNameDefault);
         return;
     }
@@ -743,37 +796,39 @@ void Settings::removeCurrentProfile()
     }
 
     m_currentProfile.reset();
-	m_mainProfile.setValue(Main::Key::ProfileLast, Main::ProfileNameDefault);
-	this->currentProfileRemoved();
+    m_mainProfile.setValue(Main::Key::ProfileLast, Main::ProfileNameDefault);
+    this->currentProfileRemoved();
 }
 
 
 QString Settings::getCurrentProfileName() const
 {
-	if (m_currentProfile.isInitialized()) {
-		DEBUG_MID_LEVEL << Q_FUNC_INFO << m_currentProfile.name();
+    if (m_currentProfile.isInitialized())
+    {
+        DEBUG_MID_LEVEL << Q_FUNC_INFO << m_currentProfile.name();
     } else {
         qCritical() << Q_FUNC_INFO << ("current profile isn't set!!!");
     }
 
-	return m_currentProfile.name();
+    return m_currentProfile.name();
 }
 
 QString Settings::getCurrentProfilePath() const
 {
-	if (m_currentProfile.isInitialized()) {
-		DEBUG_MID_LEVEL << Q_FUNC_INFO << m_currentProfile.path();
+    if (m_currentProfile.isInitialized())
+    {
+        DEBUG_MID_LEVEL << Q_FUNC_INFO << m_currentProfile.path();
     } else {
         qCritical() << Q_FUNC_INFO << ("current profile isn't set!!!");
     }
 
-	return m_currentProfile.path();
+    return m_currentProfile.path();
 }
 
 bool Settings::isProfileLoaded() const
 {
     DEBUG_HIGH_LEVEL << Q_FUNC_INFO;
-	return m_currentProfile.isInitialized();
+    return m_currentProfile.isInitialized();
 }
 
 QString Settings::getApplicationDirPath() const
@@ -822,79 +877,79 @@ QPoint Settings::getDefaultPosition(int ledIndex)
 
 QString Settings::getLastProfileName() const
 {
-	return m_mainProfile.value(Main::Key::ProfileLast).toString();
+    return m_mainProfile.value(Main::Key::ProfileLast).toString();
 }
 
 QString Settings::getLanguage() const
 {
-	return m_mainProfile.value(Main::Key::Language).toString();
+    return m_mainProfile.value(Main::Key::Language).toString();
 }
 
 void Settings::setLanguage(const QString & language)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_mainProfile.setValue(Main::Key::Language, language);
-	this->languageChanged(language);
+    m_mainProfile.setValue(Main::Key::Language, language);
+    this->languageChanged(language);
 }
 
 int Settings::getDebugLevel() const
 {
-	return m_mainProfile.value(Main::Key::DebugLevel).toInt();
+    return m_mainProfile.value(Main::Key::DebugLevel).toInt();
 }
 
 void Settings::setDebugLevel(int debugLvl)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_mainProfile.setValue(Main::Key::DebugLevel, debugLvl);
-	this->debugLevelChanged(debugLvl);
+    m_mainProfile.setValue(Main::Key::DebugLevel, debugLvl);
+    this->debugLevelChanged(debugLvl);
 }
 
 bool Settings::isApiEnabled() const
 {
-	return m_mainProfile.value(Main::Key::Api::IsEnabled).toBool();
+    return m_mainProfile.value(Main::Key::Api::IsEnabled).toBool();
 }
 
 void Settings::setIsApiEnabled(bool isEnabled)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_mainProfile.setValue(Main::Key::Api::IsEnabled, isEnabled);
-	this->apiServerSettingsChanged();
+    m_mainProfile.setValue(Main::Key::Api::IsEnabled, isEnabled);
+    this->apiServerSettingsChanged();
 }
 
 bool Settings::isListenOnlyOnLoInterface() const
 {
-	return m_mainProfile.value(Main::Key::Api::ListenOnlyOnLoInterface).toBool();
+    return m_mainProfile.value(Main::Key::Api::ListenOnlyOnLoInterface).toBool();
 }
 
 void Settings::setListenOnlyOnLoInterface(bool localOnly)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_mainProfile.setValue(Main::Key::Api::ListenOnlyOnLoInterface, localOnly);
-	this->apiServerSettingsChanged();
+    m_mainProfile.setValue(Main::Key::Api::ListenOnlyOnLoInterface, localOnly);
+    this->apiServerSettingsChanged();
 }
 
 int Settings::getApiPort() const
 {
-	return m_mainProfile.value(Main::Key::Api::Port).toInt();
+    return m_mainProfile.value(Main::Key::Api::Port).toInt();
 }
 
 void Settings::setApiPort(int apiPort)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_mainProfile.setValue(Main::Key::Api::Port, apiPort);
-	this->apiServerSettingsChanged();
+    m_mainProfile.setValue(Main::Key::Api::Port, apiPort);
+    this->apiServerSettingsChanged();
 }
 
 QString Settings::getApiAuthKey() const
 {
-	return m_mainProfile.value(Main::Key::Api::AuthKey).toString();
+    return m_mainProfile.value(Main::Key::Api::AuthKey).toString();
 }
 
 void Settings::setApiKey(const QString & apiKey)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_mainProfile.setValue(Main::Key::Api::AuthKey, apiKey);
-	this->apiKeyChanged(apiKey);
+    m_mainProfile.setValue(Main::Key::Api::AuthKey, apiKey);
+    this->apiKeyChanged(apiKey);
 }
 
 bool Settings::isApiAuthEnabled() const
@@ -904,112 +959,131 @@ bool Settings::isApiAuthEnabled() const
 
 bool Settings::isExpertModeEnabled() const
 {   
-	return m_mainProfile.value(Main::Key::IsExpertModeEnabled).toBool();
+    return m_mainProfile.value(Main::Key::IsExpertModeEnabled).toBool();
 }
 
 void Settings::setExpertModeEnabled(bool isEnabled)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_mainProfile.setValue(Main::Key::IsExpertModeEnabled, isEnabled);
-	this->expertModeEnabledChanged(isEnabled);
+    m_mainProfile.setValue(Main::Key::IsExpertModeEnabled, isEnabled);
+    this->expertModeEnabledChanged(isEnabled);
 }
 
 bool Settings::isKeepLightsOnAfterExit() const
 {
-	return m_mainProfile.value(Main::Key::IsKeepLightsOnAfterExit).toBool();
+    return m_mainProfile.value(Main::Key::IsKeepLightsOnAfterExit).toBool();
 }
 
 void Settings::setKeepLightsOnAfterExit(bool isEnabled)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_mainProfile.setValue(Main::Key::IsKeepLightsOnAfterExit, isEnabled);
-	this->keepLightsOnAfterExitChanged(isEnabled);
+    m_mainProfile.setValue(Main::Key::IsKeepLightsOnAfterExit, isEnabled);
+    this->keepLightsOnAfterExitChanged(isEnabled);
 }
 
 bool Settings::isKeepLightsOnAfterLock() const
 {
-	return m_mainProfile.value(Main::Key::IsKeepLightsOnAfterLock).toBool();
+    return m_mainProfile.value(Main::Key::IsKeepLightsOnAfterLock).toBool();
 }
 
 void Settings::setKeepLightsOnAfterLock(bool isEnabled)
 {
-	DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_mainProfile.setValue(Main::Key::IsKeepLightsOnAfterLock, isEnabled);
-	this->keepLightsOnAfterLockChanged(isEnabled);
+    DEBUG_LOW_LEVEL << Q_FUNC_INFO;
+    m_mainProfile.setValue(Main::Key::IsKeepLightsOnAfterLock, isEnabled);
+    this->keepLightsOnAfterLockChanged(isEnabled);
 }
 
 bool Settings::isPingDeviceEverySecond() const
 {
-	return m_mainProfile.value(Main::Key::IsPingDeviceEverySecond).toBool();
+    return m_mainProfile.value(Main::Key::IsPingDeviceEverySecond).toBool();
 }
 
 void Settings::setPingDeviceEverySecond(bool isEnabled)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_mainProfile.setValue(Main::Key::IsPingDeviceEverySecond, isEnabled);
-	this->pingDeviceEverySecondEnabledChanged(isEnabled);
+    m_mainProfile.setValue(Main::Key::IsPingDeviceEverySecond, isEnabled);
+    this->pingDeviceEverySecondEnabledChanged(isEnabled);
 }
 
 bool Settings::isUpdateFirmwareMessageShown() const
 {
-	return m_mainProfile.value(Main::Key::IsUpdateFirmwareMessageShown).toBool();
+    return m_mainProfile.value(Main::Key::IsUpdateFirmwareMessageShown).toBool();
 }
 
 void Settings::setUpdateFirmwareMessageShown(bool isShown)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_mainProfile.setValue(Main::Key::IsUpdateFirmwareMessageShown, isShown);
-	this->updateFirmwareMessageShownChanged(isShown);
+    m_mainProfile.setValue(Main::Key::IsUpdateFirmwareMessageShown, isShown);
+    this->updateFirmwareMessageShownChanged(isShown);
 }
 
-void Settings::verifyMainProfile() {
-	const QString deviceName = m_mainProfile.value(Main::Key::ConnectedDevice).toString();
-	if (!m_devicesTypeToNameMap.values().contains(deviceName))
-	{
-		qWarning() << Q_FUNC_INFO
-				   << Main::Key::ConnectedDevice
-				   << "in main config contains crap or unsupported device,"
-				   << "reset it to default value:" << Main::ConnectedDeviceDefault;
+void Settings::verifyMainProfile()
+{
+    bool initDebugLevelToDefault = !m_mainProfile.contains(Main::Key::DebugLevel);
+    if (!initDebugLevelToDefault)
+    {
+        const QVariant& valueOrDefault = m_mainProfile.value(Main::Key::DebugLevel);
+        bool ok = false;
+        const uint debugLevel = valueOrDefault.toUInt(&ok);
+        initDebugLevelToDefault = ok && debugLevel <= Debug::HighLevel;
+    }
+    if (initDebugLevelToDefault)
+    {
+        qWarning() << "DebugLevel in config has an invalid value, set the default" << Main::DebugLevelDefault;
+        m_mainProfile.setValue(Main::Key::DebugLevel, Main::DebugLevelDefault);
+    }
 
-		setConnectedDevice(SupportedDevices::DefaultDeviceType);
-	}
+    const QString deviceName = m_mainProfile.value(Main::Key::ConnectedDevice).toString();
+    if (!m_devicesTypeToNameMap.values().contains(deviceName))
+    {
+        qWarning() << Q_FUNC_INFO
+                   << Main::Key::ConnectedDevice
+                   << "in main config contains crap or unsupported device,"
+                   << "reset it to default value:" << Main::ConnectedDeviceDefault;
+
+        setConnectedDevice(SupportedDevices::DefaultDeviceType);
+    }
 }
 
-namespace {
-Grab::GrabberType checkedGrabberType(const QString& grabberTypeName, bool& isTypeValid) {
-	Grab::GrabberType grabberType;
-	isTypeValid = validateGrabberType(grabberTypeName, grabberType);
-	Q_ASSERT(isTypeValid || grabberType == Profile::Grab::GrabberDefault);
+namespace
+{
+Grab::GrabberType checkedGrabberType(const QString& grabberTypeName, bool& isTypeValid)
+{
+    Grab::GrabberType grabberType;
+    isTypeValid = validateGrabberType(grabberTypeName, grabberType);
+    Q_ASSERT(isTypeValid || grabberType == Profile::Grab::GrabberDefault);
 
-	if (!isTypeValid) {
-		qWarning() << Q_FUNC_INFO
-			<< Profile::Key::Grab::Grabber << "contains invalid value:" << grabberTypeName
-			<< ", reset it to default:" << Profile::Grab::GrabberDefaultString;
-	}
-	return Profile::Grab::GrabberDefault;
+    if (!isTypeValid)
+    {
+        qWarning() << Q_FUNC_INFO
+                   << Profile::Key::Grab::Grabber << "contains invalid value:" << grabberTypeName
+                   << ", reset it to default:" << Profile::Grab::GrabberDefaultString;
+    }
+    return Profile::Grab::GrabberDefault;
 }
 }
 
-void Settings::verifyCurrentProfile() {
-	bool isTypeValid = false;
-	checkedGrabberType(m_currentProfile.value(Profile::Key::Grab::Grabber).toString(), isTypeValid);
-	if (!isTypeValid)
-		setGrabberType(Profile::Grab::GrabberDefault);
+void Settings::verifyCurrentProfile()
+{
+    bool isTypeValid = false;
+    checkedGrabberType(m_currentProfile.value(Profile::Key::Grab::Grabber).toString(), isTypeValid);
+    if (!isTypeValid)
+        setGrabberType(Profile::Grab::GrabberDefault);
 }
 
 SupportedDevices::DeviceType Settings::getConnectedDevice() const
 {
-	const QString deviceName = m_mainProfile.value(Main::Key::ConnectedDevice).toString();
-	return m_devicesTypeToNameMap.key(deviceName, SupportedDevices::DefaultDeviceType);
+    const QString deviceName = m_mainProfile.value(Main::Key::ConnectedDevice).toString();
+    return m_devicesTypeToNameMap.key(deviceName, SupportedDevices::DefaultDeviceType);
 }
 
 void Settings::setConnectedDevice(SupportedDevices::DeviceType device)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	const QString deviceName = m_devicesTypeToNameMap.value(device, Main::ConnectedDeviceDefault);
+    const QString deviceName = m_devicesTypeToNameMap.value(device, Main::ConnectedDeviceDefault);
 
-	m_mainProfile.setValue(Main::Key::ConnectedDevice, deviceName);
-	this->connectedDeviceChanged(device);
+    m_mainProfile.setValue(Main::Key::ConnectedDevice, deviceName);
+    this->connectedDeviceChanged(device);
 }
 
 QString Settings::getConnectedDeviceName() const
@@ -1020,7 +1094,7 @@ QString Settings::getConnectedDeviceName() const
 void Settings::setConnectedDeviceName(const QString & deviceName)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	if (deviceName.isEmpty())
+    if (deviceName.isEmpty())
         return; // silent return
 
     if (m_devicesTypeToNameMap.values().contains(deviceName) == false)
@@ -1029,8 +1103,8 @@ void Settings::setConnectedDeviceName(const QString & deviceName)
         return;
     }
 
-	m_mainProfile.setValue(Main::Key::ConnectedDevice, deviceName);
-	this->connectedDeviceChanged(m_devicesTypeToNameMap.key(deviceName));
+    m_mainProfile.setValue(Main::Key::ConnectedDevice, deviceName);
+    this->connectedDeviceChanged(m_devicesTypeToNameMap.key(deviceName));
 }
 
 // static
@@ -1042,74 +1116,75 @@ QStringList Settings::getSupportedDevices()
 QKeySequence Settings::getHotkey(const QString &actionName) const
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	const QString key = Main::Key::Hotkeys::SettingsPrefix + actionName;
-	const QVariant& keyValue = m_mainProfile.valueOrDefault(key, QVariant());
-	return keyValue.isNull() ? QKeySequence() : QKeySequence(keyValue.toString());
+    const QString key = Main::Key::Hotkeys::SettingsPrefix + actionName;
+    const QVariant& keyValue = m_mainProfile.valueOrDefault(key, QVariant());
+    return keyValue.isNull() ? QKeySequence() : QKeySequence(keyValue.toString());
 }
 
 void Settings::setHotkey(const QString &actionName, const QKeySequence &keySequence)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	const QString key = Main::Key::Hotkeys::SettingsPrefix + actionName;
-	const QKeySequence oldKeySequence = getHotkey(actionName);
-    if( keySequence.isEmpty() ) {
-		m_mainProfile.setValue(key, Main::HotKeys::HotkeyDefault);
+    const QString key = Main::Key::Hotkeys::SettingsPrefix + actionName;
+    const QKeySequence oldKeySequence = getHotkey(actionName);
+    if( keySequence.isEmpty() )
+    {
+        m_mainProfile.setValue(key, Main::HotKeys::HotkeyDefault);
     } else {
-		m_mainProfile.setValue(key, keySequence.toString());
+        m_mainProfile.setValue(key, keySequence.toString());
     }
-	this->hotkeyChanged(actionName, keySequence, oldKeySequence);
+    this->hotkeyChanged(actionName, keySequence, oldKeySequence);
 }
 
 QString Settings::getAdalightSerialPortName() const
 {
-	return m_mainProfile.value(Main::Key::Adalight::Port).toString();
+    return m_mainProfile.value(Main::Key::Adalight::Port).toString();
 }
 
 void Settings::setAdalightSerialPortName(const QString & port)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_mainProfile.setValue(Main::Key::Adalight::Port, port);
-	this->adalightSerialPortNameChanged(port);
+    m_mainProfile.setValue(Main::Key::Adalight::Port, port);
+    this->adalightSerialPortNameChanged(port);
 }
 
 int Settings::getAdalightSerialPortBaudRate() const
 {
     // TODO: validate baudrate reading from settings file
-	return m_mainProfile.value(Main::Key::Adalight::BaudRate).toInt();
+    return m_mainProfile.value(Main::Key::Adalight::BaudRate).toInt();
 }
 
 void Settings::setAdalightSerialPortBaudRate(const QString & baud)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     // TODO: validator
-	m_mainProfile.setValue(Main::Key::Adalight::BaudRate, baud);
-	this->adalightSerialPortBaudRateChanged(baud);
+    m_mainProfile.setValue(Main::Key::Adalight::BaudRate, baud);
+    this->adalightSerialPortBaudRateChanged(baud);
 }
 
 QString Settings::getArdulightSerialPortName() const
 {
-	return m_mainProfile.value(Main::Key::Ardulight::Port).toString();
+    return m_mainProfile.value(Main::Key::Ardulight::Port).toString();
 }
 
 void Settings::setArdulightSerialPortName(const QString & port)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_mainProfile.setValue(Main::Key::Ardulight::Port, port);
-	this->ardulightSerialPortNameChanged(port);
+    m_mainProfile.setValue(Main::Key::Ardulight::Port, port);
+    this->ardulightSerialPortNameChanged(port);
 }
 
 int Settings::getArdulightSerialPortBaudRate() const
 {
     // TODO: validate baudrate reading from settings file
-	return m_mainProfile.value(Main::Key::Ardulight::BaudRate).toInt();
+    return m_mainProfile.value(Main::Key::Ardulight::BaudRate).toInt();
 }
 
 void Settings::setArdulightSerialPortBaudRate(const QString & baud)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     // TODO: validator
-	m_mainProfile.setValue(Main::Key::Ardulight::BaudRate, baud);
-	this->ardulightSerialPortBaudRateChanged(baud);
+    m_mainProfile.setValue(Main::Key::Ardulight::BaudRate, baud);
+    this->ardulightSerialPortBaudRateChanged(baud);
 }
 
 // static
@@ -1145,32 +1220,33 @@ void Settings::setNumberOfLeds(SupportedDevices::DeviceType device, int numberOf
         //nothing to do
         return;
 
-	const QString key = m_devicesTypeToKeyNumberOfLedsMap.value(device);
+    const QString key = m_devicesTypeToKeyNumberOfLedsMap.value(device);
 
-	if (key.isEmpty())
+    if (key.isEmpty())
     {
         qCritical() << Q_FUNC_INFO << "Device type not recognized, device ==" << device << "numberOfLeds ==" << numberOfLeds;
         return;
     }
 
-	m_mainProfile.setValue(key, numberOfLeds);
+    m_mainProfile.setValue(key, numberOfLeds);
     {
         using namespace SupportedDevices;
-        switch(device) {
-            case DeviceTypeLightpack:
-			this->lightpackNumberOfLedsChanged(numberOfLeds);
+        switch(device)
+        {
+        case DeviceTypeLightpack:
+            this->lightpackNumberOfLedsChanged(numberOfLeds);
             break;
 
-            case DeviceTypeAdalight:
-			this->adalightNumberOfLedsChanged(numberOfLeds);
+        case DeviceTypeAdalight:
+            this->adalightNumberOfLedsChanged(numberOfLeds);
             break;
 
-            case DeviceTypeArdulight:
-			this->ardulightNumberOfLedsChanged(numberOfLeds);
+        case DeviceTypeArdulight:
+            this->ardulightNumberOfLedsChanged(numberOfLeds);
             break;
 
-            case DeviceTypeVirtual:
-			this->virtualNumberOfLedsChanged(numberOfLeds);
+        case DeviceTypeVirtual:
+            this->virtualNumberOfLedsChanged(numberOfLeds);
             break;
         default:
             qCritical() << Q_FUNC_INFO << "Device type not recognized, device ==" << device << "numberOfLeds ==" << numberOfLeds;
@@ -1180,20 +1256,21 @@ void Settings::setNumberOfLeds(SupportedDevices::DeviceType device, int numberOf
 
 int Settings::getNumberOfLeds(SupportedDevices::DeviceType device) const
 {
-	const QString key = m_devicesTypeToKeyNumberOfLedsMap.value(device);
+    const QString key = m_devicesTypeToKeyNumberOfLedsMap.value(device);
 
-	if (key.isEmpty())
+    if (key.isEmpty())
     {
         qCritical() << Q_FUNC_INFO << "Device type not recognized, device ==" << device;
         return MaximumNumberOfLeds::Default;
     }
 
     // TODO: validator on maximum number of leds for current 'device'
-	return m_mainProfile.value(key).toInt();
+    return m_mainProfile.value(key).toInt();
 }
 
-int Settings::getNumberOfConnectedDeviceLeds() const {
-	return getNumberOfLeds(getConnectedDevice());
+int Settings::getNumberOfConnectedDeviceLeds() const
+{
+    return getNumberOfLeds(getConnectedDevice());
 }
 
 void Settings::setColorSequence(SupportedDevices::DeviceType device, QString colorSequence)
@@ -1201,40 +1278,40 @@ void Settings::setColorSequence(SupportedDevices::DeviceType device, QString col
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << device << colorSequence;
     switch (device)
     {
-        case  SupportedDevices::DeviceTypeAdalight:
-			m_mainProfile.setValue(Main::Key::Adalight::ColorSequence, colorSequence);
-            DEBUG_LOW_LEVEL << Q_FUNC_INFO << "ada" << colorSequence;
-            break;
-        case SupportedDevices::DeviceTypeArdulight:
-			m_mainProfile.setValue(Main::Key::Ardulight::ColorSequence, colorSequence);
-            DEBUG_LOW_LEVEL << Q_FUNC_INFO << "ard" << colorSequence;
-            break;
-        default:
-            qWarning() << Q_FUNC_INFO << "Unsupported device type: " << device << m_devicesTypeToNameMap.value(device);
-            return;
+    case  SupportedDevices::DeviceTypeAdalight:
+        m_mainProfile.setValue(Main::Key::Adalight::ColorSequence, colorSequence);
+        DEBUG_LOW_LEVEL << Q_FUNC_INFO << "ada" << colorSequence;
+        break;
+    case SupportedDevices::DeviceTypeArdulight:
+        m_mainProfile.setValue(Main::Key::Ardulight::ColorSequence, colorSequence);
+        DEBUG_LOW_LEVEL << Q_FUNC_INFO << "ard" << colorSequence;
+        break;
+    default:
+        qWarning() << Q_FUNC_INFO << "Unsupported device type: " << device << m_devicesTypeToNameMap.value(device);
+        return;
     }
-	this->deviceColorSequenceChanged(colorSequence);
+    this->deviceColorSequenceChanged(colorSequence);
 }
 
 QString Settings::getColorSequence(SupportedDevices::DeviceType device) const
 {
     switch (device)
     {
-        case SupportedDevices::DeviceTypeAdalight:
-			return m_mainProfile.value(Main::Key::Adalight::ColorSequence).toString();
-            break;
-        case SupportedDevices::DeviceTypeArdulight:
-			return m_mainProfile.value(Main::Key::Ardulight::ColorSequence).toString();
-            break;
-        default:
-            qWarning() << Q_FUNC_INFO << "Unsupported device type: " << device << m_devicesTypeToNameMap.value(device);
+    case SupportedDevices::DeviceTypeAdalight:
+        return m_mainProfile.value(Main::Key::Adalight::ColorSequence).toString();
+        break;
+    case SupportedDevices::DeviceTypeArdulight:
+        return m_mainProfile.value(Main::Key::Ardulight::ColorSequence).toString();
+        break;
+    default:
+        qWarning() << Q_FUNC_INFO << "Unsupported device type: " << device << m_devicesTypeToNameMap.value(device);
     }
     return NULL;
 }
 
 BaseVersion Settings::getVersion() const
 {
-	return BaseVersion(m_mainProfile.value(Main::Key::MainConfigVersion).toString());
+    return BaseVersion(m_mainProfile.value(Main::Key::MainConfigVersion).toString());
 }
 
 int Settings::getGrabSlowdown() const
@@ -1246,68 +1323,68 @@ int Settings::getGrabSlowdown() const
 void Settings::setGrabSlowdown(int value)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(Profile::Key::Grab::Slowdown, getValidGrabSlowdown(value));
-	this->grabSlowdownChanged(value);
+    m_currentProfile.setValue(Profile::Key::Grab::Slowdown, getValidGrabSlowdown(value));
+    this->grabSlowdownChanged(value);
 }
 
 bool Settings::isBacklightEnabled() const
 {
-	return m_currentProfile.value(Profile::Key::IsBacklightEnabled).toBool();
+    return m_currentProfile.value(Profile::Key::IsBacklightEnabled).toBool();
 }
 
 void Settings::setIsBacklightEnabled(bool isEnabled)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(Profile::Key::IsBacklightEnabled, isEnabled);
-	this->backlightEnabledChanged(isEnabled);
+    m_currentProfile.setValue(Profile::Key::IsBacklightEnabled, isEnabled);
+    this->backlightEnabledChanged(isEnabled);
 }
 
 bool Settings::isGrabAvgColorsEnabled() const
 {
-	return m_currentProfile.value(Profile::Key::Grab::IsAvgColorsEnabled).toBool();
+    return m_currentProfile.value(Profile::Key::Grab::IsAvgColorsEnabled).toBool();
 }
 
 void Settings::setGrabAvgColorsEnabled(bool isEnabled)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(Profile::Key::Grab::IsAvgColorsEnabled, isEnabled);
-	this->grabAvgColorsEnabledChanged(isEnabled);
+    m_currentProfile.setValue(Profile::Key::Grab::IsAvgColorsEnabled, isEnabled);
+    this->grabAvgColorsEnabledChanged(isEnabled);
 }
 
 bool Settings::isSendDataOnlyIfColorsChanges() const
 {
-	return m_currentProfile.value(Profile::Key::Grab::IsSendDataOnlyIfColorsChanges).toBool();
+    return m_currentProfile.value(Profile::Key::Grab::IsSendDataOnlyIfColorsChanges).toBool();
 }
 
 void Settings::setSendDataOnlyIfColorsChanges(bool isEnabled)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(Profile::Key::Grab::IsSendDataOnlyIfColorsChanges, isEnabled);
-	this->sendDataOnlyIfColorsChangesChanged(isEnabled);
+    m_currentProfile.setValue(Profile::Key::Grab::IsSendDataOnlyIfColorsChanges, isEnabled);
+    this->sendDataOnlyIfColorsChangesChanged(isEnabled);
 }
 
 int Settings::getLuminosityThreshold() const
 {
-	return m_currentProfile.value(Profile::Key::Grab::LuminosityThreshold).toInt();
+    return m_currentProfile.value(Profile::Key::Grab::LuminosityThreshold).toInt();
 }
 
 void Settings::setLuminosityThreshold(int value)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(Profile::Key::Grab::LuminosityThreshold, getValidLuminosityThreshold(value));
-	this->luminosityThresholdChanged(value);
+    m_currentProfile.setValue(Profile::Key::Grab::LuminosityThreshold, getValidLuminosityThreshold(value));
+    this->luminosityThresholdChanged(value);
 }
 
 bool Settings::isMinimumLuminosityEnabled() const
 {
-	return m_currentProfile.value(Profile::Key::Grab::IsMinimumLuminosityEnabled).toBool();
+    return m_currentProfile.value(Profile::Key::Grab::IsMinimumLuminosityEnabled).toBool();
 }
 
 void Settings::setMinimumLuminosityEnabled(bool value)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(Profile::Key::Grab::IsMinimumLuminosityEnabled, value);
-	this->minimumLuminosityEnabledChanged(value);
+    m_currentProfile.setValue(Profile::Key::Grab::IsMinimumLuminosityEnabled, value);
+    this->minimumLuminosityEnabledChanged(value);
 }
 
 int Settings::getDeviceRefreshDelay() const
@@ -1318,8 +1395,8 @@ int Settings::getDeviceRefreshDelay() const
 void Settings::setDeviceRefreshDelay(int value)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(Profile::Key::Device::RefreshDelay, getValidDeviceRefreshDelay(value));
-	this->deviceRefreshDelayChanged(value);
+    m_currentProfile.setValue(Profile::Key::Device::RefreshDelay, getValidDeviceRefreshDelay(value));
+    this->deviceRefreshDelayChanged(value);
 }
 
 int Settings::getDeviceBrightness() const
@@ -1330,8 +1407,8 @@ int Settings::getDeviceBrightness() const
 void Settings::setDeviceBrightness(int value)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(Profile::Key::Device::Brightness, getValidDeviceBrightness(value));
-	this->deviceBrightnessChanged(value);
+    m_currentProfile.setValue(Profile::Key::Device::Brightness, getValidDeviceBrightness(value));
+    this->deviceBrightnessChanged(value);
 }
 
 int Settings::getDeviceSmooth() const
@@ -1342,8 +1419,8 @@ int Settings::getDeviceSmooth() const
 void Settings::setDeviceSmooth(int value)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(Profile::Key::Device::Smooth, getValidDeviceSmooth(value));
-	this->deviceSmoothChanged(value);
+    m_currentProfile.setValue(Profile::Key::Device::Smooth, getValidDeviceSmooth(value));
+    this->deviceSmoothChanged(value);
 }
 
 int Settings::getDeviceColorDepth() const
@@ -1354,8 +1431,8 @@ int Settings::getDeviceColorDepth() const
 void Settings::setDeviceColorDepth(int value)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(Profile::Key::Device::ColorDepth, getValidDeviceColorDepth(value));
-	this->deviceColorDepthChanged(value);
+    m_currentProfile.setValue(Profile::Key::Device::ColorDepth, getValidDeviceColorDepth(value));
+    this->deviceColorDepthChanged(value);
 }
 
 double Settings::getDeviceGamma() const
@@ -1366,18 +1443,18 @@ double Settings::getDeviceGamma() const
 void Settings::setDeviceGamma(double gamma)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(Profile::Key::Device::Gamma, getValidDeviceGamma(gamma));
-	this->deviceGammaChanged(gamma);
+    m_currentProfile.setValue(Profile::Key::Device::Gamma, getValidDeviceGamma(gamma));
+    this->deviceGammaChanged(gamma);
 }
 
 Grab::GrabberType Settings::getGrabberType() const
 {
-	DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	bool isTypeValid = false;
-	const QString grabberTypeName = m_currentProfile.value(Profile::Key::Grab::Grabber).toString();
-	const Grab::GrabberType grabberType = checkedGrabberType(grabberTypeName, isTypeValid);
-	Q_ASSERT(isTypeValid);
-	return grabberType;
+    DEBUG_LOW_LEVEL << Q_FUNC_INFO;
+    bool isTypeValid = false;
+    const QString grabberTypeName = m_currentProfile.value(Profile::Key::Grab::Grabber).toString();
+    const Grab::GrabberType grabberType = checkedGrabberType(grabberTypeName, isTypeValid);
+    Q_ASSERT(isTypeValid);
+    return grabberType;
 }
 
 void Settings::setGrabberType(Grab::GrabberType grabberType)
@@ -1385,7 +1462,7 @@ void Settings::setGrabberType(Grab::GrabberType grabberType)
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << grabberType;
 
     QString strGrabber;
-	switch (grabberType)
+    switch (grabberType)
     {
     case Grab::GrabberTypeQt:
         strGrabber = Profile::Value::GrabberType::Qt;
@@ -1426,18 +1503,20 @@ void Settings::setGrabberType(Grab::GrabberType grabberType)
         qWarning() << Q_FUNC_INFO << "Switch on grabberType =" << grabberType << "failed. Reset to default value.";
         strGrabber = Profile::Grab::GrabberDefaultString;
     }
-	m_currentProfile.setValue(Profile::Key::Grab::Grabber, strGrabber);
-	this->grabberTypeChanged(grabberType);
+    m_currentProfile.setValue(Profile::Key::Grab::Grabber, strGrabber);
+    this->grabberTypeChanged(grabberType);
 }
 
 #ifdef D3D10_GRAB_SUPPORT
-bool Settings::isDx1011GrabberEnabled() const {
-	return m_currentProfile.value(Profile::Key::Grab::IsDx1011GrabberEnabled).toBool();
+bool Settings::isDx1011GrabberEnabled() const
+{
+    return m_currentProfile.value(Profile::Key::Grab::IsDx1011GrabberEnabled).toBool();
 }
 
-void Settings::setDx1011GrabberEnabled(bool isEnabled) {
-	m_currentProfile.setValue(Profile::Key::Grab::IsDx1011GrabberEnabled, isEnabled);
-	this->dx1011GrabberEnabledChanged(isEnabled);
+void Settings::setDx1011GrabberEnabled(bool isEnabled)
+{
+    m_currentProfile.setValue(Profile::Key::Grab::IsDx1011GrabberEnabled, isEnabled);
+    this->dx1011GrabberEnabledChanged(isEnabled);
 }
 #endif
 
@@ -1445,7 +1524,7 @@ Lightpack::Mode Settings::getLightpackMode()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-	const QString strMode = m_currentProfile.value(Profile::Key::LightpackMode).toString();
+    const QString strMode = m_currentProfile.value(Profile::Key::LightpackMode).toString();
 
     if (strMode == Profile::Value::LightpackMode::Ambilight)
     {
@@ -1470,13 +1549,13 @@ void Settings::setLightpackMode(Lightpack::Mode mode)
 
     if (mode == Lightpack::AmbilightMode)
     {
-		m_currentProfile.setValue(Profile::Key::LightpackMode, Profile::Value::LightpackMode::Ambilight);
-		this->lightpackModeChanged(mode);
+        m_currentProfile.setValue(Profile::Key::LightpackMode, Profile::Value::LightpackMode::Ambilight);
+        this->lightpackModeChanged(mode);
     }
     else if (mode == Lightpack::MoodLampMode)
     {
-		m_currentProfile.setValue(Profile::Key::LightpackMode, Profile::Value::LightpackMode::MoodLamp);
-		this->lightpackModeChanged(mode);
+        m_currentProfile.setValue(Profile::Key::LightpackMode, Profile::Value::LightpackMode::MoodLamp);
+        this->lightpackModeChanged(mode);
     }
     else
     {
@@ -1487,14 +1566,14 @@ void Settings::setLightpackMode(Lightpack::Mode mode)
 bool Settings::isMoodLampLiquidMode() const
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	return m_currentProfile.value(Profile::Key::MoodLamp::IsLiquidMode).toBool();
+    return m_currentProfile.value(Profile::Key::MoodLamp::IsLiquidMode).toBool();
 }
 
 void Settings::setMoodLampLiquidMode(bool value)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(Profile::Key::MoodLamp::IsLiquidMode, value );
-	this->moodLampLiquidModeChanged(value);
+    m_currentProfile.setValue(Profile::Key::MoodLamp::IsLiquidMode, value );
+    this->moodLampLiquidModeChanged(value);
 }
 
 QColor Settings::getMoodLampColor() const
@@ -1506,8 +1585,8 @@ QColor Settings::getMoodLampColor() const
 void Settings::setMoodLampColor(QColor value)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << value.name();
-	m_currentProfile.setValue(Profile::Key::MoodLamp::Color, value.name() );
-	this->moodLampColorChanged(value);
+    m_currentProfile.setValue(Profile::Key::MoodLamp::Color, value.name() );
+    this->moodLampColorChanged(value);
 }
 
 int Settings::getMoodLampSpeed() const
@@ -1519,8 +1598,8 @@ int Settings::getMoodLampSpeed() const
 void Settings::setMoodLampSpeed(int value)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(Profile::Key::MoodLamp::Speed, getValidMoodLampSpeed(value));
-	this->moodLampSpeedChanged(value);
+    m_currentProfile.setValue(Profile::Key::MoodLamp::Speed, getValidMoodLampSpeed(value));
+    this->moodLampSpeedChanged(value);
 }
 
 QList<WBAdjustment> Settings::getLedCoefs() const
@@ -1553,190 +1632,197 @@ void Settings::setLedCoefRed(int ledIndex, double value)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     setValidLedCoef(ledIndex, Profile::Key::Led::CoefRed, value);
-	this->ledCoefRedChanged(ledIndex, value);
+    this->ledCoefRedChanged(ledIndex, value);
 }
 
 void Settings::setLedCoefGreen(int ledIndex, double value)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     setValidLedCoef(ledIndex, Profile::Key::Led::CoefGreen, value);
-	this->ledCoefGreenChanged(ledIndex, value);
+    this->ledCoefGreenChanged(ledIndex, value);
 }
 
 void Settings::setLedCoefBlue(int ledIndex, double value)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     setValidLedCoef(ledIndex, Profile::Key::Led::CoefBlue, value);
-	this->ledCoefBlueChanged(ledIndex, value);
+    this->ledCoefBlueChanged(ledIndex, value);
 }
 
 QSize Settings::getLedSize(int ledIndex) const
 {
-	return m_currentProfile.value(
-			Profile::Key::Led::Prefix + QString::number(ledIndex + 1) + "/" + Profile::Key::Led::Size
-		).toSize();
+    return m_currentProfile.value(
+                Profile::Key::Led::Prefix + QString::number(ledIndex + 1) + "/" + Profile::Key::Led::Size
+                ).toSize();
 }
 
 void Settings::setLedSize(int ledIndex, QSize size)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(
-			Profile::Key::Led::Prefix + QString::number(ledIndex + 1) + "/" + Profile::Key::Led::Size,
-			size);
-	this->ledSizeChanged(ledIndex, size);
+    m_currentProfile.setValue(
+                Profile::Key::Led::Prefix + QString::number(ledIndex + 1) + "/" + Profile::Key::Led::Size,
+                size);
+    this->ledSizeChanged(ledIndex, size);
 }
 
 QPoint Settings::getLedPosition(int ledIndex) const
 {
-	return m_currentProfile.value(
-			Profile::Key::Led::Prefix + QString::number(ledIndex + 1) + "/" + Profile::Key::Led::Position
-		).toPoint();
+    return m_currentProfile.value(
+                Profile::Key::Led::Prefix + QString::number(ledIndex + 1) + "/" + Profile::Key::Led::Position
+                ).toPoint();
 }
 
 void Settings::setLedPosition(int ledIndex, QPoint position)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(
-			Profile::Key::Led::Prefix + QString::number(ledIndex + 1) + "/" + Profile::Key::Led::Position,
-			position);
-	this->ledPositionChanged(ledIndex, position);
+    m_currentProfile.setValue(
+                Profile::Key::Led::Prefix + QString::number(ledIndex + 1) + "/" + Profile::Key::Led::Position,
+                position);
+    this->ledPositionChanged(ledIndex, position);
 }
 
 bool Settings::isLedEnabled(int ledIndex) const
 {
-	return m_currentProfile.valueOrDefault(
-			Profile::Key::Led::Prefix + QString::number(ledIndex + 1) + "/" + Profile::Key::Led::IsEnabled,
-			Profile::Led::IsEnabledDefault).toBool();
+    return m_currentProfile.valueOrDefault(
+                Profile::Key::Led::Prefix + QString::number(ledIndex + 1) + "/" + Profile::Key::Led::IsEnabled,
+                Profile::Led::IsEnabledDefault).toBool();
 }
 
 void Settings::setLedEnabled(int ledIndex, bool isEnabled)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-	m_currentProfile.setValue(
-			Profile::Key::Led::Prefix + QString::number(ledIndex + 1) + "/" + Profile::Key::Led::IsEnabled,
-			isEnabled);
-	this->ledEnabledChanged(ledIndex, isEnabled);
+    m_currentProfile.setValue(
+                Profile::Key::Led::Prefix + QString::number(ledIndex + 1) + "/" + Profile::Key::Led::IsEnabled,
+                isEnabled);
+    this->ledEnabledChanged(ledIndex, isEnabled);
 }
 
 // static
 int Settings::getValidDeviceRefreshDelay(int value)
 {
-	return clamp_value(value, Profile::Device::RefreshDelayMin, Profile::Device::RefreshDelayMax);
+    return clamp_value(value, Profile::Device::RefreshDelayMin, Profile::Device::RefreshDelayMax);
 }
 
 // static
 int Settings::getValidDeviceBrightness(int value)
 {
-	return clamp_value(value, Profile::Device::BrightnessMin, Profile::Device::BrightnessMax);
+    return clamp_value(value, Profile::Device::BrightnessMin, Profile::Device::BrightnessMax);
 }
 
 // static
 int Settings::getValidDeviceSmooth(int value)
 {
-	return clamp_value(value, Profile::Device::SmoothMin, Profile::Device::SmoothMax);
+    return clamp_value(value, Profile::Device::SmoothMin, Profile::Device::SmoothMax);
 }
 
 // static
 int Settings::getValidDeviceColorDepth(int value)
 {
-	return clamp_value(value, Profile::Device::ColorDepthMin, Profile::Device::ColorDepthMin);
+    return clamp_value(value, Profile::Device::ColorDepthMin, Profile::Device::ColorDepthMin);
 }
 
 // static
 double Settings::getValidDeviceGamma(double value)
 {
-	return clamp_value(value, Profile::Device::GammaMin, Profile::Device::GammaMin);
+    return clamp_value(value, Profile::Device::GammaMin, Profile::Device::GammaMin);
 }
 
 // static
 int Settings::getValidGrabSlowdown(int value)
 {
-	return clamp_value(value, Profile::Grab::SlowdownMin, Profile::Grab::SlowdownMax);
+    return clamp_value(value, Profile::Grab::SlowdownMin, Profile::Grab::SlowdownMax);
 }
 
 // static
 int Settings::getValidMoodLampSpeed(int value)
 {
-	return clamp_value(value, Profile::MoodLamp::SpeedMin, Profile::MoodLamp::SpeedMax);
+    return clamp_value(value, Profile::MoodLamp::SpeedMin, Profile::MoodLamp::SpeedMax);
 }
 
 // static
 int Settings::getValidLuminosityThreshold(int value)
 {
-	return clamp_value(value, Profile::Grab::MinimumLevelOfSensitivityMin, Profile::Grab::MinimumLevelOfSensitivityMin);
+    return clamp_value(value, Profile::Grab::MinimumLevelOfSensitivityMin, Profile::Grab::MinimumLevelOfSensitivityMin);
 }
 
-namespace {
-inline bool validateLedCoef(double coef, bool conversionResult, QString& errorDescription) {
-	if (!conversionResult) {
-		errorDescription = "Error: Convert to double.";
-		return false;
-	} else if (between(coef, Profile::Led::CoefMin, Profile::Led::CoefMax)){
-		errorDescription = "Error: outside the valid values (coef < " +
-				QString::number(Profile::Led::CoefMin) + " || coef > " + QString::number(Profile::Led::CoefMax) + ").";
-		return false;
-	}
+namespace
+{
+inline bool validateLedCoef(double coef, bool conversionResult, QString& errorDescription)
+{
+    if (!conversionResult)
+    {
+        errorDescription = "Error: Convert to double.";
+        return false;
+    } else if (between(coef, Profile::Led::CoefMin, Profile::Led::CoefMax)){
+        errorDescription = "Error: outside the valid values (coef < " +
+                QString::number(Profile::Led::CoefMin) + " || coef > " + QString::number(Profile::Led::CoefMax) + ").";
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
-inline double checkedLedCoef(const QString& prefix, const QString keyCoef, double coef, bool conversionResult) {
-	QString error;
-	if (validateLedCoef(coef, conversionResult, error))
-		return coef;
+inline double checkedLedCoef(const QString& prefix, const QString keyCoef, double coef, bool conversionResult)
+{
+    QString error;
+    if (validateLedCoef(coef, conversionResult, error))
+        return coef;
 
-	coef = Profile::Led::CoefDefault;
-	qWarning() << Q_FUNC_INFO << "Checking bad value"
-			   << "[" + prefix + "]"
-			   << keyCoef
-			   << error
-			   << ". Set it to default value" << keyCoef << "=" << coef;
-	return coef;
+    coef = Profile::Led::CoefDefault;
+    qWarning() << Q_FUNC_INFO << "Checking bad value"
+               << "[" + prefix + "]"
+               << keyCoef
+               << error
+               << ". Set it to default value" << keyCoef << "=" << coef;
+    return coef;
 }
 }
 
 void Settings::setValidLedCoef(int ledIndex, const QString & keyCoef, double coef)
 {
-	const QString prefix(Profile::Key::Led::Prefix + QString::number(ledIndex + 1));
-	coef = checkedLedCoef(prefix, keyCoef, coef, true);
-	m_currentProfile.setValue(prefix + "/" + keyCoef, coef);
+    const QString prefix(Profile::Key::Led::Prefix + QString::number(ledIndex + 1));
+    coef = checkedLedCoef(prefix, keyCoef, coef, true);
+    m_currentProfile.setValue(prefix + "/" + keyCoef, coef);
 }
 
 double Settings::getValidLedCoef(int ledIndex, const QString & keyCoef)
 {
     bool ok = false;
-	const QString prefix(Profile::Key::Led::Prefix + QString::number(ledIndex + 1));
-	double coef = Settings::value(prefix + "/" + keyCoef).toDouble(&ok);
-	double checkedCoef = checkedLedCoef(prefix, keyCoef, coef, ok);
-	if (coef == checkedCoef)
-		return coef;
+    const QString prefix(Profile::Key::Led::Prefix + QString::number(ledIndex + 1));
+    double coef = Settings::value(prefix + "/" + keyCoef).toDouble(&ok);
+    double checkedCoef = checkedLedCoef(prefix, keyCoef, coef, ok);
+    if (coef == checkedCoef)
+        return coef;
 
-	m_currentProfile.setValue(prefix + "/" + keyCoef, checkedCoef);
-	return checkedCoef;
+    m_currentProfile.setValue(prefix + "/" + keyCoef, checkedCoef);
+    return checkedCoef;
 }
 
-QString Settings::getProfilesPath() const {
-   return m_applicationDirPath + "Profiles/";
+QString Settings::getProfilesPath() const
+{
+    return m_applicationDirPath + "Profiles/";
 }
 
-uint Settings::getLastReadUpdateId() const {
-   return m_mainProfile.value(Main::Key::LastReadUpdateId).toUInt();
+uint Settings::getLastReadUpdateId() const
+{
+    return m_mainProfile.value(Main::Key::LastReadUpdateId).toUInt();
 }
 
-void Settings::setLastReadUpdateId(const uint updateId) {
-	m_mainProfile.setValue(Main::Key::LastReadUpdateId, updateId);
+void Settings::setLastReadUpdateId(const uint updateId)
+{
+    m_mainProfile.setValue(Main::Key::LastReadUpdateId, updateId);
 }
 
 void Settings::setValueMain(const QString & key, const QVariant & value)
 {
     DEBUG_MID_LEVEL << Q_FUNC_INFO << key << value;
 
-	m_mainProfile.setValue(key, value);
+    m_mainProfile.setValue(key, value);
 }
 
 QVariant Settings::valueMain(const QString & key) const
 {
-	QVariant value = m_mainProfile.value(key);
+    QVariant value = m_mainProfile.value(key);
     DEBUG_MID_LEVEL << Q_FUNC_INFO << key << "= " << value;
     return value;
 }
@@ -1745,31 +1831,33 @@ void Settings::setValue(const QString & key, const QVariant & value)
 {
     DEBUG_MID_LEVEL << Q_FUNC_INFO << key << "= " << value;
 
-	m_currentProfile.setValue(key, value);
+    m_currentProfile.setValue(key, value);
 }
 
 QVariant Settings::value(const QString & key) const
 {
-	QVariant value = m_currentProfile.value(key);
+    QVariant value = m_currentProfile.value(key);
     DEBUG_MID_LEVEL << Q_FUNC_INFO << key << "= " << value;
     return value;
 }
 
-QVariant Settings::pluginValue(const QString & pluginId, const QString & key) const {
-	const QString pluginKey = pluginId + "/" + key;
-	return m_mainProfile.value(pluginKey);
+QVariant Settings::pluginValue(const QString & pluginId, const QString & key) const
+{
+    const QString pluginKey = pluginId + "/" + key;
+    return m_mainProfile.value(pluginKey);
 }
 
-void Settings::setPluginValue(const QString & pluginId, const QString & key, const QVariant& value) {
-	const QString pluginKey = pluginId + "/" + key;
-	return m_mainProfile.setValue(pluginKey, value);
+void Settings::setPluginValue(const QString & pluginId, const QString & key, const QVariant& value)
+{
+    const QString pluginKey = pluginId + "/" + key;
+    return m_mainProfile.setValue(pluginKey, value);
 }
 
 void Settings::initDevicesMap()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-	m_devicesTypeToNameMap[SupportedDevices::DefaultDeviceType]  = Main::Value::ConnectedDevice::AdalightDevice;
+    m_devicesTypeToNameMap[SupportedDevices::DefaultDeviceType]  = Main::Value::ConnectedDevice::AdalightDevice;
     m_devicesTypeToNameMap[SupportedDevices::DeviceTypeAdalight]  = Main::Value::ConnectedDevice::AdalightDevice;
     m_devicesTypeToNameMap[SupportedDevices::DeviceTypeArdulight] = Main::Value::ConnectedDevice::ArdulightDevice;
     m_devicesTypeToNameMap[SupportedDevices::DeviceTypeLightpack] = Main::Value::ConnectedDevice::LightpackDevice;
@@ -1785,9 +1873,8 @@ void Settings::initDevicesMap()
     m_devicesTypeToKeyNumberOfLedsMap[SupportedDevices::DeviceTypeAlienFx]   = Main::Key::AlienFx::NumberOfLeds;
 #endif
 
-	if (!m_devicesTypeToNameMap.contains(SupportedDevices::DefaultDeviceType)) {
-		m_devicesTypeToNameMap[SupportedDevices::DefaultDeviceType] = Main::ConnectedDeviceDefault;
-	}
+    if (!m_devicesTypeToNameMap.contains(SupportedDevices::DefaultDeviceType))
+        m_devicesTypeToNameMap[SupportedDevices::DefaultDeviceType] = Main::ConnectedDeviceDefault;
 }
 
 /*
@@ -1795,17 +1882,17 @@ void Settings::initDevicesMap()
  */
 void Settings::migrateSettings()
 {
-	static const BaseVersion kVersion_1_0(1, 0);
-	static const BaseVersion kVersion_2_0(2, 0);
-	static const BaseVersion kVersion_3_0(3, 0);
-	static const BaseVersion kVersion_4_0(4, 0);
+    static const BaseVersion kVersion_1_0(1, 0);
+    static const BaseVersion kVersion_2_0(2, 0);
+    static const BaseVersion kVersion_3_0(3, 0);
+    static const BaseVersion kVersion_4_0(4, 0);
 
-	BaseVersion configVersion(m_mainProfile.value(Main::Key::MainConfigVersion).toString());
-	if (configVersion == kVersion_1_0) {
-
-		if (getConnectedDevice() == SupportedDevices::DeviceTypeLightpack) {
-
-			const int remap[] = {3, 4, 2, 1, 0, 5, 6, 7, 8, 9};
+    BaseVersion configVersion(m_mainProfile.value(Main::Key::MainConfigVersion).toString());
+    if (configVersion == kVersion_1_0)
+    {
+        if (getConnectedDevice() == SupportedDevices::DeviceTypeLightpack)
+        {
+            const int remap[] = {3, 4, 2, 1, 0, 5, 6, 7, 8, 9};
 
             const int ledCount = getNumberOfLeds(SupportedDevices::DeviceTypeLightpack);
             QMap<int, LedInfo> ledInfoMap;
@@ -1820,29 +1907,32 @@ void Settings::migrateSettings()
                 ledInfoMap.insert(remap[i], ledInfo);
             }
 
-			const QList<LedInfo> remappedLeds = ledInfoMap.values();
-            for (int i = 0; i < remappedLeds.size(); ++i) {
-                Settings::setLedEnabled(i, remappedLeds[i].isEnabled);
-                Settings::setLedPosition(i, remappedLeds[i].position);
-                Settings::setLedSize(i, remappedLeds[i].size);
-                Settings::setLedCoefRed(i, remappedLeds[i].wbRed);
-                Settings::setLedCoefGreen(i, remappedLeds[i].wbGreen);
-                Settings::setLedCoefBlue(i, remappedLeds[i].wbBlue);
+            const QList<LedInfo> remappedLeds = ledInfoMap.values();
+            for (int i = 0; i < remappedLeds.size(); ++i)
+            {
+                setLedEnabled(i, remappedLeds[i].isEnabled);
+                setLedPosition(i, remappedLeds[i].position);
+                setLedSize(i, remappedLeds[i].size);
+                setLedCoefRed(i, remappedLeds[i].wbRed);
+                setLedCoefGreen(i, remappedLeds[i].wbGreen);
+                setLedCoefBlue(i, remappedLeds[i].wbBlue);
             }
         }
-		configVersion = kVersion_2_0;
+        configVersion = kVersion_2_0;
     }
-	if (configVersion == kVersion_2_0) {
+    if (configVersion == kVersion_2_0)
+    {
         // Disable ApiAuth by default
         setApiKey("");
 
         // Remove obsolete keys
-		const QString authEnabledKey = "API/IsAuthEnabled";
-		m_mainProfile.remove(authEnabledKey);
+        const QString authEnabledKey = "API/IsAuthEnabled";
+        m_mainProfile.remove(authEnabledKey);
 
-		configVersion = kVersion_3_0;
+        configVersion = kVersion_3_0;
     }
-	if (configVersion == kVersion_3_0) {
+    if (configVersion == kVersion_3_0)
+    {
 #ifdef WINAPI_GRAB_SUPPORT
         Settings::setGrabberType(Grab::GrabberTypeWinAPI);
 #endif
@@ -1855,8 +1945,8 @@ void Settings::migrateSettings()
         Settings::setGrabberType(Grab::GrabberTypeMacCoreGraphics);
 #endif
 
-		configVersion = kVersion_4_0;
+        configVersion = kVersion_4_0;
     }
-	setValueMain(Main::Key::MainConfigVersion, configVersion.toString());
+    setValueMain(Main::Key::MainConfigVersion, configVersion.toString());
 }
 } /*SettingsScope*/

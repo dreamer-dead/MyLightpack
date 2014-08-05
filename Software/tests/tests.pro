@@ -58,7 +58,9 @@ HEADERS += \
     lightpackmathtest.hpp \
     AppVersionTest.hpp \
     ../src/UpdatesProcessor.hpp \
-    SettingsTest.hpp
+    SettingsTest.hpp \
+    SettingsSourceMockupTest.hpp \
+    SettingsSourceMockup.hpp
 
 SOURCES += \
     ../src/ApiServerSetColorTask.cpp \
@@ -73,7 +75,9 @@ SOURCES += \
     TestsMain.cpp \
     AppVersionTest.cpp \
     ../src/UpdatesProcessor.cpp \
-    SettingsTest.cpp
+    SettingsTest.cpp \
+    SettingsSourceMockup.cpp \
+    SettingsSourceMockupTest.cpp
 
 win32{
     HEADERS += \
