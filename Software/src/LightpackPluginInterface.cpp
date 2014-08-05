@@ -354,27 +354,27 @@ bool LightpackPluginInterface::SetProfile(QString sessionKey,QString profile)
 {
     if (lockSessionKeys.isEmpty()) return false;
     if (lockSessionKeys[0]!=sessionKey) return false;
-	 QStringList profiles = Settings::instance()->findAllProfiles();
-     if (profiles.contains(profile))
-     {
-         emit updateProfile(profile);
-         return true;
-     } else
-         return false;
+    QStringList profiles = Settings::instance()->findAllProfiles();
+    if (profiles.contains(profile))
+    {
+        emit updateProfile(profile);
+        return true;
+    } else
+        return false;
 }
 
 bool LightpackPluginInterface::SetDevice(QString sessionKey,QString device)
 {
     if (lockSessionKeys.isEmpty()) return false;
     if (lockSessionKeys[0]!=sessionKey) return false;
-	 QStringList devices = Settings::instance()->getSupportedDevices();
-     if (devices.contains(device))
-     {
-		 //Settings::instance()->setConnectedDeviceName(device);
-         emit changeDevice(device);
-         return true;
-     } else
-         return false;
+    QStringList devices = Settings::instance()->getSupportedDevices();
+    if (devices.contains(device))
+    {
+        //Settings::instance()->setConnectedDeviceName(device);
+        emit changeDevice(device);
+        return true;
+    } else
+        return false;
 }
 
 bool LightpackPluginInterface::SetStatus(QString sessionKey, int status)
@@ -403,12 +403,12 @@ bool LightpackPluginInterface::SetLeds(QString sessionKey, QList<QRect> leds)
     if (lockSessionKeys[0]!=sessionKey) return false;
     int num =0;
      foreach(QRect rectLed, leds){
-		Settings::instance()->setLedPosition(num, QPoint(rectLed.x(),rectLed.y()));
-		Settings::instance()->setLedSize(num,QSize(rectLed.width(),rectLed.height()));
-        ++ num;
+        Settings::instance()->setLedPosition(num, QPoint(rectLed.x(),rectLed.y()));
+        Settings::instance()->setLedSize(num,QSize(rectLed.width(),rectLed.height()));
+        ++num;
      }
     emit updateCountLeds(leds.count());
-	QString profile = Settings::instance()->getCurrentProfileName();
+    QString profile = Settings::instance()->getCurrentProfileName();
     emit updateProfile(profile);
     return true;
 }
@@ -418,23 +418,23 @@ bool LightpackPluginInterface::NewProfile(QString sessionKey, QString profile)
     if (lockSessionKeys.isEmpty()) return false;
     if (lockSessionKeys[0]!=sessionKey) return false;
 
-	 Settings::instance()->loadOrCreateProfile(profile);
-     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "OK:" << profile;
-     emit updateProfile(profile);
+    Settings::instance()->loadOrCreateProfile(profile);
+    DEBUG_LOW_LEVEL << Q_FUNC_INFO << "OK:" << profile;
+    emit updateProfile(profile);
 
-     return true;
+    return true;
 }
 
 bool LightpackPluginInterface::DeleteProfile(QString sessionKey, QString profile)
 {
     if (lockSessionKeys.isEmpty()) return false;
     if (lockSessionKeys[0]!=sessionKey) return false;
-	QStringList profiles = Settings::instance()->findAllProfiles();
+    QStringList profiles = Settings::instance()->findAllProfiles();
     if (profiles.contains(profile))
     {
-		Settings::instance()->loadOrCreateProfile(profile);
-		Settings::instance()->removeCurrentProfile();
-		QString profileLast = Settings::instance()->getLastProfileName();
+        Settings::instance()->loadOrCreateProfile(profile);
+        Settings::instance()->removeCurrentProfile();
+        QString profileLast = Settings::instance()->getLastProfileName();
         emit updateProfile(profileLast);
         return true;
     }
@@ -468,7 +468,7 @@ bool LightpackPluginInterface::SetCountLeds(QString sessionKey, int countLeds)
     if (lockSessionKeys.isEmpty()) return false;
     if (lockSessionKeys[0]!=sessionKey) return false;
 
-	Settings::instance()->setNumberOfLeds(Settings::instance()->getConnectedDevice(), countLeds);
+    Settings::instance()->setNumberOfLeds(Settings::instance()->getConnectedDevice(), countLeds);
     emit updateCountLeds(countLeds);
     return true;
 
@@ -476,7 +476,7 @@ bool LightpackPluginInterface::SetCountLeds(QString sessionKey, int countLeds)
 
 int LightpackPluginInterface::GetCountLeds()
 {
-	return Settings::instance()->getNumberOfLeds(Settings::instance()->getConnectedDevice());
+    return Settings::instance()->getNumberOfLeds(Settings::instance()->getConnectedDevice());
 }
 
 int LightpackPluginInterface::GetStatus()
@@ -528,21 +528,21 @@ bool LightpackPluginInterface::GetStatusAPI()
 
 QStringList LightpackPluginInterface::GetProfiles()
 {
-	return Settings::instance()->findAllProfiles();
+    return Settings::instance()->findAllProfiles();
 }
 
 QString LightpackPluginInterface::GetProfile()
 {
-	return Settings::instance()->getCurrentProfileName();
+    return Settings::instance()->getCurrentProfileName();
 }
 
 QList<QRect> LightpackPluginInterface::GetLeds()
 {
     QList<QRect> leds;
-	for (int i = 0; i < Settings::instance()->getNumberOfLeds(Settings::instance()->getConnectedDevice()); i++)
+    for (int i = 0; i < Settings::instance()->getNumberOfLeds(Settings::instance()->getConnectedDevice()); i++)
     {
-		QPoint top = Settings::instance()->getLedPosition(i);
-		QSize size = Settings::instance()->getLedSize(i);
+        QPoint top = Settings::instance()->getLedPosition(i);
+        QSize size = Settings::instance()->getLedSize(i);
         leds << QRect(top.x(),top.y(),size.width(),size.height());
     }
     return leds;
@@ -565,7 +565,7 @@ QRect LightpackPluginInterface::GetScreenSize()
 
 int LightpackPluginInterface::GetBacklight()
 {
-	Lightpack::Mode mode =  Settings::instance()->getLightpackMode();
+    const Lightpack::Mode mode =  Settings::instance()->getLightpackMode();
 
     switch (mode)
     {
@@ -584,30 +584,28 @@ int LightpackPluginInterface::GetBacklight()
 
 QString LightpackPluginInterface::GetPluginsDir()
 {
-	return  QString(Settings::instance()->getApplicationDirPath() + "Plugins");
+    return QString(Settings::instance()->getApplicationDirPath() + "Plugins");
 }
 
 /*
 // TODO: settings (global or profile?)
 void LightpackPluginInterface::SetSettingProfile(QString key, QVariant value)
 {
-	Settings::instance()->setValue(key,value);
+    Settings::instance()->setValue(key,value);
 }
 
 QVariant LightpackPluginInterface::GetSettingProfile(QString key)
 {
-	return Settings::instance()->value(key);
+    return Settings::instance()->value(key);
 }
 
 void LightpackPluginInterface::SetSettingMain(QString key, QVariant value)
 {
-	Settings::instance()->setValueMain(key,value);
+    Settings::instance()->setValueMain(key,value);
 }
 
 QVariant LightpackPluginInterface::GetSettingMain(QString key)
 {
-	return Settings::instance()->valueMain(key);
+    return Settings::instance()->valueMain(key);
 }
 //*/
-
-

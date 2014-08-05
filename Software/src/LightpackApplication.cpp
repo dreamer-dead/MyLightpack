@@ -196,7 +196,7 @@ void LightpackApplication::setStatusChanged(Backlight::Status status)
 void LightpackApplication::setBacklightChanged(Lightpack::Mode mode)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << mode;
-	Settings::instance()->setLightpackMode(mode);
+    Settings::instance()->setLightpackMode(mode);
     if (!m_noGui)
         m_settingsWindow->setModeChanged(mode);
     startBacklight();
@@ -227,9 +227,9 @@ void LightpackApplication::startBacklight()
 
     m_pluginInterface->resultBacklightStatus(m_backlightStatus);
 
-	Settings::instance()->setIsBacklightEnabled(isBacklightEnabled);
+    Settings::instance()->setIsBacklightEnabled(isBacklightEnabled);
 
-	const Lightpack::Mode lightpackMode = Settings::instance()->getLightpackMode();
+    const Lightpack::Mode lightpackMode = Settings::instance()->getLightpackMode();
     switch (lightpackMode)
     {
     case Lightpack::AmbilightMode:
@@ -288,11 +288,11 @@ void LightpackApplication::quitFromWizard(int result)
 
 void LightpackApplication::processCommandLineArguments()
 {
+    const QStringList& args = arguments();
+
     g_debugLevel = SettingsScope::Main::DebugLevelDefault;
-
     m_isDebugLevelObtainedFromCmdArgs = false;
-
-    for (int i = 1; i < arguments().count(); i++)
+    for (int i = 1; i < args.count(); i++)
     {
         if (arguments().at(i) == "--nogui")
         {
@@ -301,7 +301,9 @@ void LightpackApplication::processCommandLineArguments()
         }
         else if (arguments().at(i) == "--wizard")
         {
-            bool isInitFromSettings = Settings::Initialize(m_applicationDirPath, false);
+            SettingsScope::Settings::Overrides overrides;
+            overrides.setDebuglevel(static_cast<Debug::DebugLevels>(g_debugLevel));
+            bool isInitFromSettings = Settings::Initialize(m_applicationDirPath, overrides);
             runWizardLoop(isInitFromSettings);
         }
         else if (arguments().at(i) == "--off")
@@ -328,7 +330,6 @@ void LightpackApplication::processCommandLineArguments()
         {
             g_debugLevel = Debug::MidLevel;
             m_isDebugLevelObtainedFromCmdArgs = true;
-
         }
         else if (arguments().at(i) =="--debug-low")
         {
@@ -338,7 +339,7 @@ void LightpackApplication::processCommandLineArguments()
         }
         else if (arguments().at(i) =="--debug-zero")
         {
-            g_debugLevel = Debug::ZeroLevel;
+            g_debugLevel = Debug::LowLevel;
             m_isDebugLevelObtainedFromCmdArgs = true;
         } else {
             qDebug() << "Wrong argument:" << arguments().at(i);

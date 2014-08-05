@@ -63,7 +63,7 @@ SpeedTest::SpeedTest() : QObject()
 
 void SpeedTest::start()
 {
-	QString filePath = Settings::instance()->getApplicationDirPath() + "/SpeedTest.csv";
+    const QString filePath = Settings::instance()->getApplicationDirPath() + "/SpeedTest.csv";
 
     resultFile.setFileName( filePath );
 
