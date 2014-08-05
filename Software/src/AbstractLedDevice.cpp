@@ -58,11 +58,11 @@ void AbstractLedDevice::updateWBAdjustments(const QList<WBAdjustment> &coefs) {
 void AbstractLedDevice::updateDeviceSettings()
 {
     using namespace SettingsScope;
-	setGamma(Settings::instance()->getDeviceGamma());
-	setBrightness(Settings::instance()->getDeviceBrightness());
-	setLuminosityThreshold(Settings::instance()->getLuminosityThreshold());
-	setMinimumLuminosityThresholdEnabled(Settings::instance()->isMinimumLuminosityEnabled());
-	updateWBAdjustments(Settings::instance()->getLedCoefs());
+    setGamma(Settings::instance()->getDeviceGamma());
+    setBrightness(Settings::instance()->getDeviceBrightness());
+    setLuminosityThreshold(Settings::instance()->getLuminosityThreshold());
+    setMinimumLuminosityThresholdEnabled(Settings::instance()->isMinimumLuminosityEnabled());
+    updateWBAdjustments(Settings::instance()->getLedCoefs());
 }
 
 /*!

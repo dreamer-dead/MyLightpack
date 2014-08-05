@@ -46,11 +46,11 @@ MoodLampManager::MoodLampManager(QObject *parent) : QObject(parent)
     m_isMoodLampEnabled = false;
     m_rgbSaved = 0;
 
-	m_isLiquidMode = Settings::instance()->isMoodLampLiquidMode();
-	m_liquidModeSpeed = Settings::instance()->getMoodLampSpeed();
-	m_currentColor = Settings::instance()->getMoodLampColor();
+    m_isLiquidMode = Settings::instance()->isMoodLampLiquidMode();
+    m_liquidModeSpeed = Settings::instance()->getMoodLampSpeed();
+    m_currentColor = Settings::instance()->getMoodLampColor();
 
-	m_isSendDataOnlyIfColorsChanged = Settings::instance()->isSendDataOnlyIfColorsChanges();
+    m_isSendDataOnlyIfColorsChanged = Settings::instance()->isSendDataOnlyIfColorsChanges();
 
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(updateColors()));
 }
@@ -133,10 +133,10 @@ void MoodLampManager::settingsProfileChanged(const QString &profileName)
 
 void MoodLampManager::initFromSettings()
 {
-	m_liquidModeSpeed = Settings::instance()->getMoodLampSpeed();
-	m_currentColor = Settings::instance()->getMoodLampColor();
-	setLiquidMode(Settings::instance()->isMoodLampLiquidMode());
-	m_isSendDataOnlyIfColorsChanged = Settings::instance()->isSendDataOnlyIfColorsChanges();
+    m_liquidModeSpeed = Settings::instance()->getMoodLampSpeed();
+    m_currentColor = Settings::instance()->getMoodLampColor();
+    setLiquidMode(Settings::instance()->isMoodLampLiquidMode());
+    m_isSendDataOnlyIfColorsChanged = Settings::instance()->isSendDataOnlyIfColorsChanges();
 
 	initColors(Settings::instance()->getNumberOfLeds(Settings::instance()->getConnectedDevice()));
 }
@@ -230,7 +230,7 @@ void MoodLampManager::fillColors(QRgb rgb)
 
     for (int i = 0; i < m_colors.size(); i++)
     {
-		if (Settings::instance()->isLedEnabled(i))
+        if (Settings::instance()->isLedEnabled(i))
             m_colors[i] = rgb;
         else
             m_colors[i] = 0;

@@ -331,7 +331,7 @@ void LedDeviceManager::initLedDevice()
 
     m_isLastCommandCompleted = true;
 
-	SupportedDevices::DeviceType connectedDevice = Settings::instance()->getConnectedDevice();
+    SupportedDevices::DeviceType connectedDevice = Settings::instance()->getConnectedDevice();
 
     if (m_ledDevices[connectedDevice] == NULL)
     {
@@ -359,8 +359,8 @@ AbstractLedDevice * LedDeviceManager::createLedDevice(SupportedDevices::DeviceTy
 #       if !defined(Q_OS_WIN)
         qWarning() << Q_FUNC_INFO << "AlienFx not supported on current platform";
 
-		Settings::instance()->setConnectedDevice(SupportedDevices::DefaultDeviceType);
-		deviceType = Settings::instance()->getConnectedDevice();
+        Settings::instance()->setConnectedDevice(SupportedDevices::DefaultDeviceType);
+        deviceType = Settings::instance()->getConnectedDevice();
 #       endif /* Q_OS_WIN */
     }
 
@@ -565,5 +565,3 @@ void LedDeviceManager::ledDeviceCommandTimedOut()
     ledDeviceCommandCompleted(false);
     emit ioDeviceSuccess(false);
 }
-
-

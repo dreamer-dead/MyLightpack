@@ -196,7 +196,7 @@ void LightpackApplication::setStatusChanged(Backlight::Status status)
 void LightpackApplication::setBacklightChanged(Lightpack::Mode mode)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << mode;
-	Settings::instance()->setLightpackMode(mode);
+    Settings::instance()->setLightpackMode(mode);
     if (!m_noGui)
         m_settingsWindow->setModeChanged(mode);
     startBacklight();
@@ -227,9 +227,9 @@ void LightpackApplication::startBacklight()
 
     m_pluginInterface->resultBacklightStatus(m_backlightStatus);
 
-	Settings::instance()->setIsBacklightEnabled(isBacklightEnabled);
+    Settings::instance()->setIsBacklightEnabled(isBacklightEnabled);
 
-	const Lightpack::Mode lightpackMode = Settings::instance()->getLightpackMode();
+    const Lightpack::Mode lightpackMode = Settings::instance()->getLightpackMode();
     switch (lightpackMode)
     {
     case Lightpack::AmbilightMode:
@@ -289,10 +289,10 @@ void LightpackApplication::quitFromWizard(int result)
 void LightpackApplication::processCommandLineArguments(SettingsScope::Settings::Overrides& overrides)
 {
     static const QString kSetProfileOption("--set-profile=");
-	bool isDebugLevelObtainedFromCmdArgs = false;
+    bool isDebugLevelObtainedFromCmdArgs = false;
     const QStringList& args = arguments();
 
-	g_debugLevel = SettingsScope::Main::DebugLevelDefault;
+    g_debugLevel = SettingsScope::Main::DebugLevelDefault;
     for (int i = 1; i < args.count(); i++)
     {
         const QString& argument = args.at(i);
@@ -303,7 +303,7 @@ void LightpackApplication::processCommandLineArguments(SettingsScope::Settings::
         }
         else if (argument == "--wizard")
         {
-			bool isInitFromSettings = Settings::Initialize(m_applicationDirPath, overrides);
+            bool isInitFromSettings = Settings::Initialize(m_applicationDirPath, overrides);
             runWizardLoop(isInitFromSettings);
         }
         else if (argument == "--off")
@@ -324,12 +324,12 @@ void LightpackApplication::processCommandLineArguments(SettingsScope::Settings::
         else if (argument =="--debug-high")
         {
             g_debugLevel = Debug::HighLevel;
-			isDebugLevelObtainedFromCmdArgs = true;
+            isDebugLevelObtainedFromCmdArgs = true;
         }
         else if (argument =="--debug-mid")
         {
             g_debugLevel = Debug::MidLevel;
-			isDebugLevelObtainedFromCmdArgs = true;
+            isDebugLevelObtainedFromCmdArgs = true;
 
         }
         else if (argument =="--debug-low")

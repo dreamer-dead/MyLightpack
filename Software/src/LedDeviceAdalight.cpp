@@ -184,7 +184,7 @@ void LedDeviceAdalight::updateDeviceSettings()
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
     AbstractLedDevice::updateDeviceSettings();
-	setColorSequence(Settings::instance()->getColorSequence(SupportedDevices::DeviceTypeAdalight));
+    setColorSequence(Settings::instance()->getColorSequence(SupportedDevices::DeviceTypeAdalight));
 }
 
 void LedDeviceAdalight::open()
@@ -199,7 +199,7 @@ void LedDeviceAdalight::open()
     else
         m_AdalightDevice = new QSerialPort();
 
-	m_AdalightDevice->setPortName(m_portName);// Settings::instance()->getAdalightSerialPortName());
+    m_AdalightDevice->setPortName(m_portName);// Settings::instance()->getAdalightSerialPortName());
 
     m_AdalightDevice->open(QIODevice::WriteOnly | QIODevice::Unbuffered);
     bool ok = m_AdalightDevice->isOpen();
@@ -216,7 +216,7 @@ void LedDeviceAdalight::open()
     {
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "Serial device" << m_AdalightDevice->portName() << "open";
 
-		ok = m_AdalightDevice->setBaudRate(m_baudRate);//Settings::instance()->getAdalightSerialPortBaudRate());
+        ok = m_AdalightDevice->setBaudRate(m_baudRate);//Settings::instance()->getAdalightSerialPortBaudRate());
         if (ok)
         {
             ok = m_AdalightDevice->setDataBits(QSerialPort::Data8);

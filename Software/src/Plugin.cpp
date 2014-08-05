@@ -84,20 +84,20 @@ QIcon Plugin::Icon() const  {
 }
 
 int Plugin::getPriority() const {
-	return Settings::instance()->pluginValue(this->_name, kPriorityKey).toInt();
+    return Settings::instance()->pluginValue(this->_name, kPriorityKey).toInt();
 }
 
 void Plugin::setPriority(int priority) {
-	Settings::instance()->setPluginValue(this->_name, kPriorityKey, priority);
+    Settings::instance()->setPluginValue(this->_name, kPriorityKey, priority);
 }
 
 bool Plugin::isEnabled() const {
-	return Settings::instance()->pluginValue(this->_name, kEnableKey).toBool();
+    return Settings::instance()->pluginValue(this->_name, kEnableKey).toBool();
 }
 
 void Plugin::setEnabled(bool enable){
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << enable;
-	Settings::instance()->setPluginValue(this->_name, kEnableKey, enable);
+    Settings::instance()->setPluginValue(this->_name, kEnableKey, enable);
     if (!enable) this->Stop();
     if (enable) this->Start();
 }
