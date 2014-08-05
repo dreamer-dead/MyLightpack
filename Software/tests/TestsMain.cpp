@@ -4,6 +4,7 @@
 #include "GrabCalculationTest.hpp"
 #include "lightpackmathtest.hpp"
 #include "AppVersionTest.hpp"
+#include "SettingsSourceMockupTest.hpp"
 #include "SettingsTest.hpp"
 #ifdef Q_OS_WIN
 #include "HooksTest.h"
@@ -35,6 +36,7 @@ int main(int argc, char *argv[])
 	tests.append(new LightpackApiTest());
 	tests.append(new AppVersionTest());
 #endif
+	tests.append(new SettingsSourceMockupTest());
 	tests.append(new SettingsTest());
 
     for(int i=0; i < tests.size(); i++) {
