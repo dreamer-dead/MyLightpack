@@ -34,6 +34,11 @@ class GrabberContext;
 class TimeEvaluations;
 class D3D10Grabber;
 
+namespace SettingsScope
+{
+class Settings;
+}
+
 class GrabManager : public QObject
 {
     Q_OBJECT

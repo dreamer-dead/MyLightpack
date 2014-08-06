@@ -71,7 +71,10 @@ void LightpackApplication::initializeAll(const QString & appDirPath)
     if (isRunning())
         return;
 
-    if (!Settings::Initialize(m_applicationDirPath, m_isDebugLevelObtainedFromCmdArgs)
+    SettingsScope::Settings::Overrides overrides;
+    if (m_isDebugLevelObtainedFromCmdArgs)
+        overrides.setDebuglevel(static_cast<Debug::DebugLevels>(g_debugLevel));
+    if (!Settings::Initialize(m_applicationDirPath, overrides)
             && !m_noGui) {
         runWizardLoop(false);
     }

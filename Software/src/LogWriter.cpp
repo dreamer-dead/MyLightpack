@@ -62,7 +62,7 @@ void LogWriter::writeMessage(const QString& msg, Level level)
 void LogWriter::messageHandler(QtMsgType type, const QMessageLogContext &ctx, const QString &msg)
 {
     static const LogWriter::Level s_msgType2Loglevel[] = {
-        LogWriter::Debug, LogWriter::Warn, LogWriter::Critical, LogWriter::Fatal, LogWriter::Debug
+        LogWriter::Debug, LogWriter::Warn, LogWriter::Critical, LogWriter::Fatal
     };
     Q_ASSERT(type >= 0 && type < sizeof(s_msgType2Loglevel)/sizeof(s_msgType2Loglevel[0]));
     Q_UNUSED(ctx);
