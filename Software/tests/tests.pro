@@ -50,6 +50,7 @@ HEADERS += \
     ../src/Settings.hpp \
     ../src/Plugin.hpp \
     ../src/LightpackPluginInterface.hpp \
+    ../src/LightpackCommandLineParser.hpp \
     ../grab/include/calculations.hpp \
     ../math/include/PrismatikMath.hpp \
     SettingsWindowMockup.hpp \
@@ -60,7 +61,8 @@ HEADERS += \
     ../src/UpdatesProcessor.hpp \
     SettingsTest.hpp \
     SettingsSourceMockupTest.hpp \
-    SettingsSourceMockup.hpp
+    SettingsSourceMockup.hpp \
+    LightpackCommandLineParserTest.hpp
 
 SOURCES += \
     ../src/ApiServerSetColorTask.cpp \
@@ -68,6 +70,7 @@ SOURCES += \
     ../src/Settings.cpp \
     ../src/Plugin.cpp \
     ../src/LightpackPluginInterface.cpp \
+    ../src/LightpackCommandLineParser.cpp \
     LightpackApiTest.cpp \
     SettingsWindowMockup.cpp \
     GrabCalculationTest.cpp \
@@ -77,7 +80,8 @@ SOURCES += \
     ../src/UpdatesProcessor.cpp \
     SettingsTest.cpp \
     SettingsSourceMockup.cpp \
-    SettingsSourceMockupTest.cpp
+    SettingsSourceMockupTest.cpp \
+    LightpackCommandLineParserTest.cpp
 
 win32{
     HEADERS += \
