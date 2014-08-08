@@ -218,7 +218,8 @@ SOURCES += \
     settings/DeviceTypesInfo.cpp \
     settings/Settings.cpp \
     settings/ConfigurationProfile.cpp \
-    settings/SettingsProfiles.cpp
+    settings/SettingsProfiles.cpp \
+    LightpackCommandLineParser.cpp
 
 HEADERS += \
     LightpackApplication.hpp \
@@ -279,7 +280,8 @@ HEADERS += \
     settings/SettingsSignals.hpp \
     settings/SettingsProfiles.hpp \
     settings/DeviceTypesInfo.hpp \
-    settings/SettingsReader.hpp
+    settings/SettingsReader.hpp \
+    LightpackCommandLineParser.hpp
 
 !contains(DEFINES,UNITY_DESKTOP) {
     HEADERS += systrayicon/SysTrayIcon_qt_p.hpp

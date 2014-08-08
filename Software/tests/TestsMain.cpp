@@ -1,4 +1,3 @@
-
 #include <QtTest/QtTest>
 #include "LightpackApiTest.hpp"
 #include "GrabCalculationTest.hpp"
@@ -9,6 +8,7 @@
 #ifdef Q_OS_WIN
 #include "HooksTest.h"
 #endif
+#include "LightpackCommandLineParserTest.hpp"
 #include "debug.h"
 
 #include <iostream>
@@ -24,20 +24,17 @@ int main(int argc, char *argv[])
 
     QList<QObject *> tests;
     QStringList summary;
-
-#if 0
     tests.append(new GrabCalculationTest());
 
 #ifdef Q_OS_WIN
     tests.append(new HooksTest());
 #endif
 
-	tests.append(new LightpackMathTest());
-	tests.append(new LightpackApiTest());
-	tests.append(new AppVersionTest());
-#endif
-	tests.append(new SettingsSourceMockupTest());
-	tests.append(new SettingsTest());
+    tests.append(new LightpackMathTest());
+    tests.append(new LightpackApiTest());
+    tests.append(new AppVersionTest());
+    tests.append(new SettingsSourceMockupTest());
+    tests.append(new SettingsTest());
 
     for(int i=0; i < tests.size(); i++) {
         if (QTest::qExec(tests[i], argc, argv)) {

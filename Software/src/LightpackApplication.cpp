@@ -34,6 +34,7 @@
 #include "PluginsManager.hpp"
 #include "wizard/Wizard.hpp"
 #include "Plugin.hpp"
+#include "LightpackCommandLineParser.hpp"
 
 #include <stdio.h>
 #include <iostream>
@@ -294,54 +295,33 @@ void LightpackApplication::processCommandLineArguments()
     g_debugLevel = SettingsScope::Main::DebugLevelDefault;
     m_isDebugLevelObtainedFromCmdArgs = false;
 
-    QCommandLineParser parser;
-    parser.setApplicationDescription("Prismatik of Lightpack");
-    const QCommandLineOption optionHelp = parser.addHelpOption();
-    const QCommandLineOption optionVersion = parser.addVersionOption();
-    const QCommandLineOption optionNogui("nogui", "no GUI (console mode)");
-    parser.addOption(optionNogui);
-
-    const QCommandLineOption optionWizard("wizard", "run settings wizard first");
-    parser.addOption(optionWizard);
-
-    const QCommandLineOption optionOn("on", "send 'on leds' cmd to running instance, if any");
-    parser.addOption(optionOn);
-
-    const QCommandLineOption optionOff("off", "send 'off leds' cmd to the device or running instance");
-    parser.addOption(optionOff);
-
-    const QCommandLineOption optionSetProfile("set-profile", "switch to another profile in already running instance", "profile");
-    parser.addOption(optionSetProfile);
-
-    const QCommandLineOption optionDebug("debug", "verbosity level of debug output (high, mid, low, zero)", "debug");
-    parser.addOption(optionDebug);
-
-    if ( !parser.parse(arguments()) ) {
+    LightpackCommandLineParser parser;
+    if (!parser.parse(arguments())) {
         outputMessage(parser.errorText());
         ::exit(WrongCommandLineArgument_ErrorCode);
     }
 
-    if (parser.isSet(optionHelp)) {
+    if (parser.isSetHelp()) {
         outputMessage(parser.helpText());
         ::exit(0);
     }
-
-    if (parser.isSet(optionVersion)) {
-        QString m = "Version: " + QString(VERSION_STR) + "\n"
+    if (parser.isSetVersion())
+    {
+        const QString versionString =
+            "Version: " VERSION_STR "\n"
 #ifdef GIT_REVISION
-            "Revision: " + QString(GIT_REVISION) + "\n"
+            "Revision: " GIT_REVISION "\n"
 #endif
-            "Build with Qt version " + QString(QT_VERSION_STR) + "\n";
-        outputMessage(m);
+            "Build with Qt version " QT_VERSION_STR "\n";
+        outputMessage(versionString);
         ::exit(0);
     }
 
     // these two options are mutually exclusive
-    if (parser.isSet(optionNogui)) {
+    if (parser.isSetNoGUI()) {
         m_noGui = true;
         DEBUG_LOW_LEVEL <<  "Application running no_GUI mode";
-    }
-    else if (parser.isSet(optionWizard)) {
+    } else if (parser.isSetWizard()) {
         SettingsScope::Settings::Overrides overrides;
         overrides.setDebuglevel(static_cast<Debug::DebugLevels>(g_debugLevel));
         bool isInitFromSettings = Settings::Initialize(m_applicationDirPath, overrides);
@@ -349,68 +329,32 @@ void LightpackApplication::processCommandLineArguments()
     }
 
     // 'on' and 'off' are mutually exclusive also
-    if (parser.isSet(optionOff)) {
+    if (parser.isSetBacklightOff()) {
         if (!isRunning()) {
             LedDeviceLightpack lightpackDevice;
             lightpackDevice.switchOffLeds();
-        }
-        else
+        } else {
             sendMessage("off");
+        }
         ::exit(0);
     }
-    else if (parser.isSet(optionOn)) {
+    else if (parser.isSetBacklightOn())
+    {
         if (isRunning())
             sendMessage("on");
         ::exit(0);
     }
 
-    if (parser.isSet(optionSetProfile)) {
+    if (parser.isSetProfile()) {
         if (isRunning())
-            sendMessage("set-profile " + parser.value(optionSetProfile));
+            sendMessage("set-profile " + parser.profileName());
         ::exit(0);
     }
 
-    if (parser.isSet(optionDebug)) {
-        QString debugLevel = parser.value(optionDebug);
-        m_isDebugLevelObtainedFromCmdArgs = true;
-        if (debugLevel == "high")
-            g_debugLevel = Debug::HighLevel;
-        else if (debugLevel == "mid")
-            g_debugLevel = Debug::MidLevel;
-        else if (debugLevel == "low")
-            g_debugLevel = Debug::LowLevel;
-        else if (debugLevel == "zero")
-            g_debugLevel = Debug::ZeroLevel;
-        else {
-            qDebug() << "Wrong debug level specified " << debugLevel;
-            m_isDebugLevelObtainedFromCmdArgs = false;
-        }
-    }
-
-    // Keep this for a while for backward compatibility
-    // TODO: remove this block.
-    for (int i = 1; i < arguments().count(); i++)
+    if (parser.isSetDebuglevel())
     {
-        if (arguments().at(i) =="--debug-high") {
-            g_debugLevel = Debug::HighLevel;
-            m_isDebugLevelObtainedFromCmdArgs = true;
-            break;
-        }
-        else if (arguments().at(i) =="--debug-mid") {
-            g_debugLevel = Debug::MidLevel;
-            m_isDebugLevelObtainedFromCmdArgs = true;
-            break;
-        }
-        else if (arguments().at(i) =="--debug-low") {
-            g_debugLevel = Debug::LowLevel;
-            m_isDebugLevelObtainedFromCmdArgs = true;
-            break;
-        }
-        else if (arguments().at(i) =="--debug-zero") {
-            g_debugLevel = Debug::ZeroLevel;
-            m_isDebugLevelObtainedFromCmdArgs = true;
-            break;
-        }
+        g_debugLevel = parser.debugLevel();
+        m_isDebugLevelObtainedFromCmdArgs = true;
     }
 
     if (m_isDebugLevelObtainedFromCmdArgs)
