@@ -102,13 +102,121 @@ private:
     QScopedPointer<SettingsSource> m_settings;
 };
 
+class SettingsSignals : public QObject {
+    Q_OBJECT
+
+protected:
+    SettingsSignals() {}
+    ~SettingsSignals() {}
+
+signals:
+    void profileLoaded(const QString &);
+    void currentProfileNameChanged(const QString &);
+    void currentProfileRemoved();
+    void currentProfileInited(const QString &);
+    void apiServerSettingsChanged();
+    void apiKeyChanged(const QString &);
+    void expertModeEnabledChanged(bool);
+    void keepLightsOnAfterExitChanged(bool isEnabled);
+    void keepLightsOnAfterLockChanged(bool isEnabled);
+    void pingDeviceEverySecondEnabledChanged(bool);
+
+    void languageChanged(const QString &);
+    void debugLevelChanged(int);
+    void updateFirmwareMessageShownChanged(bool isShown);
+    void connectedDeviceChanged(const SupportedDevices::DeviceType device);
+    void hotkeyChanged(const QString &actionName, const QKeySequence & newKeySequence, const QKeySequence &oldKeySequence);
+    void adalightSerialPortNameChanged(const QString & port);
+    void adalightSerialPortBaudRateChanged(const QString & baud);
+    void ardulightSerialPortNameChanged(const QString & port);
+    void ardulightSerialPortBaudRateChanged(const QString & baud);
+    void lightpackNumberOfLedsChanged(int numberOfLeds);
+    void adalightNumberOfLedsChanged(int numberOfLeds);
+    void ardulightNumberOfLedsChanged(int numberOfLeds);
+    void virtualNumberOfLedsChanged(int numberOfLeds);
+    void grabSlowdownChanged(int value);
+    void backlightEnabledChanged(bool isEnabled);
+    void grabAvgColorsEnabledChanged(bool isEnabled);
+    void sendDataOnlyIfColorsChangesChanged(bool isEnabled);
+    void luminosityThresholdChanged(int value);
+    void minimumLuminosityEnabledChanged(bool value);
+    void deviceRefreshDelayChanged(int value);
+    void deviceBrightnessChanged(int value);
+    void deviceSmoothChanged(int value);
+    void deviceColorDepthChanged(int value);
+    void deviceGammaChanged(double gamma);
+    void deviceColorSequenceChanged(QString value);
+    void grabberTypeChanged(const Grab::GrabberType grabMode);
+    void dx1011GrabberEnabledChanged(const bool isEnabled);
+    void lightpackModeChanged(const Lightpack::Mode mode);
+    void moodLampLiquidModeChanged(bool isLiquidMode);
+    void moodLampColorChanged(const QColor color);
+    void moodLampSpeedChanged(int value);
+    void ledCoefRedChanged(int ledIndex, double value);
+    void ledCoefGreenChanged(int ledIndex, double value);
+    void ledCoefBlueChanged(int ledIndex, double value);
+    void ledSizeChanged(int ledIndex, const QSize &size);
+    void ledPositionChanged(int ledIndex, const QPoint &position);
+    void ledEnabledChanged(int ledIndex, bool isEnabled);
+};
+
+class SettingsProfiles {
+public:
+    QVariant valueMain(const QString & key) const;
+    QVariant value(const QString & key) const;
+
+protected:
+    // forwarding to m_mainConfig object
+    void setValueMain(const QString & key, const QVariant & value);
+    // forwarding to m_currentProfile object
+    void setValue(const QString & key, const QVariant & value);
+
+    ConfigurationProfile m_mainProfile;
+    ConfigurationProfile m_currentProfile;
+};
+
+class SettingsReader {
+public:
+    SettingsReader(SettingsProfiles& profiles)
+        : m_profiles(profiles)
+    {}
+
+    // Main
+    QString getLanguage() const;
+    int getDebugLevel() const;
+    bool isApiEnabled() const;
+    bool isListenOnlyOnLoInterface() const;
+    int getApiPort() const;
+    QString getApiAuthKey() const;
+    bool isApiAuthEnabled() const;
+    bool isExpertModeEnabled() const;
+    bool isKeepLightsOnAfterExit() const;
+    bool isKeepLightsOnAfterLock() const;
+    bool isPingDeviceEverySecond() const;
+    bool isUpdateFirmwareMessageShown() const;
+    SupportedDevices::DeviceType getConnectedDevice() const;
+    QString getConnectedDeviceName() const;
+    QKeySequence getHotkey(const QString &actionName) const;
+    QString getAdalightSerialPortName() const;
+    int getAdalightSerialPortBaudRate() const;
+    QString getArdulightSerialPortName() const;
+    int getArdulightSerialPortBaudRate() const;
+    bool isConnectedDeviceUsesSerialPort() const;
+    // [Adalight | Ardulight | Lightpack | ... | Virtual]
+    int getNumberOfLeds(SupportedDevices::DeviceType device) const;
+    int getNumberOfConnectedDeviceLeds() const;
+
+protected:
+    SettingsProfiles& m_profiles;
+};
+
 /*!
   Provides access to persistent settings.
 */
-class Settings : public QObject
+class Settings : public SettingsSignals
+               , private SettingsProfiles
+               , public SettingsReader
 {
-    Q_OBJECT
-
 public:
     class Overrides
     {
@@ -147,6 +255,7 @@ public:
      */
     static bool Initialize(const QString & applicationDirPath, const Overrides& overrides);
     static Settings * instance() { return m_instance.data(); }
+    static const SettingsReader * readerInstance() { return instance(); }
     static void Shutdown();
 
     static QStringList getSupportedDevices();
@@ -174,49 +283,27 @@ public:
 
     // Main
     QString getLastProfileName() const;
-    QString getLanguage() const;
     void setLanguage(const QString & language);
-    int getDebugLevel() const;
     void setDebugLevel(int debugLvl);
-    bool isApiEnabled() const;
     void setIsApiEnabled(bool isEnabled);
-    bool isListenOnlyOnLoInterface() const;
     void setListenOnlyOnLoInterface(bool localOnly);
-    int getApiPort() const;
     void setApiPort(int apiPort);
-    QString getApiAuthKey() const;
     void setApiKey(const QString & apiKey);
-    bool isApiAuthEnabled() const;
     void setIsApiAuthEnabled(bool isEnabled);
-    bool isExpertModeEnabled() const;
     void setExpertModeEnabled(bool isEnabled);
-    bool isKeepLightsOnAfterExit() const;
     void setKeepLightsOnAfterExit(bool isEnabled);
-    bool isKeepLightsOnAfterLock() const;
     void setKeepLightsOnAfterLock(bool isEnabled);
-    bool isPingDeviceEverySecond() const;
     void setPingDeviceEverySecond(bool isEnabled);
-    bool isUpdateFirmwareMessageShown() const;
     void setUpdateFirmwareMessageShown(bool isShown);
-    SupportedDevices::DeviceType getConnectedDevice() const;
     void setConnectedDevice(SupportedDevices::DeviceType device);
-    QString getConnectedDeviceName() const;
     void setConnectedDeviceName(const QString & deviceName);
-    QKeySequence getHotkey(const QString &actionName) const;
     void setHotkey(const QString &actionName, const QKeySequence &keySequence);
-    QString getAdalightSerialPortName() const;
     void setAdalightSerialPortName(const QString & port);
-    int getAdalightSerialPortBaudRate() const;
     void setAdalightSerialPortBaudRate(const QString & baud);
-    QString getArdulightSerialPortName() const;
     void setArdulightSerialPortName(const QString & port);
-    int getArdulightSerialPortBaudRate() const;
     void setArdulightSerialPortBaudRate(const QString & baud);
-    bool isConnectedDeviceUsesSerialPort() const;
     // [Adalight | Ardulight | Lightpack | ... | Virtual]
     void setNumberOfLeds(SupportedDevices::DeviceType device, int numberOfLeds);
-    int getNumberOfLeds(SupportedDevices::DeviceType device) const;
-    int getNumberOfConnectedDeviceLeds() const;
 
     void setColorSequence(SupportedDevices::DeviceType device, QString colorSequence);
     QString getColorSequence(SupportedDevices::DeviceType device) const;
@@ -285,15 +372,6 @@ public:
     void setLastReadUpdateId(const uint updateId);
 
 private:
-    static int getValidDeviceRefreshDelay(int value);
-    static int getValidDeviceBrightness(int value);
-    static int getValidDeviceSmooth(int value);
-    static int getValidDeviceColorDepth(int value);
-    static double getValidDeviceGamma(double value);
-    static int getValidGrabSlowdown(int value);
-    static int getValidMoodLampSpeed(int value);
-    static int getValidLuminosityThreshold(int value);
-
     void setValidLedCoef(int ledIndex, const QString & keyCoef, double coef);
     double getValidLedCoef(int ledIndex, const QString & keyCoef);
 
@@ -305,64 +383,6 @@ private:
 public:
     QVariant pluginValue(const QString & pluginId, const QString & key) const;
     void setPluginValue(const QString & pluginId, const QString & key, const QVariant& value);
-
-private:
-    // forwarding to m_mainConfig object
-    QVariant valueMain(const QString & key) const;
-    void setValueMain(const QString & key, const QVariant & value);
-    // forwarding to m_currentProfile object
-    void setValue(const QString & key, const QVariant & value);
-    QVariant value(const QString & key) const;
-
-signals:
-    void profileLoaded(const QString &);
-    void currentProfileNameChanged(const QString &);
-    void currentProfileRemoved();
-    void currentProfileInited(const QString &);
-    void apiServerSettingsChanged();
-    void apiKeyChanged(const QString &);
-    void expertModeEnabledChanged(bool);
-    void keepLightsOnAfterExitChanged(bool isEnabled);
-    void keepLightsOnAfterLockChanged(bool isEnabled);
-    void pingDeviceEverySecondEnabledChanged(bool);
-
-    void languageChanged(const QString &);
-    void debugLevelChanged(int);
-    void updateFirmwareMessageShownChanged(bool isShown);
-    void connectedDeviceChanged(const SupportedDevices::DeviceType device);
-    void hotkeyChanged(const QString &actionName, const QKeySequence & newKeySequence, const QKeySequence &oldKeySequence);
-    void adalightSerialPortNameChanged(const QString & port);
-    void adalightSerialPortBaudRateChanged(const QString & baud);
-    void ardulightSerialPortNameChanged(const QString & port);
-    void ardulightSerialPortBaudRateChanged(const QString & baud);
-    void lightpackNumberOfLedsChanged(int numberOfLeds);
-    void adalightNumberOfLedsChanged(int numberOfLeds);
-    void ardulightNumberOfLedsChanged(int numberOfLeds);
-    void virtualNumberOfLedsChanged(int numberOfLeds);
-    void grabSlowdownChanged(int value);
-    void backlightEnabledChanged(bool isEnabled);
-    void grabAvgColorsEnabledChanged(bool isEnabled);
-    void sendDataOnlyIfColorsChangesChanged(bool isEnabled);
-    void luminosityThresholdChanged(int value);
-    void minimumLuminosityEnabledChanged(bool value);
-    void deviceRefreshDelayChanged(int value);
-    void deviceBrightnessChanged(int value);
-    void deviceSmoothChanged(int value);
-    void deviceColorDepthChanged(int value);
-    void deviceGammaChanged(double gamma);
-    void deviceColorSequenceChanged(QString value);
-    void grabberTypeChanged(const Grab::GrabberType grabMode);
-    void dx1011GrabberEnabledChanged(const bool isEnabled);
-    void lightpackModeChanged(const Lightpack::Mode mode);
-    void moodLampLiquidModeChanged(bool isLiquidMode);
-    void moodLampColorChanged(const QColor color);
-    void moodLampSpeedChanged(int value);
-    void ledCoefRedChanged(int ledIndex, double value);
-    void ledCoefGreenChanged(int ledIndex, double value);
-    void ledCoefBlueChanged(int ledIndex, double value);
-    void ledSizeChanged(int ledIndex, const QSize &size);
-    void ledPositionChanged(int ledIndex, const QPoint &position);
-    void ledEnabledChanged(int ledIndex, bool isEnabled);
 
 private:
     // This allows Settings to be deleted with private destructor.
@@ -386,8 +406,6 @@ private:
     void verifyMainProfile();
     void verifyCurrentProfile();
 
-    ConfigurationProfile m_mainProfile;
-    ConfigurationProfile m_currentProfile;
     QString m_applicationDirPath; // path to store app generated stuff
     QMap<SupportedDevices::DeviceType, QString> m_devicesTypeToNameMap;
     QMap<SupportedDevices::DeviceType, QString> m_devicesTypeToKeyNumberOfLedsMap;
