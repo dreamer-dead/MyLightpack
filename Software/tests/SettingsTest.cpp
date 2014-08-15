@@ -68,6 +68,26 @@ void SettingsTest::testCase_migrateMainSettingsFrom1_0() {
     QCOMPARE(Settings::instance()->getVersion(), BaseVersion(4, 0));
 }
 
+void SettingsTest::testCase_migrateMainSettingsFrom2_0() {
+    g_debugLevel = Debug::MidLevel;
+
+    // Set minimal config version.
+    Settings::TestingOverrides overrides;
+    overrides.setConfigVersionForTests(BaseVersion(2, 0));
+    QVERIFY(!Settings::Initialize("./", overrides));
+    QCOMPARE(Settings::instance()->getVersion(), BaseVersion(4, 0));
+}
+
+void SettingsTest::testCase_migrateMainSettingsFrom3_0() {
+    g_debugLevel = Debug::MidLevel;
+
+    // Set minimal config version.
+    Settings::TestingOverrides overrides;
+    overrides.setConfigVersionForTests(BaseVersion(3, 0));
+    QVERIFY(!Settings::Initialize("./", overrides));
+    QCOMPARE(Settings::instance()->getVersion(), BaseVersion(4, 0));
+}
+
 void SettingsTest::testCase_resetDefault() {
     g_debugLevel = Debug::MidLevel;
     QVERIFY(!Settings::Initialize("./", Settings::Overrides()));

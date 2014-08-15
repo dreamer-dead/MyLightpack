@@ -19,6 +19,8 @@ private slots:
     void testCase_initMockSettings();
     void testCase_verifyMainSettings();
     void testCase_migrateMainSettingsFrom1_0();
+    void testCase_migrateMainSettingsFrom2_0();
+    void testCase_migrateMainSettingsFrom3_0();
     void testCase_resetDefault();
 };
 
