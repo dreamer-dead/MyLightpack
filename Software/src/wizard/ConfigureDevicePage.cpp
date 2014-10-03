@@ -30,6 +30,7 @@
 #include "ConfigureDevicePage.hpp"
 #include "ui_ConfigureDevicePage.h"
 #include "Settings.hpp"
+#include "SettingsDefaults.hpp"
 #include "LedDeviceArdulight.hpp"
 #include "LedDeviceAdalight.hpp"
 #include "LedDeviceVirtual.hpp"

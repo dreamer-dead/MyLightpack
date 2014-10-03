@@ -35,6 +35,7 @@
 #include "wizard/Wizard.hpp"
 #include "Plugin.hpp"
 #include "LightpackCommandLineParser.hpp"
+#include "SettingsDefaults.hpp"
 
 #include <stdio.h>
 #include <iostream>

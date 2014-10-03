@@ -32,6 +32,7 @@
 #include "Settings.hpp"
 #include "debug.h"
 #include "LogWriter.hpp"
+#include "SettingsDefaults.hpp"
 #include "SettingsWizard.hpp"
 
 #ifdef Q_OS_WIN

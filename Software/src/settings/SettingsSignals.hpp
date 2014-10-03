@@ -39,8 +39,8 @@ class SettingsSignals : public QObject {
     Q_OBJECT
 
 protected:
-    SettingsSignals() {}
-    ~SettingsSignals() {}
+    SettingsSignals();
+    ~SettingsSignals();
 
 signals:
     void profileLoaded(const QString &);

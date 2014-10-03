@@ -1,6 +1,7 @@
 #include <QMap>
 
 #include "SettingsSourceMockup.hpp"
+#include "SettingsDefaults.hpp"
 #include "SettingsTest.hpp"
 #include "Settings.hpp"
 #include "BaseVersion.hpp"

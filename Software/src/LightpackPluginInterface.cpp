@@ -3,6 +3,7 @@
 #include "LightpackPluginInterface.hpp"
 #include "Plugin.hpp"
 #include "Settings.hpp"
+#include "SettingsDefaults.hpp"
 #include "version.h"
 #include "debug.h"
 

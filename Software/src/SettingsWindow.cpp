@@ -40,6 +40,7 @@
 #include "enums.hpp"
 #include "debug.h"
 #include "Plugin.hpp"
+#include "SettingsDefaults.hpp"
 #include "systrayicon/SysTrayIcon.hpp"
 #include <QStringBuilder>
 #include <QScrollBar>

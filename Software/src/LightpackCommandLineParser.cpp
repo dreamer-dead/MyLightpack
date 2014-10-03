@@ -83,7 +83,7 @@ QString LightpackCommandLineParser::profileName() const {
 }
 
 QString LightpackCommandLineParser::helpText() const {
-    m_parser.helpText();
+    return m_parser.helpText();
 }
 
 QString LightpackCommandLineParser::errorText() const {
