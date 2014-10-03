@@ -176,9 +176,10 @@ INCLUDEPATH += . \
                ../grab/include \
                ../math/include \
                ./stuff \
+               ./settings \
 
 SOURCES += \
-    LightpackApplication.cpp  main.cpp   SettingsWindow.cpp  Settings.cpp \
+    LightpackApplication.cpp  main.cpp   SettingsWindow.cpp \
     GrabWidget.cpp  GrabConfigWidget.cpp \
     LogWriter.cpp \
     SpeedTest.cpp \
@@ -213,13 +214,15 @@ SOURCES += \
     wizard/CassiopeiaDistributor.cpp \
     wizard/PegasusDistributor.cpp \
     systrayicon/SysTrayIcon.cpp \
-    UpdatesProcessor.cpp
+    UpdatesProcessor.cpp \
+    settings/DeviceTypesInfo.cpp \
+    settings/Settings.cpp \
+    settings/ConfigurationProfile.cpp \
+    settings/SettingsProfiles.cpp
 
 HEADERS += \
     LightpackApplication.hpp \
     SettingsWindow.hpp \
-    Settings.hpp \
-    SettingsDefaults.hpp \
     version.h \
     TimeEvaluations.hpp \
     GrabManager.hpp \
@@ -268,7 +271,15 @@ HEADERS += \
     systrayicon/SysTrayIcon.hpp \
     systrayicon/SysTrayIcon_p.hpp \
     UpdatesProcessor.hpp \
-    BaseVersion.hpp
+    BaseVersion.hpp \
+    settings/Settings.hpp \
+    settings/SettingsDefaults.hpp \
+    settings/SettingsSource.hpp \
+    settings/ConfigurationProfile.hpp \
+    settings/SettingsSignals.hpp \
+    settings/SettingsProfiles.hpp \
+    settings/DeviceTypesInfo.hpp \
+    settings/SettingsReader.hpp
 
 !contains(DEFINES,UNITY_DESKTOP) {
     HEADERS += systrayicon/SysTrayIcon_qt_p.hpp
