@@ -26,7 +26,6 @@
 #pragma once
 
 #include "GrabberBase.hpp"
-#include "../src/enums.hpp"
 
 #ifdef QT_GRAB_SUPPORT
 

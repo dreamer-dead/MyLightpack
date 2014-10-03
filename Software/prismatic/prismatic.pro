@@ -1,5 +1,5 @@
 # -------------------------------------------------
-# src.pro
+# prismatik.pro
 #
 # Copyright (c) 2010,2011 Mike Shatohin, mikeshatohin [at] gmail.com
 # http://lightpack.tv https://github.com/woodenshark/Lightpack
@@ -9,8 +9,10 @@
 TARGET      = Prismatik
 CONFIG(msvc) {
     PRE_TARGETDEPS += ../lib/grab.lib
+    PRE_TARGETDEPS += ../lib/hidapi.lib
 } else {
     PRE_TARGETDEPS += ../lib/libgrab.a
+    PRE_TARGETDEPS += ../lib/libhidapi.a
 }
 DESTDIR     = bin
 TEMPLATE    = app
@@ -56,7 +58,7 @@ include(../build-config.prf)
 include(../grab/configure-grabbers.prf)
 DEFINES += $${SUPPORTED_GRABBERS}
 
-LIBS    += -L../lib -lgrab -lprismatik-math
+LIBS    += -L../lib -lgrab -lprismatik-math -lhidapi
 
 unix:!macx{
     CONFIG    += link_pkgconfig debug
@@ -84,8 +86,6 @@ win32 {
         LIBS += -L$${DIRECTX_SDK_DIR}/Lib/x86
     }
     LIBS    += -lwsock32 -lshlwapi -lole32 -ldxguid
-
-    SOURCES += hidapi/windows/hid.c
 
     #DX9 grab
     LIBS    += -lgdi32 -ld3d9
@@ -129,16 +129,12 @@ win32 {
 }
 
 unix:!macx{
-    # Linux version using libusb and hidapi codes
-    SOURCES += hidapi/linux/hid-libusb.c
     # For X11 grabber
     LIBS +=-lXext -lX11
 }
 
 macx{
     QMAKE_LFLAGS += -F/System/Library/Frameworks
-    # MacOS version using libusb and hidapi codes
-    SOURCES += hidapi/mac/hid.c
     LIBS += \
             -framework Cocoa \
             -framework Carbon \
@@ -170,9 +166,9 @@ macx{
 
 INCLUDEPATH += . \
                .. \
-               ./hidapi \
+               ../third_party/hidapi \
+               ../third_party/alienfx \
                ../grab \
-               ../alienfx \
                ../grab/include \
                ../math/include \
                ./stuff \
@@ -223,6 +219,9 @@ SOURCES += \
     settings/SettingsSignals.cpp
 
 HEADERS += \
+    ../third_party/alienfx/LFXDecl.h \
+    ../third_party/alienfx/LFX2.h \
+    ../third_party/hidapi/hidapi.h \
     LightpackApplication.hpp \
     SettingsWindow.hpp \
     version.h \
@@ -233,8 +232,6 @@ HEADERS += \
     debug.h \
     LogWriter.hpp \
     SpeedTest.hpp \
-    alienfx/LFXDecl.h \
-    alienfx/LFX2.h \
     LedDeviceLightpack.hpp \
     LedDeviceAdalight.hpp \
     LedDeviceArdulight.hpp \
@@ -242,7 +239,6 @@ HEADERS += \
     ColorButton.hpp \
     ../common/defs.h \
     enums.hpp         ApiServer.hpp     ApiServerSetColorTask.hpp \
-    hidapi/hidapi.h \
     ../../CommonHeaders/COMMANDS.h \
     ../../CommonHeaders/USB_ID.h \
     MoodLampManager.hpp \
@@ -314,7 +310,7 @@ FORMS += SettingsWindow.ui \
 #
 # QtSingleApplication
 #
-include(qtsingleapplication/src/qtsingleapplication.pri)
+include(../third_party/qtsingleapplication/src/qtsingleapplication.pri)
 
 OTHER_FILES += \
     Info.plist

@@ -34,8 +34,8 @@ win32 {
 }
 
 INCLUDEPATH += . \
-               ../src \
-               ../src/settings \
+               ../prismatic \
+               ../prismatic/settings \
                ../hooks \
                ../grab/include \
                ../math/include \
@@ -44,15 +44,15 @@ INCLUDEPATH += . \
 
 HEADERS += \
     ../common/defs.h \
-    ../src/enums.hpp \
-    ../src/ApiServerSetColorTask.hpp \
-    ../src/ApiServer.hpp \
-    ../src/debug.h \
-    ../src/settings/Settings.hpp \
-    ../src/settings/SettingsSignals.hpp \
-    ../src/Plugin.hpp \
-    ../src/LightpackPluginInterface.hpp \
-    ../src/LightpackCommandLineParser.hpp \
+    ../prismatic/enums.hpp \
+    ../prismatic/ApiServerSetColorTask.hpp \
+    ../prismatic/ApiServer.hpp \
+    ../prismatic/debug.h \
+    ../prismatic/settings/Settings.hpp \
+    ../prismatic/settings/SettingsSignals.hpp \
+    ../prismatic/Plugin.hpp \
+    ../prismatic/LightpackPluginInterface.hpp \
+    ../prismatic/LightpackCommandLineParser.hpp \
     ../grab/include/calculations.hpp \
     ../math/include/PrismatikMath.hpp \
     SettingsWindowMockup.hpp \
@@ -60,30 +60,30 @@ HEADERS += \
     LightpackApiTest.hpp \
     lightpackmathtest.hpp \
     AppVersionTest.hpp \
-    ../src/UpdatesProcessor.hpp \
+    ../prismatic/UpdatesProcessor.hpp \
     SettingsTest.hpp \
     SettingsSourceMockupTest.hpp \
     SettingsSourceMockup.hpp \
     LightpackCommandLineParserTest.hpp
 
 SOURCES += \
-    ../src/ApiServerSetColorTask.cpp \
-    ../src/ApiServer.cpp \
-    ../src/settings/Settings.cpp \
-    ../src/settings/DeviceTypesInfo.cpp \
-    ../src/settings/ConfigurationProfile.cpp \
-    ../src/settings/SettingsProfiles.cpp \
-    ../src/settings/SettingsSignals.cpp \
-    ../src/Plugin.cpp \
-    ../src/LightpackPluginInterface.cpp \
-    ../src/LightpackCommandLineParser.cpp \
+    ../prismatic/ApiServerSetColorTask.cpp \
+    ../prismatic/ApiServer.cpp \
+    ../prismatic/settings/Settings.cpp \
+    ../prismatic/settings/DeviceTypesInfo.cpp \
+    ../prismatic/settings/ConfigurationProfile.cpp \
+    ../prismatic/settings/SettingsProfiles.cpp \
+    ../prismatic/settings/SettingsSignals.cpp \
+    ../prismatic/Plugin.cpp \
+    ../prismatic/LightpackPluginInterface.cpp \
+    ../prismatic/LightpackCommandLineParser.cpp \
     LightpackApiTest.cpp \
     SettingsWindowMockup.cpp \
     GrabCalculationTest.cpp \
     lightpackmathtest.cpp \
     TestsMain.cpp \
     AppVersionTest.cpp \
-    ../src/UpdatesProcessor.cpp \
+    ../prismatic/UpdatesProcessor.cpp \
     SettingsTest.cpp \
     SettingsSourceMockup.cpp \
     SettingsSourceMockupTest.cpp \
