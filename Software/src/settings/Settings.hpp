@@ -28,7 +28,6 @@
 
 #include "DeviceTypesInfo.hpp"
 #include "ConfigurationProfile.hpp"
-#include "SettingsDefaults.hpp"
 #include "SettingsProfiles.hpp"
 #include "SettingsReader.hpp"
 #include "SettingsSignals.hpp"
