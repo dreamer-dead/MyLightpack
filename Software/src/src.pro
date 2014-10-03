@@ -219,7 +219,8 @@ SOURCES += \
     settings/Settings.cpp \
     settings/ConfigurationProfile.cpp \
     settings/SettingsProfiles.cpp \
-    LightpackCommandLineParser.cpp
+    LightpackCommandLineParser.cpp \
+    settings/SettingsSignals.cpp
 
 HEADERS += \
     LightpackApplication.hpp \

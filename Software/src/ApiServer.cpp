@@ -31,6 +31,7 @@
 #include "LightpackPluginInterface.hpp"
 #include "ApiServerSetColorTask.hpp"
 #include "Settings.hpp"
+#include "SettingsDefaults.hpp"
 #include "TimeEvaluations.hpp"
 #include "version.h"
 #include <QtWidgets/QApplication>

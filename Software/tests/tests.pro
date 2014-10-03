@@ -15,10 +15,10 @@ CONFIG     -= app_bundle
 CONFIG(gcc):QMAKE_CXXFLAGS += -std=c++11
 
 # QMake and GCC produce a lot of stuff
-OBJECTS_DIR = stuff
-MOC_DIR     = stuff
-UI_DIR      = stuff
-RCC_DIR     = stuff
+OBJECTS_DIR = tests_stuff
+MOC_DIR     = tests_stuff
+UI_DIR      = tests_stuff
+RCC_DIR     = tests_stuff
 
 # Grabber types configuration
 include(../grab/configure-grabbers.prf)
@@ -35,6 +35,7 @@ win32 {
 
 INCLUDEPATH += . \
                ../src \
+               ../src/settings \
                ../hooks \
                ../grab/include \
                ../math/include \
@@ -47,7 +48,8 @@ HEADERS += \
     ../src/ApiServerSetColorTask.hpp \
     ../src/ApiServer.hpp \
     ../src/debug.h \
-    ../src/Settings.hpp \
+    ../src/settings/Settings.hpp \
+    ../src/settings/SettingsSignals.hpp \
     ../src/Plugin.hpp \
     ../src/LightpackPluginInterface.hpp \
     ../src/LightpackCommandLineParser.hpp \
@@ -67,7 +69,11 @@ HEADERS += \
 SOURCES += \
     ../src/ApiServerSetColorTask.cpp \
     ../src/ApiServer.cpp \
-    ../src/Settings.cpp \
+    ../src/settings/Settings.cpp \
+    ../src/settings/DeviceTypesInfo.cpp \
+    ../src/settings/ConfigurationProfile.cpp \
+    ../src/settings/SettingsProfiles.cpp \
+    ../src/settings/SettingsSignals.cpp \
     ../src/Plugin.cpp \
     ../src/LightpackPluginInterface.cpp \
     ../src/LightpackCommandLineParser.cpp \
