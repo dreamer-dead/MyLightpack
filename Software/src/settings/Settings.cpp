@@ -37,6 +37,7 @@
 
 #include "debug.h"
 #include "BaseVersion.hpp"
+#include "SettingsDefaults.hpp"
 
 #define MAIN_CONFIG_FILE_VERSION    "4.0"
 
