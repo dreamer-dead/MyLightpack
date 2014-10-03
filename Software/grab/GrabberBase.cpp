@@ -24,9 +24,9 @@
  */
 
 #include "GrabberContext.hpp"
-#include "GrabWidget.hpp"
+#include "prismatic/GrabWidget.hpp"
 #include "GrabberBase.hpp"
-#include "src/debug.h"
+#include "prismatic/debug.h"
 
 namespace
 {

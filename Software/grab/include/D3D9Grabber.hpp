@@ -26,7 +26,6 @@
 #pragma once
 
 #include "GrabberBase.hpp"
-#include "../src/enums.hpp"
 
 #ifdef D3D9_GRAB_SUPPORT
 

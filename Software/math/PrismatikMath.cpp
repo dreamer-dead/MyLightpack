@@ -25,7 +25,7 @@
 
 #include "PrismatikMath.hpp"
 #include <algorithm>
-#include "../src/debug.h"
+#include "../prismatic/debug.h"
 
 namespace PrismatikMath
 {

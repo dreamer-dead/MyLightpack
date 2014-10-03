@@ -26,7 +26,6 @@
 #pragma once
 
 #include "GrabberBase.hpp"
-#include "../src/enums.hpp"
 
 #ifdef X11_GRAB_SUPPORT
 

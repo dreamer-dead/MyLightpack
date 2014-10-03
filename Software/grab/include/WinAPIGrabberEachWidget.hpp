@@ -26,7 +26,6 @@
 #pragma once
 
 #include "WinAPIGrabber.hpp"
-#include "../src/enums.hpp"
 
 #ifdef WINAPI_EACH_GRAB_SUPPORT
 

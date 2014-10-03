@@ -28,7 +28,7 @@
 #include <QSharedPointer>
 #include <QColor>
 #include <QTimer>
-#include "src/GrabWidget.hpp"
+#include "prismatic/GrabWidget.hpp"
 #include "calculations.hpp"
 
 class GrabberContext;
