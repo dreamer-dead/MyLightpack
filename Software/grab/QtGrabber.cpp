@@ -29,7 +29,7 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QDesktopWidget>
 #include <GrabberContext.hpp>
-#include "../src/debug.h"
+#include "common/DebugOut.hpp"
 
 QtGrabber::QtGrabber(QObject *parent, GrabberContext * context )
     : GrabberBase(parent, context)

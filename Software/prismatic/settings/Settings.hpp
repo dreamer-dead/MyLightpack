@@ -33,9 +33,9 @@
 #include "SettingsSignals.hpp"
 #include "SettingsSource.hpp"
 
+#include "common/DebugOut.hpp"
+#include "common/defs.h"
 #include "enums.hpp"
-#include "../common/defs.h"
-#include "debug.h"
 #include "types.h"
 
 class SettingsTest;

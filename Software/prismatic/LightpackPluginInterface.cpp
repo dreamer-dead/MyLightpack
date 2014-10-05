@@ -1,11 +1,13 @@
+#include "LightpackPluginInterface.hpp"
+
 #include <QtGui>
 #include <QtWidgets/QApplication>
-#include "LightpackPluginInterface.hpp"
+
+#include "common/DebugOut.hpp"
 #include "Plugin.hpp"
 #include "Settings.hpp"
 #include "SettingsDefaults.hpp"
 #include "version.h"
-#include "debug.h"
 
 using namespace SettingsScope;
 

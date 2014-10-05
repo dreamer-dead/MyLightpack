@@ -30,7 +30,7 @@
 #include <QApplication>
 #include <qdesktopwidget.h>
 #include <cmath>
-#include "../src/debug.h"
+#include "common/DebugOut.hpp"
 #include "PrismatikMath.hpp"
 
 #define BYTES_PER_PIXEL 4

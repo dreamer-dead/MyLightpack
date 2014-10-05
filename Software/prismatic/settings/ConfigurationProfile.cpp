@@ -2,7 +2,7 @@
 
 #include <QSettings>
 
-#include "debug.h"
+#include "common/DebugOut.hpp"
 
 namespace SettingsScope {
 

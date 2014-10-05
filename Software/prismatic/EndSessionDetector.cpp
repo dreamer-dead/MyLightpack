@@ -1,8 +1,9 @@
 #include "EndSessionDetector.hpp"
-#include "debug.h"
-#include "LightpackApplication.hpp"
 
 #include <exception>
+
+#include "common/DebugOut.hpp"
+#include "LightpackApplication.hpp"
 
 #ifdef Q_OS_WIN
 #if !defined NOMINMAX

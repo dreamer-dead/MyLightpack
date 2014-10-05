@@ -26,9 +26,10 @@
 #ifndef LIGHTPACKCOMMANDLINEPARSER_H
 #define LIGHTPACKCOMMANDLINEPARSER_H
 
-#include "debug.h"
 #include <QCoreApplication>
 #include <QCommandLineParser>
+
+#include "common/DebugOut.hpp"
 
 class LightpackCommandLineParser {
 public:

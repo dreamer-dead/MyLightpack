@@ -28,7 +28,7 @@
 #ifdef QT_GRAB_SUPPORT
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QDesktopWidget>
-#include "../src/debug.h"
+#include "common/DebugOut.hpp"
 #include "GrabberContext.hpp"
 
 QtGrabberEachWidget::QtGrabberEachWidget(QObject *parent, GrabberContext *context)

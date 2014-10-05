@@ -27,13 +27,13 @@
 
 #include <QtGlobal>
 #include <QString>
-#include "../src/debug.h"
-
-#include "../../common/msvcstub.h"
 #include <DXGI.h>
 #include <D3D10_1.h>
 #include <D3D10.h>
 #include <d3d9.h>
+
+#include "common/DebugOut.hpp"
+#include "common/msvcstub.h"
 
 #define DXGI_PRESENT_FUNC_ORD 8
 #define D3D9_SCPRESENT_FUNC_ORD 3

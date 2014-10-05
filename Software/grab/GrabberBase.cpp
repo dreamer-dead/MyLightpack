@@ -23,10 +23,12 @@
  *
  */
 
+#include "GrabberBase.hpp"
+
+#include "common/DebugOut.hpp"
+#include "common/PrintHelpers.hpp"
 #include "GrabberContext.hpp"
 #include "prismatic/GrabWidget.hpp"
-#include "GrabberBase.hpp"
-#include "prismatic/debug.h"
 
 namespace
 {

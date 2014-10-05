@@ -35,7 +35,7 @@
 #include <QDir>
 #include <QUuid>
 
-#include "debug.h"
+#include "common/DebugOut.hpp"
 #include "BaseVersion.hpp"
 #include "SettingsDefaults.hpp"
 

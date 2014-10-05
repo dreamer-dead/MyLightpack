@@ -1,6 +1,6 @@
 #include "DeviceTypesInfo.hpp"
 
-#include "debug.h"
+#include "common/DebugOut.hpp"
 
 namespace SettingsScope {
 
