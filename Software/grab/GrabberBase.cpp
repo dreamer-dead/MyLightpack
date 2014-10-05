@@ -27,8 +27,8 @@
 
 #include "common/DebugOut.hpp"
 #include "common/PrintHelpers.hpp"
+#include "GrabbedArea.hpp"
 #include "GrabberContext.hpp"
-#include "prismatic/GrabWidget.hpp"
 
 namespace
 {
@@ -134,7 +134,7 @@ void GrabberBase::grab()
         _context->grabResult->clear();
 
         for (int i = 0; i < _context->grabWidgets->size(); ++i) {
-            QRect widgetRect = _context->grabWidgets->at(i)->frameGeometry();
+            QRect widgetRect = _context->grabWidgets->at(i)->geometry();
             getValidRect(widgetRect);
 
             const GrabbedScreen *grabbedScreen = screenOfRect(widgetRect);
@@ -174,7 +174,7 @@ void GrabberBase::grab()
             using namespace Grab;
             const int bytesPerPixel = 4;
             QRgb avgColor;
-            if (_context->grabWidgets->at(i)->isAreaEnabled()) {
+            if (_context->grabWidgets->at(i)->isEnabled()) {
                 Calculations::calculateAvgColor(&avgColor, grabbedScreen->imgData, grabbedScreen->imgFormat, grabbedScreen->screenInfo.rect.width() * bytesPerPixel, preparedRect );
                 _context->grabResult->append(avgColor);
             } else {

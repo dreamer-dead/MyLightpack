@@ -28,12 +28,13 @@
 
 //#include <QtWidgets/QWidget>
 #include "GrabConfigWidget.hpp"
+#include "GrabbedArea.hpp"
 
 namespace Ui {
     class GrabWidget;
 }
 
-class GrabWidget : public QWidget
+class GrabWidget : public QWidget, public GrabbedArea
 {
     Q_OBJECT
 public:
@@ -42,12 +43,16 @@ public:
 
     void saveSizeAndPosition();
 
-    double getCoefRed();
-    double getCoefGreen();
-    double getCoefBlue();
-    bool isAreaEnabled();
+    double getCoefRed() const;
+    double getCoefGreen() const;
+    double getCoefBlue() const;
+    bool isAreaEnabled() const;
     void fillBackgroundWhite();
     void fillBackgroundColored();
+
+    // GrabbedArea methods
+    virtual bool isEnabled() const { return isAreaEnabled(); }
+    virtual QRect geometry() const { return frameGeometry(); }
 
 private:
     void fillBackground(int index);

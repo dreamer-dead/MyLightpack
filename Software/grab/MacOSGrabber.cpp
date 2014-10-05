@@ -23,7 +23,7 @@
  *
  */
 
-#include"MacOSGrabber.hpp"
+#include "MacOSGrabber.hpp"
 
 #ifdef MAC_OS_CG_GRAB_SUPPORT
 
@@ -31,6 +31,7 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <QGuiApplication>
 
+#include "GrabbedArea.hpp"
 #include "calculations.hpp"
 #include "common/DebugOut.hpp"
 
@@ -59,7 +60,7 @@ void MacOSGrabber::freeScreens()
     _screensWithWidgets.clear();
 }
 
-QList< ScreenInfo > * MacOSGrabber::screensWithWidgets(QList< ScreenInfo > * result, const QList<GrabWidget *> &grabWidgets)
+QList< ScreenInfo > * MacOSGrabber::screensWithWidgets(QList< ScreenInfo > * result, const QList<GrabbedArea *> &grabWidgets)
 {
     CGDirectDisplayID displays[kMaxDisplaysCount];
     uint32_t displayCount;
@@ -123,10 +124,6 @@ bool MacOSGrabber::reallocate(const QList<ScreenInfo> &screens)
     const size_t kBytesPerPixel = 4;
     freeScreens();
     for (int i = 0; i < screens.size(); ++i) {
-
-
-        //MacOSScreenData *d = new MacOSScreenData();
-
         int screenid = reinterpret_cast<intptr_t>(screens[i].handle);
 
         qreal pixelRatio = ((QGuiApplication*)QCoreApplication::instance())->devicePixelRatio();
@@ -146,7 +143,6 @@ bool MacOSGrabber::reallocate(const QList<ScreenInfo> &screens)
         grabScreen.imgData = buf;
         grabScreen.imgFormat = BufferFormatArgb;
         grabScreen.screenInfo = screens[i];
-        //grabScreen.associatedData = d;
         _screensWithWidgets.append(grabScreen);
 
     }

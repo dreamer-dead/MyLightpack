@@ -19,7 +19,6 @@ include(configure-grabbers.prf)
 LIBS += -lprismatik-math
 
 INCLUDEPATH += ./include \
-               ../prismatic \
                ../math/include \
                ..
 
