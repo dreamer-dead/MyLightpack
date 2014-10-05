@@ -54,6 +54,7 @@ HEADERS += \
     ../prismatic/LightpackPluginInterface.hpp \
     ../prismatic/LightpackCommandLineParser.hpp \
     ../grab/include/calculations.hpp \
+    ../grab/include/GrabberContext.hpp \
     ../math/include/PrismatikMath.hpp \
     SettingsWindowMockup.hpp \
     GrabCalculationTest.hpp \
@@ -64,7 +65,8 @@ HEADERS += \
     SettingsTest.hpp \
     SettingsSourceMockupTest.hpp \
     SettingsSourceMockup.hpp \
-    LightpackCommandLineParserTest.hpp
+    LightpackCommandLineParserTest.hpp \
+    GrabTests.hpp
 
 SOURCES += \
     ../prismatic/ApiServerSetColorTask.cpp \
@@ -87,7 +89,8 @@ SOURCES += \
     SettingsTest.cpp \
     SettingsSourceMockup.cpp \
     SettingsSourceMockupTest.cpp \
-    LightpackCommandLineParserTest.cpp
+    LightpackCommandLineParserTest.cpp \
+    GrabTests.cpp
 
 win32{
     HEADERS += \

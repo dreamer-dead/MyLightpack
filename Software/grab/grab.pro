@@ -83,6 +83,7 @@ HEADERS += \
 SOURCES += \
     calculations.cpp \
     GrabberBase.cpp \
+    GrabberContext.cpp \
     include/ColorProvider.cpp \
     $${GRABBERS_SOURCES}
 

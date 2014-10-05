@@ -47,60 +47,26 @@ struct AllocatedBuf {
 class GrabberContext {
 public:
     GrabberContext()
-    {}
+        : grabWidgets(0)
+        , grabResult(0) {
+    }
 
-    ~GrabberContext(){
+    ~GrabberContext() {
 //        releaseAllBufs();
 //        freeReleasedBufs();
     }
 
-    unsigned char * queryBuf(size_t reqSize) {
-        AllocatedBuf *bestFitBuf = NULL;
-        for (int i = 0; i < _allocatedBufs.size(); ++i) {
-            if (_allocatedBufs[i]->isAvail
-                && _allocatedBufs[i]->size >= reqSize
-                && ( bestFitBuf == NULL
-                    || _allocatedBufs[i]->size < bestFitBuf->size))
-            {
-                bestFitBuf = _allocatedBufs[i];
-            }
-        }
-        if (bestFitBuf == NULL) {
-            bestFitBuf = new AllocatedBuf();
-            bestFitBuf->ptr = (unsigned char *)malloc(reqSize);
+    unsigned char * queryBuf(size_t reqSize);
+    void releaseAllBufs();
+    void freeReleasedBufs();
+    int buffersCount() const { return _allocatedBufs.size(); }
 
-            if (bestFitBuf->ptr == NULL)
-                return NULL;
-
-            bestFitBuf->size = reqSize;
-            _allocatedBufs.append(bestFitBuf);
-        }
-        return bestFitBuf->ptr;
-    }
-
-    void releaseAllBufs() {
-        for (QList<AllocatedBuf*>::const_iterator iter = _allocatedBufs.cbegin(); iter != _allocatedBufs.end(); ++iter) {
-            (*iter)->isAvail = true;
-        }
-    }
-
-    void freeReleasedBufs() {
-        for (QList<AllocatedBuf*>::iterator iter = _allocatedBufs.begin(); iter != _allocatedBufs.end(); ++iter) {
-            if ((*iter)->isAvail) {
-                AllocatedBuf *buf = *iter;
-                free(buf->ptr);
-                _allocatedBufs.removeAll(buf);
-                delete buf;
-            }
-        }
-    }
 public:
     QList<GrabbedArea *> *grabWidgets;
     QList<QRgb> *grabResult;
 
-
 private:
-    QList<AllocatedBuf *> _allocatedBufs;
+    QList<AllocatedBuf> _allocatedBufs;
 };
 
 
