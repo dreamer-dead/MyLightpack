@@ -3,6 +3,7 @@
 
 #include "common/DebugOut.hpp"
 #include "LightpackApiTest.hpp"
+#include "GrabTests.hpp"
 #include "GrabCalculationTest.hpp"
 #include "lightpackmathtest.hpp"
 #include "AppVersionTest.hpp"
@@ -35,6 +36,7 @@ int main(int argc, char *argv[])
     tests.append(new AppVersionTest());
     tests.append(new SettingsSourceMockupTest());
     tests.append(new SettingsTest());
+    tests.append(new GrabTests());
 
     for(int i=0; i < tests.size(); i++) {
         if (QTest::qExec(tests[i], argc, argv)) {
