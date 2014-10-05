@@ -30,7 +30,6 @@
 #ifdef X11_GRAB_SUPPORT
 
 #include <QScopedPointer>
-#include "../src/debug.h"
 
 struct X11GrabberData;
 struct _XDisplay;

@@ -28,10 +28,11 @@
 #include <QtGui>
 #include <QtWidgets/QDesktopWidget>
 #include <QTextItem>
+
+#include "common/DebugOut.hpp"
 #include "GrabAreaWidget.hpp"
 #include "ui_GrabAreaWidget.h"
 #include "Settings.hpp"
-#include "debug.h"
 
 using namespace SettingsScope;
 
