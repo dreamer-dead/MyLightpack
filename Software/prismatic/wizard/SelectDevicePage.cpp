@@ -27,10 +27,10 @@
 #include <QDesktopWidget>
 
 #include "SelectDevicePage.hpp"
+#include "SettingsReader.hpp"
 #include "ui_SelectDevicePage.h"
 #include "Wizard.hpp"
-#include "LedDeviceVirtual.hpp"
-#include "SettingsReader.hpp"
+#include "devices/LedDeviceVirtual.hpp"
 
 SelectDevicePage::SelectDevicePage(bool isInitFromSettings, TransientSettings *ts, QWidget *parent):
     QWizardPage(parent),

@@ -32,7 +32,6 @@
 
 #include "ApiServer.hpp"
 #include "LightpackApplication.hpp"
-#include "LedDeviceLightpack.hpp"
 #include "LightpackPluginInterface.hpp"
 #include "PluginsManager.hpp"
 #include "Plugin.hpp"
@@ -40,6 +39,7 @@
 #include "Settings.hpp"
 #include "SettingsDefaults.hpp"
 #include "SettingsWindow.hpp"
+#include "devices/LedDeviceLightpack.hpp"
 #include "version.h"
 #include "wizard/Wizard.hpp"
 

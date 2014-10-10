@@ -28,9 +28,9 @@
 
 #include "LightpackDiscoveryPage.hpp"
 #include "ui_LightpackDiscoveryPage.h"
-#include "LedDeviceLightpack.hpp"
 #include "Wizard.hpp"
 #include "common/DebugOut.hpp"
+#include "devices/LedDeviceLightpack.hpp"
 
 LightpackDiscoveryPage::LightpackDiscoveryPage(bool isInitFromSettings, TransientSettings *ts, QWidget *parent) :
     QWizardPage(parent),
