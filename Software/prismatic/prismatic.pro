@@ -175,16 +175,13 @@ INCLUDEPATH += . \
                ./settings \
 
 SOURCES += \
-    LightpackApplication.cpp  main.cpp   SettingsWindow.cpp \
-    GrabWidget.cpp  GrabConfigWidget.cpp \
+    LightpackApplication.cpp  main.cpp \
     LogWriter.cpp \
     SpeedTest.cpp \
-    ColorButton.cpp \
     ApiServer.cpp \
     ApiServerSetColorTask.cpp \
     MoodLampManager.cpp \
     LedDeviceManager.cpp \
-    SelectWidget.cpp \
     GrabManager.cpp \
     AbstractLedDevice.cpp \
     PluginsManager.cpp \
@@ -192,6 +189,8 @@ SOURCES += \
     LightpackPluginInterface.cpp \
     TimeEvaluations.cpp \
     EndSessionDetector.cpp \
+    LightpackCommandLineParser.cpp \
+    UpdatesProcessor.cpp \
     devices/LedDeviceLightpack.cpp \
     devices/LedDeviceAdalight.cpp \
     devices/LedDeviceArdulight.cpp \
@@ -210,42 +209,44 @@ SOURCES += \
     wizard/CassiopeiaDistributor.cpp \
     wizard/PegasusDistributor.cpp \
     systrayicon/SysTrayIcon.cpp \
-    UpdatesProcessor.cpp \
     settings/DeviceTypesInfo.cpp \
     settings/Settings.cpp \
     settings/ConfigurationProfile.cpp \
     settings/SettingsProfiles.cpp \
-    LightpackCommandLineParser.cpp \
-    settings/SettingsSignals.cpp
+    settings/SettingsSignals.cpp \
+    ui/ColorButton.cpp \
+    ui/GrabConfigWidget.cpp \
+    ui/GrabWidget.cpp \
+    ui/SelectWidget.cpp \
+    ui/SettingsWindow.cpp \
 
 HEADERS += \
     ../third_party/alienfx/LFXDecl.h \
     ../third_party/alienfx/LFX2.h \
     ../third_party/hidapi/hidapi.h \
     LightpackApplication.hpp \
-    SettingsWindow.hpp \
     version.h \
     TimeEvaluations.hpp \
     GrabManager.hpp \
-    GrabWidget.hpp \
-    GrabConfigWidget.hpp \
     debug.h \
     LogWriter.hpp \
     SpeedTest.hpp \
-    ColorButton.hpp \
     ../common/defs.h \
     enums.hpp         ApiServer.hpp     ApiServerSetColorTask.hpp \
     ../../CommonHeaders/COMMANDS.h \
     ../../CommonHeaders/USB_ID.h \
     MoodLampManager.hpp \
     LedDeviceManager.hpp \
-    SelectWidget.hpp \
     ../common/D3D10GrabberDefs.hpp \
     AbstractLedDevice.hpp \
     PluginsManager.hpp \
     Plugin.hpp \
     LightpackPluginInterface.hpp \
     EndSessionDetector.hpp \
+    LightpackCommandLineParser.hpp \
+    UpdatesProcessor.hpp \
+    BaseVersion.hpp \
+    types.h \
     devices/LedDeviceLightpack.hpp \
     devices/LedDeviceAdalight.hpp \
     devices/LedDeviceArdulight.hpp \
@@ -262,14 +263,11 @@ HEADERS += \
     wizard/AndromedaDistributor.hpp \
     wizard/ConfigureDevicePage.hpp \
     wizard/SelectDevicePage.hpp \
-    types.h \
     wizard/AreaDistributor.hpp \
     wizard/CassiopeiaDistributor.hpp \
     wizard/PegasusDistributor.hpp \
     systrayicon/SysTrayIcon.hpp \
     systrayicon/SysTrayIcon_p.hpp \
-    UpdatesProcessor.hpp \
-    BaseVersion.hpp \
     settings/Settings.hpp \
     settings/SettingsDefaults.hpp \
     settings/SettingsSource.hpp \
@@ -278,7 +276,11 @@ HEADERS += \
     settings/SettingsProfiles.hpp \
     settings/DeviceTypesInfo.hpp \
     settings/SettingsReader.hpp \
-    LightpackCommandLineParser.hpp
+    ui/ColorButton.hpp \
+    ui/GrabWidget.hpp \
+    ui/GrabConfigWidget.hpp \
+    ui/SettingsWindow.hpp \
+    ui/SelectWidget.hpp \
 
 !contains(DEFINES,UNITY_DESKTOP) {
     HEADERS += systrayicon/SysTrayIcon_qt_p.hpp
@@ -293,9 +295,9 @@ win32 {
     HEADERS += LedDeviceAlienFx.hpp
 }
 
-FORMS += SettingsWindow.ui \
-    GrabWidget.ui \
-    GrabConfigWidget.ui \
+FORMS += ui/SettingsWindow.ui \
+    ui/GrabWidget.ui \
+    ui/GrabConfigWidget.ui \
     wizard/ZoneWidget.ui \
     wizard/ZonePlacementPage.ui \
     wizard/Wizard.ui \
