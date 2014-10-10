@@ -38,9 +38,9 @@
 #include "LightpackCommandLineParser.hpp"
 #include "Settings.hpp"
 #include "SettingsDefaults.hpp"
-#include "SettingsWindow.hpp"
 #include "devices/LedDeviceLightpack.hpp"
 #include "version.h"
+#include "ui/SettingsWindow.hpp"
 #include "wizard/Wizard.hpp"
 
 using namespace std;

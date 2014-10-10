@@ -3,8 +3,8 @@
 #include <exception>
 
 #include "LightpackApplication.hpp"
-#include "SettingsWindow.hpp"
 #include "common/DebugOut.hpp"
+#include "ui/SettingsWindow.hpp"
 
 #ifdef Q_OS_WIN
 #if !defined NOMINMAX

@@ -26,8 +26,7 @@
 
 #pragma once
 
-//#include <QtWidgets/QWidget>
-#include "GrabConfigWidget.hpp"
+#include <QtWidgets/QWidget>
 
 namespace Ui {
     class GrabAreaWidget;
