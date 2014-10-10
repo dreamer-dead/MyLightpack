@@ -55,6 +55,8 @@ LedDeviceManager::LedDeviceManager(QObject *parent)
 
     for (int i = 0; i < SupportedDevices::DeviceTypesCount; i++)
         m_ledDevices.append(NULL);
+
+    m_settings = SettingsReader::instance();
 }
 
 LedDeviceManager::~LedDeviceManager()
@@ -331,7 +333,7 @@ void LedDeviceManager::initLedDevice()
 
     m_isLastCommandCompleted = true;
 
-    SupportedDevices::DeviceType connectedDevice = Settings::instance()->getConnectedDevice();
+    SupportedDevices::DeviceType connectedDevice = m_settings->getConnectedDevice();
 
     if (m_ledDevices[connectedDevice] == NULL)
     {
@@ -353,43 +355,48 @@ void LedDeviceManager::initLedDevice()
 }
 
 AbstractLedDevice * LedDeviceManager::createLedDevice(SupportedDevices::DeviceType deviceType)
-{    
+{
+    using namespace SupportedDevices;
 
-    if (deviceType == SupportedDevices::DeviceTypeAlienFx){
-#       if !defined(Q_OS_WIN)
+#if !defined(Q_OS_WIN)
+    if (deviceType == DeviceTypeAlienFx) {
         qWarning() << Q_FUNC_INFO << "AlienFx not supported on current platform";
 
-        Settings::instance()->setConnectedDevice(SupportedDevices::DefaultDeviceType);
+        Settings::instance()->setConnectedDevice(DefaultDeviceType);
         deviceType = Settings::instance()->getConnectedDevice();
-#       endif /* Q_OS_WIN */
     }
+#endif /* Q_OS_WIN */
 
-    switch (deviceType){
-
-    case SupportedDevices::DeviceTypeLightpack:
+    switch (deviceType) {
+    case DeviceTypeLightpack:
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "SupportedDevices::LightpackDevice";
-        return (AbstractLedDevice *)new LedDeviceLightpack();
+        return new LedDeviceLightpack();
 
-    case SupportedDevices::DeviceTypeAlienFx:
+    case DeviceTypeAlienFx:
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "SupportedDevices::AlienFxDevice";
 
 #       ifdef Q_OS_WIN
-        return (AbstractLedDevice *)new LedDeviceAlienFx();
+        return new LedDeviceAlienFx();
 #       else
         break;
 #       endif /* Q_OS_WIN */
 
-    case SupportedDevices::DeviceTypeAdalight:
+    case DeviceTypeAdalight:
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "SupportedDevices::AdalightDevice";
-		return (AbstractLedDevice *)new LedDeviceAdalight(Settings::instance()->getAdalightSerialPortName(), Settings::instance()->getAdalightSerialPortBaudRate());
+        return new LedDeviceAdalight(
+            m_settings->getAdalightSerialPortName(),
+            m_settings->getAdalightSerialPortBaudRate());
 
-    case SupportedDevices::DeviceTypeArdulight:
+    case DeviceTypeArdulight:
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "SupportedDevices::ArdulightDevice";
-		return (AbstractLedDevice *)new LedDeviceArdulight(Settings::instance()->getArdulightSerialPortName(), Settings::instance()->getArdulightSerialPortBaudRate());
+        return new LedDeviceArdulight(
+            m_settings->getArdulightSerialPortName(),
+            m_settings->getArdulightSerialPortBaudRate());
 
-    case SupportedDevices::DeviceTypeVirtual:
+    case DeviceTypeVirtual:
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "SupportedDevices::VirtualDevice";
-        return (AbstractLedDevice *)new LedDeviceVirtual();
+        return new LedDeviceVirtual(m_settings->getDeviceGamma(),
+                                    m_settings->getDeviceBrightness());
 
     default:
         break;

@@ -29,14 +29,10 @@
 
 #include<QSharedPointer>
 
-namespace SettingsScope {
-class Settings;
-}
-
 class AbstractLedDevice;
 
 struct TransientSettings {
-    QSharedPointer<AbstractLedDevice>ledDevice;
+    QSharedPointer<AbstractLedDevice> ledDevice;
 };
 
 class SettingsAwareTrait {

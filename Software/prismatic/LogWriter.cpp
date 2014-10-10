@@ -2,9 +2,8 @@
 #include <iostream>
 
 #include "LightpackApplication.hpp"
-#include "Settings.hpp"
-#include "version.h"
 #include "LogWriter.hpp"
+#include "version.h"
 
 using namespace std;
 

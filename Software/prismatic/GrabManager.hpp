@@ -38,7 +38,7 @@ class D3D10Grabber;
 
 namespace SettingsScope
 {
-class Settings;
+class SettingsReader;
 }
 
 class GrabManager : public QObject
@@ -94,6 +94,8 @@ private:
     void initLedWidgets(int numberOfLeds);
 
 private:
+    void initFromProfileSettings();
+
     QList<GrabberBase*> m_grabbers;
     GrabberBase *m_grabber;
     QList<QRect> m_lastScreenGeometry;
@@ -127,5 +129,5 @@ private:
 
     bool m_isGrabWidgetsVisible;
     GrabberContext * m_grabberContext;
-    SettingsScope::Settings *m_settings;
+    SettingsScope::SettingsReader *m_settings;
 };

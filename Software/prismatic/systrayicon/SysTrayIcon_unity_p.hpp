@@ -2,7 +2,7 @@
 #define SYSTRAYICON_UNITY_P_HPP
 
 #include "SysTrayIcon_p.hpp"
-#include "Settings.hpp"
+#include "SettingsReader.hpp"
 #undef signals
 #include <libappindicator/app-indicator.h>
 #include <QObject>
@@ -172,7 +172,7 @@ private slots:
     void onCheckUpdate_Finished()
     {
         using namespace SettingsScope;
-        QList<UpdateInfo> updates = _updatesProcessor.readUpdates(Settings::getLastReadUpdateId());
+        QList<UpdateInfo> updates = _updatesProcessor.readUpdates(SettingsReader::getLastReadUpdateId());
         if (updates.size() > 0) {
             if(updates.size() > 1) {
                 NotifyNotification * updates = notify_notification_new ("Updates are available", "please visit http://lightpack.tv","Prismatik");

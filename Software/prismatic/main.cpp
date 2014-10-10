@@ -28,12 +28,11 @@
 #include <QMetaType>
 #include <iostream>
 
-#include "common/DebugOut.hpp"
 #include "LightpackApplication.hpp"
-#include "Settings.hpp"
 #include "LogWriter.hpp"
 #include "SettingsDefaults.hpp"
 #include "SettingsWizard.hpp"
+#include "common/DebugOut.hpp"
 
 #ifdef Q_OS_WIN
 #if !defined NOMINMAX

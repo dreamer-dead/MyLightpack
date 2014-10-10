@@ -24,17 +24,19 @@
  *
  */
 
+#include "ApiServer.hpp"
+
 #include <QtNetwork>
+#include <QtWidgets/QApplication>
 #include <stdlib.h>
 
-#include "ApiServer.hpp"
 #include "LightpackPluginInterface.hpp"
 #include "ApiServerSetColorTask.hpp"
-#include "Settings.hpp"
 #include "SettingsDefaults.hpp"
+#include "SettingsReader.hpp"
 #include "TimeEvaluations.hpp"
+#include "common/DebugOut.hpp"
 #include "version.h"
-#include <QtWidgets/QApplication>
 
 using namespace SettingsScope;
 
@@ -380,7 +382,7 @@ void ApiServer::clientProcessCommands()
         {
             API_DEBUG_OUT << CmdGetDevices;
 
-            QStringList devices = m_settings->getSupportedDevices();
+            const QStringList devices = SettingsReader::getSupportedDevices();
 
             result = ApiServer::CmdResultDevices;
             for (int i = 0; i < devices.count(); i++)
@@ -1058,7 +1060,7 @@ void ApiServer::taskSetColorIsSuccess(bool isSuccess)
 
 void ApiServer::initPrivateVariables()
 {
-    m_settings = SettingsScope::Settings::instance();
+    m_settings = SettingsReader::instance();
     m_apiPort = m_settings->getApiPort();
     m_listenOnlyOnLoInterface = m_settings->isListenOnlyOnLoInterface();
     m_apiAuthKey = m_settings->getApiAuthKey();

@@ -89,10 +89,6 @@ public:
     static Settings * instance() { return m_instance.data(); }
     static void Shutdown();
 
-    static QStringList getSupportedDevices();
-    static QPoint getDefaultPosition(int ledIndex);
-    static QStringList getSupportedSerialPortBaudRates();
-
     void resetDefaults();
 
     QStringList findAllProfiles() const;

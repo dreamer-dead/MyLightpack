@@ -24,12 +24,13 @@
  *
  */
 
+#include <QDesktopWidget>
+
 #include "LightpackDiscoveryPage.hpp"
 #include "ui_LightpackDiscoveryPage.h"
 #include "LedDeviceLightpack.hpp"
-#include "Settings.hpp"
 #include "Wizard.hpp"
-#include "QDesktopWidget"
+#include "common/DebugOut.hpp"
 
 LightpackDiscoveryPage::LightpackDiscoveryPage(bool isInitFromSettings, TransientSettings *ts, QWidget *parent) :
     QWizardPage(parent),

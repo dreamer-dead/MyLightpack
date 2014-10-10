@@ -4,7 +4,7 @@
 #include <QMap>
 #include <QString>
 #include <QVariant>
-#include "Settings.hpp"
+#include "SettingsSource.hpp"
 
 class SettingsSourceMockup : public SettingsScope::SettingsSource
 {

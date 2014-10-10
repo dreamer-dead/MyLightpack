@@ -10,16 +10,14 @@ class PluginsManager : public QObject
 {
     Q_OBJECT
 public:
-    PluginsManager(QObject *parent = 0);
+    static QString defaultPluginsDir();
+
+    PluginsManager(const QString& pluginsDir, QObject *parent = 0);
     virtual ~PluginsManager();
 
     void LoadPlugins(QString path);
     QList<Plugin*> getPluginList();
     Plugin* getPlugin(const QString& name_);
-    
-private:
-    void dropPlugins();
-    QMap<QString, Plugin*> _plugins;
 
 signals:
     void updatePlugin(QList<Plugin*>);
@@ -32,5 +30,10 @@ public slots:
 private slots:
     void onPluginStateChangedHandler();
 
+private:
+    void dropPlugins();
+
+    QMap<QString, Plugin*> _plugins;
+    const QString m_pluginsDir;
 };
 

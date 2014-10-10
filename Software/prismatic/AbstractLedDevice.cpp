@@ -27,7 +27,7 @@
 #include "AbstractLedDevice.hpp"
 #include "colorspace_types.h"
 #include "PrismatikMath.hpp"
-#include "Settings.hpp"
+#include "SettingsReader.hpp"
 
 void AbstractLedDevice::setGamma(double value) {
     m_gamma = value;
@@ -58,11 +58,11 @@ void AbstractLedDevice::updateWBAdjustments(const QList<WBAdjustment> &coefs) {
 void AbstractLedDevice::updateDeviceSettings()
 {
     using namespace SettingsScope;
-    setGamma(Settings::instance()->getDeviceGamma());
-    setBrightness(Settings::instance()->getDeviceBrightness());
-    setLuminosityThreshold(Settings::instance()->getLuminosityThreshold());
-    setMinimumLuminosityThresholdEnabled(Settings::instance()->isMinimumLuminosityEnabled());
-    updateWBAdjustments(Settings::instance()->getLedCoefs());
+    setGamma(SettingsReader::instance()->getDeviceGamma());
+    setBrightness(SettingsReader::instance()->getDeviceBrightness());
+    setLuminosityThreshold(SettingsReader::instance()->getLuminosityThreshold());
+    setMinimumLuminosityThresholdEnabled(SettingsReader::instance()->isMinimumLuminosityEnabled());
+    updateWBAdjustments(SettingsReader::instance()->getLedCoefs());
 }
 
 /*!

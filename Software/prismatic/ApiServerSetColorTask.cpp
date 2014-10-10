@@ -26,10 +26,10 @@
 #include <QThread>
 #include <cmath>
 
-#include "common/DebugOut.hpp"
 #include "ApiServerSetColorTask.hpp"
-#include "Settings.hpp"
 #include "PrismatikMath.hpp"
+#include "SettingsDefaults.hpp"
+#include "common/DebugOut.hpp"
 
 ApiServerSetColorTask::ApiServerSetColorTask(QObject *parent) :
     QObject(parent)

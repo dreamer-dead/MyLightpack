@@ -31,7 +31,7 @@
 
 #include "common/DebugOut.hpp"
 #include "PrismatikMath.hpp"
-#include "Settings.hpp"
+#include "SettingsReader.hpp"
 
 using namespace SettingsScope;
 
@@ -41,10 +41,6 @@ LedDeviceAdalight::LedDeviceAdalight(const QString &portName, const int baudRate
 
     m_portName = portName;
     m_baudRate = baudRate;
-
-//    m_gamma = Settings::instance()->getDeviceGamma();
-//    m_brightness = Settings::instance()->getDeviceBrightness();
-//    m_colorSequence =Settings::instance()->getColorSequence(SupportedDevices::DeviceTypeAdalight);
     m_AdalightDevice = NULL;
 
     // TODO: think about init m_savedColors in all ILedDevices
@@ -186,22 +182,19 @@ void LedDeviceAdalight::updateDeviceSettings()
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
     AbstractLedDevice::updateDeviceSettings();
-    setColorSequence(Settings::instance()->getColorSequence(SupportedDevices::DeviceTypeAdalight));
+    setColorSequence(SettingsReader::instance()->getColorSequence(SupportedDevices::DeviceTypeAdalight));
 }
 
 void LedDeviceAdalight::open()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << sender();
 
-//    m_gamma = Settings::instance()->getDeviceGamma();
-//    m_brightness = Settings::instance()->getDeviceBrightness();
-
     if (m_AdalightDevice != NULL)
         m_AdalightDevice->close();
     else
         m_AdalightDevice = new QSerialPort();
 
-    m_AdalightDevice->setPortName(m_portName);// Settings::instance()->getAdalightSerialPortName());
+    m_AdalightDevice->setPortName(m_portName);
 
     m_AdalightDevice->open(QIODevice::WriteOnly | QIODevice::Unbuffered);
     bool ok = m_AdalightDevice->isOpen();
@@ -218,7 +211,7 @@ void LedDeviceAdalight::open()
     {
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "Serial device" << m_AdalightDevice->portName() << "open";
 
-        ok = m_AdalightDevice->setBaudRate(m_baudRate);//Settings::instance()->getAdalightSerialPortBaudRate());
+        ok = m_AdalightDevice->setBaudRate(m_baudRate);
         if (ok)
         {
             ok = m_AdalightDevice->setDataBits(QSerialPort::Data8);

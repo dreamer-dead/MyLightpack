@@ -1520,8 +1520,10 @@ void SettingsWindow::loadTranslation(const QString & language)
 
 void SettingsWindow::startTestsClick()
 {
+    const QString resultFilePath =
+        QDir(Settings::instance()->getApplicationDirPath()).filePath("SpeedTest.csv");
     // While testing this function freezes GUI
-    m_speedTest->start();
+    m_speedTest->start(resultFilePath);
 }
 
 // ----------------------------------------------------------------------------

@@ -23,11 +23,12 @@
  *
  */
 
+#include <QTime>
 
 #include "MoodLampManager.hpp"
 #include "PrismatikMath.hpp"
-#include "Settings.hpp"
-#include <QTime>
+#include "SettingsReader.hpp"
+#include "common/DebugOut.hpp"
 
 using namespace SettingsScope;
 
@@ -46,11 +47,11 @@ MoodLampManager::MoodLampManager(QObject *parent) : QObject(parent)
     m_isMoodLampEnabled = false;
     m_rgbSaved = 0;
 
-    m_isLiquidMode = Settings::instance()->isMoodLampLiquidMode();
-    m_liquidModeSpeed = Settings::instance()->getMoodLampSpeed();
-    m_currentColor = Settings::instance()->getMoodLampColor();
+    m_isLiquidMode = SettingsReader::instance()->isMoodLampLiquidMode();
+    m_liquidModeSpeed = SettingsReader::instance()->getMoodLampSpeed();
+    m_currentColor = SettingsReader::instance()->getMoodLampColor();
 
-    m_isSendDataOnlyIfColorsChanged = Settings::instance()->isSendDataOnlyIfColorsChanges();
+    m_isSendDataOnlyIfColorsChanged = SettingsReader::instance()->isSendDataOnlyIfColorsChanges();
 
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(updateColors()));
 }
@@ -133,12 +134,12 @@ void MoodLampManager::settingsProfileChanged(const QString &profileName)
 
 void MoodLampManager::initFromSettings()
 {
-    m_liquidModeSpeed = Settings::instance()->getMoodLampSpeed();
-    m_currentColor = Settings::instance()->getMoodLampColor();
-    setLiquidMode(Settings::instance()->isMoodLampLiquidMode());
-    m_isSendDataOnlyIfColorsChanged = Settings::instance()->isSendDataOnlyIfColorsChanges();
+    m_liquidModeSpeed = SettingsReader::instance()->getMoodLampSpeed();
+    m_currentColor = SettingsReader::instance()->getMoodLampColor();
+    setLiquidMode(SettingsReader::instance()->isMoodLampLiquidMode());
+    m_isSendDataOnlyIfColorsChanged = SettingsReader::instance()->isSendDataOnlyIfColorsChanges();
 
-	initColors(Settings::instance()->getNumberOfLeds(Settings::instance()->getConnectedDevice()));
+    initColors(SettingsReader::instance()->getNumberOfLeds(SettingsReader::instance()->getConnectedDevice()));
 }
 
 void MoodLampManager::updateColors()
@@ -230,7 +231,7 @@ void MoodLampManager::fillColors(QRgb rgb)
 
     for (int i = 0; i < m_colors.size(); i++)
     {
-        if (Settings::instance()->isLedEnabled(i))
+        if (SettingsReader::instance()->isLedEnabled(i))
             m_colors[i] = rgb;
         else
             m_colors[i] = 0;

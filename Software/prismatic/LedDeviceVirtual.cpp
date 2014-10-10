@@ -28,17 +28,15 @@
 
 #include "common/DebugOut.hpp"
 #include "PrismatikMath.hpp"
-#include "Settings.hpp"
 #include "enums.hpp"
 
-using namespace SettingsScope;
-
-LedDeviceVirtual::LedDeviceVirtual(QObject * parent) : AbstractLedDevice(parent)
+LedDeviceVirtual::LedDeviceVirtual(double gamma, double brightness, QObject * parent)
+    : AbstractLedDevice(parent)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-    m_gamma = Settings::instance()->getDeviceGamma();
-    m_brightness = Settings::instance()->getDeviceBrightness();
+    m_gamma = gamma;
+    m_brightness = brightness;
 }
 
 void LedDeviceVirtual::setColors(const QList<QRgb> & colors)

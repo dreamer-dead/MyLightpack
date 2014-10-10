@@ -39,11 +39,8 @@
 #include "LedDeviceAlienFx.hpp"
 
 #include "common/DebugOut.hpp"
-#include "Settings.hpp"
 #include "../alienfx/LFX2.h"
 #include <windows.h>
-
-using namespace SettingsScope;
 
 LFX2INITIALIZE lfxInitFunction;
 LFX2RELEASE lfxReleaseFunction;

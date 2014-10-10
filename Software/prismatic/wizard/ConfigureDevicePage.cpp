@@ -29,7 +29,7 @@
 
 #include "ConfigureDevicePage.hpp"
 #include "ui_ConfigureDevicePage.h"
-#include "Settings.hpp"
+#include "SettingsReader.hpp"
 #include "SettingsDefaults.hpp"
 #include "LedDeviceArdulight.hpp"
 #include "LedDeviceAdalight.hpp"
@@ -51,7 +51,7 @@ void ConfigureDevicePage::initializePage()
     ui->leSerialPortName->setText(SERIAL_PORT_DEFAULT);
     ui->cbBaudRate->clear();
     // NOTE: This line emit's signal currentIndex_Changed()
-    ui->cbBaudRate->addItems(Settings::getSupportedSerialPortBaudRates());
+    ui->cbBaudRate->addItems(SettingsReader::getSupportedSerialPortBaudRates());
 
     registerField("serialPort", ui->leSerialPortName);
     registerField("baudRate", ui->cbBaudRate, "currentText");
