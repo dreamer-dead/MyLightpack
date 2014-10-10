@@ -2648,7 +2648,7 @@
   <customwidget>
    <class>ColorButton</class>
    <extends>QPushButton</extends>
-   <header>ColorButton.hpp</header>
+   <header>ui/ColorButton.hpp</header>
   </customwidget>
  </customwidgets>
  <tabstops>

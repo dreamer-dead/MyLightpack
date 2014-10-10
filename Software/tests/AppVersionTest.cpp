@@ -25,8 +25,10 @@
  */
 
 #include "AppVersionTest.hpp"
+
 #include <QtTest/QtTest>
-#include "../src/UpdatesProcessor.hpp"
+
+#include "UpdatesProcessor.hpp"
 
 AppVersionTest::AppVersionTest()
 {

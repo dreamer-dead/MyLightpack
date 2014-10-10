@@ -31,7 +31,6 @@
 #include "common/DebugOut.hpp"
 #include "PrismatikMath.hpp"
 #include "SettingsReader.hpp"
-#include "GrabWidget.hpp"
 #include "GrabberContext.hpp"
 #include "TimeEvaluations.hpp"
 #include "WinAPIGrabber.hpp"
@@ -43,6 +42,7 @@
 #include "D3D9Grabber.hpp"
 #include "D3D10Grabber.hpp"
 #include "GrabManager.hpp"
+#include "ui/GrabWidget.hpp"
 
 using namespace SettingsScope;
 
