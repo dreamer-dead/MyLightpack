@@ -31,10 +31,10 @@
 #include "ui_ConfigureDevicePage.h"
 #include "SettingsReader.hpp"
 #include "SettingsDefaults.hpp"
-#include "LedDeviceArdulight.hpp"
-#include "LedDeviceAdalight.hpp"
-#include "LedDeviceVirtual.hpp"
 #include "Wizard.hpp"
+#include "devices/LedDeviceArdulight.hpp"
+#include "devices/LedDeviceAdalight.hpp"
+#include "devices/LedDeviceVirtual.hpp"
 
 using namespace SettingsScope;
 

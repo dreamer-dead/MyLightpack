@@ -27,15 +27,15 @@
 #include <qglobal.h>
 
 #include "LedDeviceManager.hpp"
-#include "LedDeviceLightpack.hpp"
+#include "devices/LedDeviceLightpack.hpp"
 
 #ifdef Q_OS_WIN
-#include "LedDeviceAlienFx.hpp"
+#include "devices/LedDeviceAlienFx.hpp"
 #endif
 
-#include "LedDeviceAdalight.hpp"
-#include "LedDeviceArdulight.hpp"
-#include "LedDeviceVirtual.hpp"
+#include "devices/LedDeviceAdalight.hpp"
+#include "devices/LedDeviceArdulight.hpp"
+#include "devices/LedDeviceVirtual.hpp"
 #include "Settings.hpp"
 
 using namespace SettingsScope;

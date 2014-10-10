@@ -32,7 +32,6 @@
 #include "GrabAreaWidget.hpp"
 #include "PegasusDistributor.hpp"
 #include "Settings.hpp"
-#include "LedDeviceLightpack.hpp"
 #include "ZonePlacementPage.hpp"
 #include "ui_ZonePlacementPage.h"
 
