@@ -43,6 +43,10 @@ class SettingsReader {
 public:
     static SettingsReader * instance();
 
+    static QStringList getSupportedDevices();
+    static QPoint getDefaultPosition(int ledIndex);
+    static QStringList getSupportedSerialPortBaudRates();
+
     BaseVersion getVersion() const;
 
     // Main
@@ -93,16 +97,16 @@ public:
     bool isDx1011GrabberEnabled() const;
 #endif
 
-    Lightpack::Mode getLightpackMode();
+    Lightpack::Mode getLightpackMode() const;
     bool isMoodLampLiquidMode() const;
     QColor getMoodLampColor() const;
     int getMoodLampSpeed() const;
 
     QList<WBAdjustment> getLedCoefs() const;
 
-    double getLedCoefRed(int ledIndex);
-    double getLedCoefGreen(int ledIndex);
-    double getLedCoefBlue(int ledIndex);
+    double getLedCoefRed(int ledIndex) const;
+    double getLedCoefGreen(int ledIndex) const;
+    double getLedCoefBlue(int ledIndex) const;
 
     QSize getLedSize(int ledIndex) const;
     QPoint getLedPosition(int ledIndex) const;
@@ -111,7 +115,7 @@ public:
     uint getLastReadUpdateId() const;
 
 protected:
-    SettingsReader(SettingsProfiles& profiles,
+    SettingsReader(const SettingsProfiles& profiles,
                    const DeviceTypesInfo& deviceTypes)
         : m_profiles(profiles)
         , m_deviceTypes(deviceTypes) {
@@ -119,9 +123,9 @@ protected:
 
     ~SettingsReader() {}
 
-    double getValidLedCoef(int ledIndex, const QString & keyCoef);
+    double getValidLedCoef(int ledIndex, const QString & keyCoef) const;
 
-    SettingsProfiles& m_profiles;
+    const SettingsProfiles& m_profiles;
     const DeviceTypesInfo& m_deviceTypes;
 };
 

@@ -26,15 +26,12 @@
 
 
 #include <QtGui>
-#include <QtWidgets/QDesktopWidget>
 #include <QTextItem>
+#include <QtWidgets/QDesktopWidget>
 
-#include "common/DebugOut.hpp"
 #include "GrabAreaWidget.hpp"
 #include "ui_GrabAreaWidget.h"
-#include "Settings.hpp"
-
-using namespace SettingsScope;
+#include "common/DebugOut.hpp"
 
 GrabAreaWidget::GrabAreaWidget(int id, QWidget *parent) :
     QWidget(parent),

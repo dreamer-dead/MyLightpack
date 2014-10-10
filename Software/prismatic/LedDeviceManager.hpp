@@ -31,6 +31,10 @@
 
 class QTimer;
 
+namespace SettingsScope {
+class SettingsReader;
+}
+
 /*!
     This class creates \a ILedDevice implementations and manages them after.
     It is always better way to interact with ILedDevice through \code LedDeviceManager \endcode.
@@ -120,4 +124,5 @@ private:
     AbstractLedDevice *m_ledDevice;
     QThread *m_ledDeviceThread;
     QTimer *m_cmdTimeoutTimer;
+    const SettingsScope::SettingsReader* m_settings;
 };

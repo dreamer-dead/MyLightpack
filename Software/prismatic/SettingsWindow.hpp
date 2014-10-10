@@ -31,7 +31,7 @@
 #include <QMainWindow>
 #include <QSystemTrayIcon>
 #include <QLabel>
-#include "Settings.hpp"
+
 #include "GrabManager.hpp"
 #include "MoodLampManager.hpp"
 #include "SpeedTest.hpp"

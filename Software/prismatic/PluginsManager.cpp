@@ -1,15 +1,19 @@
 #include "PluginsManager.hpp"
-#include "Plugin.hpp"
+
 #include <QDir>
 
-#include "Settings.hpp"
+#include "Plugin.hpp"
+#include "common/DebugOut.hpp"
 
-using namespace SettingsScope;
+// static
+QString PluginsManager::defaultPluginsDir() {
+    return QString("Plugins");
+}
 
-PluginsManager::PluginsManager(QObject *parent) :
-    QObject(parent)
-{
-
+PluginsManager::PluginsManager(const QString& pluginsDir, QObject *parent)
+    : QObject(parent)
+    , m_pluginsDir(pluginsDir) {
+    Q_ASSERT(QDir(m_pluginsDir).exists());
 }
 
 
@@ -33,7 +37,7 @@ void PluginsManager::dropPlugins(){
 void PluginsManager::reloadPlugins(){
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     dropPlugins();
-    LoadPlugins(QString(Settings::instance()->getApplicationDirPath() + "Plugins"));
+    LoadPlugins(m_pluginsDir);
     StartPlugins();
 }
 

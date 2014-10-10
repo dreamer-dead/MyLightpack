@@ -1,10 +1,13 @@
 #include "Plugin.hpp"
+
 #include <QSettings>
 #include <QIcon>
 #include <QFileInfo>
 #include <QDir>
+
 #include "Settings.hpp"
-#include "../common/defs.h"
+#include "common/DebugOut.hpp"
+#include "common/defs.h"
 
 using namespace SettingsScope;
 

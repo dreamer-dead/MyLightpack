@@ -29,7 +29,7 @@
 #include <QtGui>
 #include <QtWidgets/QDesktopWidget>
 #include <QTextItem>
- 
+
 #include "ui_GrabWidget.h"
 #include "Settings.hpp"
 #include "common/DebugOut.hpp"

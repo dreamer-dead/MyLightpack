@@ -38,7 +38,7 @@ class SpeedTest : public QObject
 public:
     SpeedTest();
 
-    void start();
+    void start(const QString& filePath);
 
 private:
     void printHeader();

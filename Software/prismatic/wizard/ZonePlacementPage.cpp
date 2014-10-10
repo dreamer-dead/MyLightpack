@@ -24,16 +24,17 @@
  *
  */
 
-#include "ZonePlacementPage.hpp"
-#include "ui_ZonePlacementPage.h"
-#include "QDesktopWidget"
+#include <QDesktopWidget>
+
 #include "AbstractLedDevice.hpp"
-#include "Settings.hpp"
 #include "AndromedaDistributor.hpp"
 #include "CassiopeiaDistributor.hpp"
-#include "PegasusDistributor.hpp"
 #include "GrabAreaWidget.hpp"
+#include "PegasusDistributor.hpp"
+#include "Settings.hpp"
 #include "LedDeviceLightpack.hpp"
+#include "ZonePlacementPage.hpp"
+#include "ui_ZonePlacementPage.h"
 
 
 ZonePlacementPage::ZonePlacementPage(bool isInitFromSettings, TransientSettings *ts, QWidget *parent):

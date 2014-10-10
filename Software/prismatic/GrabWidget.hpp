@@ -26,7 +26,6 @@
 
 #pragma once
 
-//#include <QtWidgets/QWidget>
 #include "GrabConfigWidget.hpp"
 #include "GrabbedArea.hpp"
 

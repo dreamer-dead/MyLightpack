@@ -24,17 +24,13 @@
  *
  */
 
+#include "SpeedTest.hpp"
+
 #include <QApplication>
 #include <QDesktopWidget>
 
-#include <iostream>
-using namespace std;
-
-#include "SpeedTest.hpp"
-#include "Settings.hpp"
 #include "version.h"
-
-using namespace SettingsScope;
+#include "common/DebugOut.hpp"
 
 // Hacks for create aligned string from variable X with specified LENGHT
 #define ALIGN_RIGHT( LENGHT, X ) QVariant( X ).toString().prepend(QString(LENGHT - QVariant( X ).toString().length(), ' '))
@@ -61,10 +57,8 @@ SpeedTest::SpeedTest() : QObject()
 }
 
 
-void SpeedTest::start()
+void SpeedTest::start(const QString& filePath)
 {
-    const QString filePath = Settings::instance()->getApplicationDirPath() + "/SpeedTest.csv";
-
     resultFile.setFileName( filePath );
 
     bool IsFileExists = false;

@@ -33,7 +33,7 @@ class LedDeviceVirtual : public AbstractLedDevice
 {
     Q_OBJECT
 public:
-    LedDeviceVirtual(QObject * parent = 0);
+    LedDeviceVirtual(double gamma, double brightness, QObject * parent = 0);
     virtual ~LedDeviceVirtual() {}
 
 public slots:

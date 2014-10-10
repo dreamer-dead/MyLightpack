@@ -24,11 +24,13 @@
  *
  */
 
+#include <QDesktopWidget>
+
 #include "SelectDevicePage.hpp"
 #include "ui_SelectDevicePage.h"
 #include "Wizard.hpp"
 #include "LedDeviceVirtual.hpp"
-#include "QDesktopWidget"
+#include "SettingsReader.hpp"
 
 SelectDevicePage::SelectDevicePage(bool isInitFromSettings, TransientSettings *ts, QWidget *parent):
     QWizardPage(parent),
@@ -60,8 +62,12 @@ void SelectDevicePage::cleanupPage()
 
 bool SelectDevicePage::validatePage()
 {
+    using namespace SettingsScope;
+
     if (field("isVirtual").toBool()) {
-        _transSettings->ledDevice.reset(new LedDeviceVirtual());
+        const double gamma = SettingsReader::instance()->getDeviceGamma();
+        const double brightness = SettingsReader::instance()->getDeviceBrightness();
+        _transSettings->ledDevice.reset(new LedDeviceVirtual(gamma, brightness));
     }
     return true;
 }

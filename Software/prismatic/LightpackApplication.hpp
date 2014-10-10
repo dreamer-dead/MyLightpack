@@ -26,18 +26,22 @@
 
 #pragma once
 
-#include "SettingsWindow.hpp"
 #include "LedDeviceManager.hpp"
 #include "qtsingleapplication.h"
 #include "EndSessionDetector.hpp"
 
-#include <memory>
-
 #define getLightpackApp() static_cast<LightpackApplication *>(QCoreApplication::instance())
 
-class LightpackPluginInterface;
 class ApiServer;
+class GrabManager;
+class LightpackPluginInterface;
+class MoodLampManager;
 class PluginsManager;
+class SettingsWindow;
+
+namespace SettingsScope {
+class Settings;
+}
 
 class LightpackApplication : public QtSingleApplication
 {
@@ -50,8 +54,10 @@ public:
     bool winEventFilter ( MSG * msg, long * result );
     HWND getMainWindowHandle();
 #endif
-    SettingsWindow * settingsWnd() { return m_settingsWindow; }
-	const SettingsScope::Settings * settings() { return SettingsScope::Settings::instance(); }
+    SettingsWindow * settingsWnd() const { return m_settingsWindow; }
+    const SettingsScope::SettingsReader * settingsReader() const;
+    SettingsScope::Settings * settings() const;
+
     enum ErrorCodes {
         OK_ErrorCode                            = 0,
         WrongCommandLineArgument_ErrorCode      = 1,

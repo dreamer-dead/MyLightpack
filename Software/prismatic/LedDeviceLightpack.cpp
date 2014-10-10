@@ -31,7 +31,7 @@
 #include <QtDebug>
 
 #include "common/DebugOut.hpp"
-#include "Settings.hpp"
+#include "SettingsReader.hpp"
 
 using namespace SettingsScope;
 
@@ -239,9 +239,9 @@ void LedDeviceLightpack::updateDeviceSettings()
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << sender();
 
     AbstractLedDevice::updateDeviceSettings();
-    setRefreshDelay(Settings::instance()->getDeviceRefreshDelay());
-    setColorDepth(Settings::instance()->getDeviceColorDepth());
-    setSmoothSlowdown(Settings::instance()->getDeviceSmooth());
+    setRefreshDelay(SettingsReader::instance()->getDeviceRefreshDelay());
+    setColorDepth(SettingsReader::instance()->getDeviceColorDepth());
+    setSmoothSlowdown(SettingsReader::instance()->getDeviceSmooth());
 
     requestFirmwareVersion();
 }
@@ -458,7 +458,8 @@ void LedDeviceLightpack::restartPingDevice(bool isSuccess)
 {
     Q_UNUSED(isSuccess);
 
-    if (Settings::instance()->isBacklightEnabled() && Settings::instance()->isPingDeviceEverySecond())
+    if (SettingsReader::instance()->isBacklightEnabled() &&
+        SettingsReader::instance()->isPingDeviceEverySecond())
     {
         // Start ping device with PingDeviceInterval ms after last data transfer complete
         m_timerPingDevice->start(kPingDeviceInterval);

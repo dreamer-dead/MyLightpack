@@ -533,6 +533,52 @@ SettingsReader * SettingsReader::instance() {
     return Settings::instance();
 }
 
+// static
+QStringList SettingsReader::getSupportedDevices()
+{
+    return Main::SupportedDevices.split(',');
+}
+
+// static
+QPoint SettingsReader::getDefaultPosition(int ledIndex)
+{
+    if (ledIndex > (MaximumNumberOfLeds::Default - 1)) {
+        const int x = (ledIndex - MaximumNumberOfLeds::Default) * 10 /* px */;
+        return QPoint(x, 0);
+    }
+
+    static const int kDefaultHeight = Profile::Led::SizeDefault.height();
+    static const int kDefaultWidth = Profile::Led::SizeDefault.width();
+    static const int kLedsCountDiv2 = MaximumNumberOfLeds::Default / 2;
+    static const int kHeight = kLedsCountDiv2 * kDefaultHeight;
+
+    const QRect screen = QApplication::desktop()->screenGeometry();
+    QPoint result;
+
+    if (ledIndex < kLedsCountDiv2) {
+        result.setX(0);
+    } else {
+        result.setX(screen.width() - kDefaultWidth);
+    }
+
+    const int y = screen.height() / 2 - kHeight / 2;
+
+    result.setY(y + (ledIndex % kLedsCountDiv2) * kDefaultHeight);
+    return result;
+}
+
+// static
+QStringList SettingsReader::getSupportedSerialPortBaudRates()
+{
+    QStringList list;
+
+    // TODO: Add more baud rates if need it
+    list.append("115200");
+    list.append("57600");
+    list.append("9600");
+    return list;
+}
+
 QString SettingsReader::getLanguage() const
 {
     return m_profiles.valueMain(Main::Key::Language).toString();
@@ -744,7 +790,7 @@ bool SettingsReader::isDx1011GrabberEnabled() const
 }
 #endif
 
-Lightpack::Mode SettingsReader::getLightpackMode()
+Lightpack::Mode SettingsReader::getLightpackMode() const
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
@@ -788,17 +834,17 @@ QList<WBAdjustment> SettingsReader::getLedCoefs() const
     return result;
 }
 
-double SettingsReader::getLedCoefRed(int ledIndex)
+double SettingsReader::getLedCoefRed(int ledIndex) const
 {
     return getValidLedCoef(ledIndex, Profile::Key::Led::CoefRed);
 }
 
-double SettingsReader::getLedCoefGreen(int ledIndex)
+double SettingsReader::getLedCoefGreen(int ledIndex) const
 {
     return getValidLedCoef(ledIndex, Profile::Key::Led::CoefGreen);
 }
 
-double SettingsReader::getLedCoefBlue(int ledIndex)
+double SettingsReader::getLedCoefBlue(int ledIndex) const
 {
     return getValidLedCoef(ledIndex, Profile::Key::Led::CoefBlue);
 }
@@ -846,7 +892,7 @@ uint SettingsReader::getLastReadUpdateId() const {
     return m_profiles.valueMain(Main::Key::LastReadUpdateId).toUInt();
 }
 
-double SettingsReader::getValidLedCoef(int ledIndex, const QString & keyCoef)
+double SettingsReader::getValidLedCoef(int ledIndex, const QString & keyCoef) const
 {
     bool ok = false;
     const QString prefix(Profile::Key::Led::Prefix + QString::number(ledIndex + 1));
@@ -1141,37 +1187,6 @@ QString Settings::getMainConfigPath() const
     return mainConfPath;
 }
 
-// static
-QPoint Settings::getDefaultPosition(int ledIndex)
-{
-    QPoint result;
-
-    if (ledIndex > (MaximumNumberOfLeds::Default - 1))
-    {
-        int x = (ledIndex - MaximumNumberOfLeds::Default) * 10 /* px */;
-        return QPoint(x, 0);
-    }
-
-    QRect screen = QApplication::desktop()->screenGeometry();
-
-    int ledsCountDiv2 = MaximumNumberOfLeds::Default / 2;
-
-    if (ledIndex < ledsCountDiv2)
-    {
-        result.setX(0);
-    } else {
-        result.setX(screen.width() - Profile::Led::SizeDefault.width());
-    }
-
-    int height = ledsCountDiv2 * Profile::Led::SizeDefault.height();
-
-    int y = screen.height() / 2 - height / 2;
-
-    result.setY(y + (ledIndex % ledsCountDiv2) * Profile::Led::SizeDefault.height());
-
-    return result;
-}
-
 void Settings::setLanguage(const QString & language)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
@@ -1322,12 +1337,6 @@ void Settings::setConnectedDeviceName(const QString & deviceName)
     this->connectedDeviceChanged(m_deviceTypes.getDeviceType(deviceName));
 }
 
-// static
-QStringList Settings::getSupportedDevices()
-{
-    return Main::SupportedDevices.split(',');
-}
-
 void Settings::setHotkey(const QString &actionName, const QKeySequence &keySequence)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
@@ -1370,18 +1379,6 @@ void Settings::setArdulightSerialPortBaudRate(const QString & baud)
     // TODO: validator
     m_mainProfile.setValue(Main::Key::Ardulight::BaudRate, baud);
     this->ardulightSerialPortBaudRateChanged(baud);
-}
-
-// static
-QStringList Settings::getSupportedSerialPortBaudRates()
-{
-    QStringList list;
-
-    // TODO: Add more baud rates if need it
-    list.append("115200");
-    list.append("57600");
-    list.append("9600");
-    return list;
 }
 
 void Settings::setNumberOfLeds(SupportedDevices::DeviceType device, int numberOfLeds)

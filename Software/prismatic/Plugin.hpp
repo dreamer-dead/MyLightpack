@@ -3,8 +3,6 @@
 #include <QObject>
 #include <QProcess>
 
-#include "common/DebugOut.hpp"
-
 class Plugin : public QObject
 {
     Q_OBJECT

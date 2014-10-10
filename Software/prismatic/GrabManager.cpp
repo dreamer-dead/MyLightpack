@@ -30,7 +30,7 @@
 
 #include "common/DebugOut.hpp"
 #include "PrismatikMath.hpp"
-#include "Settings.hpp"
+#include "SettingsReader.hpp"
 #include "GrabWidget.hpp"
 #include "GrabberContext.hpp"
 #include "TimeEvaluations.hpp"
@@ -62,7 +62,7 @@ GrabManager::GrabManager(QWidget *parent) : QObject(parent)
 
     qRegisterMetaType<GrabResult>("GrabResult");
 
-    m_settings = SettingsScope::Settings::instance();
+    m_settings = SettingsScope::SettingsReader::instance();
     Q_ASSERT(m_settings);
     m_parentWidget = parent;
 
@@ -90,13 +90,12 @@ GrabManager::GrabManager(QWidget *parent) : QObject(parent)
     initColorLists(MaximumNumberOfLeds::Default);
     initLedWidgets(MaximumNumberOfLeds::Default);
 
-//    connect(m_timerGrab, SIGNAL(timeout()), this, SLOT(handleGrabbedColors()));
     connect(QApplication::desktop(), SIGNAL(resized(int)), this, SLOT(scaleLedWidgets(int)));
     connect(QApplication::desktop(), SIGNAL(screenCountChanged(int)), this, SLOT(onScreenCountChanged(int)));
 
     updateScreenGeometry();
 
-    settingsProfileChanged(m_settings->getCurrentProfileName());
+    initFromProfileSettings();
 
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "initialized";
 }
@@ -246,10 +245,7 @@ void GrabManager::settingsProfileChanged(const QString &profileName)
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     Q_UNUSED(profileName)
 
-    m_isSendDataOnlyIfColorsChanged = m_settings->isSendDataOnlyIfColorsChanges();
-    m_avgColorsOnAllLeds = m_settings->isGrabAvgColorsEnabled();
-
-    setNumberOfLeds(m_settings->getNumberOfLeds(m_settings->getConnectedDevice()));
+    initFromProfileSettings();
 }
 
 void GrabManager::setVisibleLedWidgets(bool state)
@@ -634,4 +630,11 @@ void GrabManager::initLedWidgets(int numberOfLeds)
 
     if (m_ledWidgets.size() != numberOfLeds)
         qCritical() << Q_FUNC_INFO << "Fail: m_ledWidgets.size()" << m_ledWidgets.size() << " != numberOfLeds" << numberOfLeds;
+}
+
+void GrabManager::initFromProfileSettings() {
+    m_isSendDataOnlyIfColorsChanged = m_settings->isSendDataOnlyIfColorsChanges();
+    m_avgColorsOnAllLeds = m_settings->isGrabAvgColorsEnabled();
+
+    setNumberOfLeds(m_settings->getNumberOfConnectedDeviceLeds());
 }

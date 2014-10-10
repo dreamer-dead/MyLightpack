@@ -35,11 +35,13 @@
 #include <QRgb>
 #include <QTime>
 
-#include "common/DebugOut.hpp"
-#include "SettingsWindow.hpp"
 #include "LightpackPluginInterface.hpp"
 #include "ApiServerSetColorTask.hpp"
 #include "enums.hpp"
+
+namespace SettingsScope {
+class SettingsReader;
+}
 
 struct ClientInfo
 {
@@ -213,5 +215,5 @@ private:
 
     QString m_helpMessage;
     QString m_shortHelpMessage;
-    SettingsScope::Settings *m_settings;
+    const SettingsScope::SettingsReader *m_settings;
 };

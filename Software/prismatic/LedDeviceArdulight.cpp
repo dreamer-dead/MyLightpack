@@ -30,7 +30,7 @@
 #include <stdio.h>
 
 #include "PrismatikMath.hpp"
-#include "Settings.hpp"
+#include "SettingsReader.hpp"
 #include "common/DebugOut.hpp"
 
 using namespace SettingsScope;
@@ -41,13 +41,8 @@ LedDeviceArdulight::LedDeviceArdulight(const QString &portName, const int baudRa
 
     m_portName = portName;
     m_baudRate = baudRate;
-
-//    m_gamma = Settings::instance()->getDeviceGamma();
-//    m_brightness = Settings::instance()->getDeviceBrightness();
-
     m_writeBufferHeader.append((char)255);
 
-//    m_colorSequence = Settings::instance()->getColorSequence(SupportedDevices::DeviceTypeArdulight);
     m_ArdulightDevice = NULL;
 
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "initialized";
@@ -192,16 +187,13 @@ void LedDeviceArdulight::updateDeviceSettings()
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
     AbstractLedDevice::updateDeviceSettings();
-    setColorSequence(Settings::instance()->getColorSequence(SupportedDevices::DeviceTypeArdulight));
+    setColorSequence(SettingsReader::instance()->getColorSequence(SupportedDevices::DeviceTypeArdulight));
 
 }
 
 void LedDeviceArdulight::open()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-
-//    m_gamma = Settings::instance()->getDeviceGamma();
-//    m_brightness = Settings::instance()->getDeviceBrightness();
 
     if (m_ArdulightDevice != NULL)
         m_ArdulightDevice->close();
