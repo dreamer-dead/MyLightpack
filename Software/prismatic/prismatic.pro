@@ -179,10 +179,6 @@ SOURCES += \
     GrabWidget.cpp  GrabConfigWidget.cpp \
     LogWriter.cpp \
     SpeedTest.cpp \
-    LedDeviceLightpack.cpp \
-    LedDeviceAdalight.cpp \
-    LedDeviceArdulight.cpp \
-    LedDeviceVirtual.cpp \
     ColorButton.cpp \
     ApiServer.cpp \
     ApiServerSetColorTask.cpp \
@@ -196,6 +192,10 @@ SOURCES += \
     LightpackPluginInterface.cpp \
     TimeEvaluations.cpp \
     EndSessionDetector.cpp \
+    devices/LedDeviceLightpack.cpp \
+    devices/LedDeviceAdalight.cpp \
+    devices/LedDeviceArdulight.cpp \
+    devices/LedDeviceVirtual.cpp \
     wizard/ZoneWidget.cpp \
     wizard/ZonePlacementPage.cpp \
     wizard/Wizard.cpp \
@@ -232,10 +232,6 @@ HEADERS += \
     debug.h \
     LogWriter.hpp \
     SpeedTest.hpp \
-    LedDeviceLightpack.hpp \
-    LedDeviceAdalight.hpp \
-    LedDeviceArdulight.hpp \
-    LedDeviceVirtual.hpp \
     ColorButton.hpp \
     ../common/defs.h \
     enums.hpp         ApiServer.hpp     ApiServerSetColorTask.hpp \
@@ -250,6 +246,10 @@ HEADERS += \
     Plugin.hpp \
     LightpackPluginInterface.hpp \
     EndSessionDetector.hpp \
+    devices/LedDeviceLightpack.hpp \
+    devices/LedDeviceAdalight.hpp \
+    devices/LedDeviceArdulight.hpp \
+    devices/LedDeviceVirtual.hpp \
     wizard/ZoneWidget.hpp \
     wizard/ZonePlacementPage.hpp \
     wizard/Wizard.hpp \
