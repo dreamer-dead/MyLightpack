@@ -1,6 +1,7 @@
 #include "PluginsManager.hpp"
 
 #include <QDir>
+#include <QProcess>
 
 #include "Plugin.hpp"
 #include "common/DebugOut.hpp"
@@ -13,7 +14,6 @@ QString PluginsManager::defaultPluginsDir() {
 PluginsManager::PluginsManager(const QString& pluginsDir, QObject *parent)
     : QObject(parent)
     , m_pluginsDir(pluginsDir) {
-    Q_ASSERT(QDir(m_pluginsDir).exists());
 }
 
 
@@ -27,7 +27,6 @@ void PluginsManager::dropPlugins(){
     //cleanAll();
     for(QMap<QString, Plugin*>::iterator it = _plugins.begin(); it != _plugins.end(); ++it){
         Plugin* p = it.value();
-        QString name = p->Name();
         p->Stop();
         delete p;
     }
@@ -37,79 +36,71 @@ void PluginsManager::dropPlugins(){
 void PluginsManager::reloadPlugins(){
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     dropPlugins();
-    LoadPlugins(m_pluginsDir);
-    StartPlugins();
+    const QDir pluginsDir(m_pluginsDir);
+    if (pluginsDir.exists()) {
+        loadPlugins(m_pluginsDir);
+        startPlugins();
+    }
 }
 
-void PluginsManager::LoadPlugins(QString path)
+void PluginsManager::loadPlugins(const QDir& pluginsDir)
 {
-    DEBUG_LOW_LEVEL << Q_FUNC_INFO << path;
+    DEBUG_LOW_LEVEL << Q_FUNC_INFO << pluginsDir.absolutePath();
 
-    //QStringList pluginPaths = QApplication::libraryPaths();
-   // path = QString(Settings::getApplicationDirPath() + "Plugins");
-    QDir dir(path);
-    //QStringList files = dir.entryList(QStringList("*.py"), QDir::Files);
-
-    QStringList lstDirs = dir.entryList(QDir::Dirs |
-                                        QDir::AllDirs |
-                                        QDir::NoDotAndDotDot); //Get directories
+    QStringList lstDirs = pluginsDir.entryList(
+        QDir::Dirs |
+        QDir::AllDirs |
+        QDir::NoDotAndDotDot); //Get directories
 
     foreach(QString pluginDir, lstDirs){
-           QString plugin = QFileInfo (pluginDir).baseName ();
+       const QString plugin = QFileInfo (pluginDir).baseName();
+       if (_plugins.contains(plugin)) {
+           DEBUG_LOW_LEVEL << "Already loaded a plugin named " << plugin << " !";
+           continue;
+       }
 
-           QMap<QString, Plugin*>::iterator found = _plugins.find(plugin);
-           if(found != _plugins.end()){
-               DEBUG_LOW_LEVEL << "Already loaded a plugin named " << plugin << " !";
-               continue;
-           }
-
-           Plugin* p = new Plugin(plugin,path+"/"+pluginDir,this);
-           //DEBUG_LOW_LEVEL <<p->getName()<<  p->getAuthor() << p->getDescription() << p->getVersion();
-           //connect(p, SIGNAL(executed()), this, SIGNAL(pluginExecuted()));
-           _plugins[plugin] = p;
+       Plugin* p = new Plugin(plugin, pluginsDir.absoluteFilePath(pluginDir), this);
+       //DEBUG_LOW_LEVEL <<p->getName()<<  p->getAuthor() << p->getDescription() << p->getVersion();
+       //connect(p, SIGNAL(executed()), this, SIGNAL(pluginExecuted()));
+       _plugins[plugin] = p;
    }
 
     emit updatePlugin(_plugins.values());
-
 }
 
-Plugin* PluginsManager::getPlugin(const QString& name_){
-    QMap<QString, Plugin*>::iterator found = _plugins.find(name_);
+Plugin* PluginsManager::getPlugin(const QString& name_) const {
+    const QMap<QString, Plugin*>::const_iterator found = _plugins.find(name_);
     if(found != _plugins.end())
         return found.value();
     else
         return 0;
 }
 
-QList<Plugin*> PluginsManager::getPluginList(){
+QList<Plugin*> PluginsManager::getPluginList() const {
     return _plugins.values();
 }
 
-
-
-void PluginsManager::StartPlugins()
+void PluginsManager::startPlugins()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
     for(QMap<QString, Plugin*>::iterator it = _plugins.begin(); it != _plugins.end(); ++it){
-            Plugin* p = it.value();
-            p->disconnect();
-            if (p->isEnabled())
-                p->Start();
-            connect(p, SIGNAL(stateChanged(QProcess::ProcessState)), this, SLOT(onPluginStateChangedHandler()));
-        }
-
+        Plugin* p = it.value();
+        p->disconnect();
+        if (p->isEnabled())
+            p->Start();
+        connect(p, SIGNAL(stateChanged(QProcess::ProcessState)), this, SLOT(onPluginStateChangedHandler()));
+    }
 }
 
-void PluginsManager::StopPlugins()
+void PluginsManager::stopPlugins()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
     for(QMap<QString, Plugin*>::iterator it = _plugins.begin(); it != _plugins.end(); ++it){
-            Plugin* p = it.value();
-            p->Stop();
-        }
-
+        Plugin* p = it.value();
+        p->Stop();
+    }
 }
 
 void PluginsManager::onPluginStateChangedHandler()
