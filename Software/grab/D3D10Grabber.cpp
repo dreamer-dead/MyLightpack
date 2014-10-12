@@ -229,7 +229,7 @@ public:
     void stop() { m_isStarted = false; }
     bool isStarted() const { return m_isStarted; }
 
-    QList< ScreenInfo > * screensWithWidgets(QList< ScreenInfo > * result, const QList<GrabWidget *> &grabWidgets)
+    QList< ScreenInfo > * screensWithWidgets(QList< ScreenInfo > * result, const GrabbedAreas& grabWidgets)
     {
         Q_UNUSED(grabWidgets);
 
@@ -535,7 +535,7 @@ void D3D10Grabber::setGrabInterval(int msec) {
  * \param grabWidgets
  * \return
  */
-QList< ScreenInfo > * D3D10Grabber::screensWithWidgets(QList< ScreenInfo > * result, const QList<GrabWidget *> &grabWidgets)
+QList< ScreenInfo > * D3D10Grabber::screensWithWidgets(QList< ScreenInfo > * result, const GrabbedAreas& grabWidgets)
 {
     Q_UNUSED(grabWidgets);
 

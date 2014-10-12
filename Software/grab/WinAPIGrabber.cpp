@@ -81,7 +81,7 @@ void WinAPIGrabber::freeScreens()
     _screensWithWidgets.clear();
 }
 
-QList< ScreenInfo > * WinAPIGrabber::screensWithWidgets(QList< ScreenInfo > * result, const QList<GrabWidget *> &grabWidgets)
+QList< ScreenInfo > * WinAPIGrabber::screensWithWidgets(QList< ScreenInfo > * result, const GrabbedAreas& grabWidgets)
 {
     result->clear();
     for (int i = 0; i < grabWidgets.size(); ++i) {

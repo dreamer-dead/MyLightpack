@@ -76,6 +76,7 @@ class GrabberBase : public QObject
 {
     Q_OBJECT
 public:
+    typedef QList<const GrabbedArea *> GrabbedAreas;
 
     /*!
      \param parent standart Qt-specific owner
@@ -116,7 +117,7 @@ protected slots:
      * \param grabWidgets
      * \return
      */
-    virtual QList< ScreenInfo > * screensWithWidgets(QList< ScreenInfo > * result, const QList<GrabbedArea *> &grabWidgets) = 0;
+    virtual QList< ScreenInfo > * screensWithWidgets(QList< ScreenInfo > * result, const GrabbedAreas& grabWidgets) = 0;
 
     virtual bool isReallocationNeeded(const QList< ScreenInfo > &grabScreens) const;
 

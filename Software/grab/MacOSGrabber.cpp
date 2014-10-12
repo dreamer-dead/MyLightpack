@@ -59,7 +59,7 @@ bool allocateScreenBuffer(const ScreenInfo& screen,
 }
 
 bool getScreenInfoFromRect(const CGDirectDisplayID display,
-                           const QList<GrabbedArea *>& grabWidgets,
+                           const GrabberBase::GrabbedAreas& grabWidgets,
                            ScreenInfo& screenInfo) {
     const CGRect displayRect = CGDisplayBounds(display);
     for (int k = 0; k < grabWidgets.size(); ++k) {
@@ -104,22 +104,22 @@ void MacOSGrabber::freeScreens() {
 
 QList< ScreenInfo > * MacOSGrabber::screensWithWidgets(
     QList< ScreenInfo > * result,
-    const QList<GrabbedArea *> &grabWidgets) {
+    const GrabbedAreas& grabWidgets) {
     CGDirectDisplayID displays[kMaxDisplaysCount];
     uint32_t displayCount;
 
     CGError err = CGGetActiveDisplayList(kMaxDisplaysCount, displays, &displayCount);
 
     result->clear();
-    if (err == kCGErrorSuccess) {
-        for (unsigned int i = 0; i < displayCount; ++i) {
-            ScreenInfo screenInfo;
-            if (getScreenInfoFromRect(displays[i], grabWidgets, screenInfo))
-                result->append(screenInfo);
-        }
-
-    } else {
+    if (err != kCGErrorSuccess) {
         qCritical() << "couldn't get active displays, error code " << QString::number(err, 16);
+        return result;
+    }
+
+    for (uint32_t i = 0; i < displayCount; ++i) {
+        ScreenInfo screenInfo;
+        if (getScreenInfoFromRect(displays[i], grabWidgets, screenInfo))
+            result->append(screenInfo);
     }
     return result;
 
@@ -163,14 +163,13 @@ GrabResult MacOSGrabber::grabScreens()
         CGDirectDisplayID display = reinterpret_cast<intptr_t>(_screensWithWidgets[i].screenInfo.handle);
         CGImageRef imageRef = CGDisplayCreateImage(display);
 
-        if (imageRef != NULL)
-        {
-            toGrabbedScreen(imageRef, &_screensWithWidgets[i] );
-            CGImageRelease(imageRef);
-        } else {
+        if (!imageRef) {
             qCritical() << Q_FUNC_INFO << "CGDisplayCreateImage(..) returned NULL";
             return GrabResultError;
         }
+
+        toGrabbedScreen(imageRef, &_screensWithWidgets[i]);
+        CGImageRelease(imageRef);
     }
     return GrabResultOk;
 }

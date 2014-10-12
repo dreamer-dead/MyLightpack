@@ -30,6 +30,8 @@
 #include <QList>
 #include <QRgb>
 
+#include "GrabberBase.hpp"
+
 class GrabbedArea;
 
 struct AllocatedBuf {
@@ -62,7 +64,7 @@ public:
     int buffersCount() const { return _allocatedBufs.size(); }
 
 public:
-    QList<GrabbedArea *> *grabWidgets;
+    const GrabberBase::GrabbedAreas *grabWidgets;
     QList<QRgb> *grabResult;
 
 private:

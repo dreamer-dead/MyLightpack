@@ -62,7 +62,7 @@ X11Grabber::~X11Grabber()
     XCloseDisplay(_display);
 }
 
-QList<ScreenInfo> * X11Grabber::screensWithWidgets(QList<ScreenInfo> *result, const QList<GrabWidget *> &grabWidgets)
+QList<ScreenInfo> * X11Grabber::screensWithWidgets(QList<ScreenInfo> *result, const GrabbedAreas& grabWidgets)
 {
     result->clear();
 
