@@ -68,7 +68,6 @@ HEADERS += \
     ../math/include/PrismatikMath.hpp \
     SettingsWindowMockup.hpp \
     LightpackApiTest.hpp \
-    AppVersionTest.hpp \
     ../prismatic/UpdatesProcessor.hpp \
     SettingsTest.hpp \
     SettingsSourceMockup.hpp \
