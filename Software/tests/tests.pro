@@ -71,7 +71,6 @@ HEADERS += \
     AppVersionTest.hpp \
     ../prismatic/UpdatesProcessor.hpp \
     SettingsTest.hpp \
-    SettingsSourceMockupTest.hpp \
     SettingsSourceMockup.hpp \
     LightpackCommandLineParserTest.hpp \
     GrabTests.hpp
