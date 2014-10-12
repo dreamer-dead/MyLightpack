@@ -1,8 +1,7 @@
 #include "PrismatikMath.hpp"
 #include "gtest/gtest.h"
 
-TEST(LightpackMathTest, HSV)
-{
+TEST(LightpackMathTest, HSV) {
     namespace PM = PrismatikMath;
 
     const QRgb color = qRgb(215, 122, 0);

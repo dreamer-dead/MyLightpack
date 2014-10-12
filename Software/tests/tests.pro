@@ -67,9 +67,7 @@ HEADERS += \
     ../grab/include/GrabberContext.hpp \
     ../math/include/PrismatikMath.hpp \
     SettingsWindowMockup.hpp \
-    GrabCalculationTest.hpp \
     LightpackApiTest.hpp \
-    lightpackmathtest.hpp \
     AppVersionTest.hpp \
     ../prismatic/UpdatesProcessor.hpp \
     SettingsTest.hpp \
