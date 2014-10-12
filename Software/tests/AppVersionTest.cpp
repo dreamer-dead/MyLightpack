@@ -24,52 +24,45 @@
  *
  */
 
-#include "AppVersionTest.hpp"
-
-#include <QtTest/QtTest>
-
 #include "UpdatesProcessor.hpp"
+#include "gtest/gtest.h"
 
-AppVersionTest::AppVersionTest()
+TEST(AppVersionTest, ExplicitEquality)
 {
+    const AppVersion a("5.10.7");
+    const AppVersion b("5.10.7");
+    EXPECT_EQ(a, b) << "Version explicit equality test failed";
+    EXPECT_FALSE(a != b) << "Version explicit inequality test failed";
 }
 
-void AppVersionTest::testCaseExplicitEquality()
+TEST(AppVersionTest, ImplicitEquality)
 {
-    AppVersion a("5.10.7");
-    AppVersion b("5.10.7");
-    QVERIFY2(a == b, "Version explicit equality test failed");
-    QVERIFY2(!(a != b), "Version explicit equality test failed");
+    const AppVersion a("5");
+    const AppVersion b("5.0.0");
+    EXPECT_EQ(a, b) << "Version explicit equality test failed";
+    EXPECT_FALSE(a != b) << "Version implicit equality test failed";
 }
 
-void AppVersionTest::testCaseImplicitEquality()
+TEST(AppVersionTest, FalseEquality)
 {
-    AppVersion a("5");
-    AppVersion b("5.0.0");
-    QVERIFY2(a == b, "Version implicit equality test failed");
-    QVERIFY2(!(a != b), "Version implicit equality test failed");
+    const AppVersion a("5.1");
+    const AppVersion b("5.0.0");
+    EXPECT_NE(a, b) << "Version false equality test failed";
+    EXPECT_TRUE(a != b), "Version false equality test failed";
 }
 
-void AppVersionTest::testCaseFalseEquality()
+TEST(AppVersionTest, LT)
 {
-    AppVersion a("5.1");
-    AppVersion b("5.0.0");
-    QVERIFY2(a != b, "Version false equality test failed");
-    QVERIFY2(!(a == b), "Version false equality test failed");
+    const AppVersion a("5");
+    const AppVersion b("5.1.0");
+    EXPECT_LT(a, b) << "Less than test failed";
+    EXPECT_FALSE(a > b) << "Less than test failed";
 }
 
-void AppVersionTest::testCaseLT()
+TEST(AppVersionTest, GT)
 {
-    AppVersion a("5");
-    AppVersion b("5.1.0");
-    QVERIFY2(a < b, "Less than test failed");
-    QVERIFY2(!(a > b), "Less than test failed");
-}
-
-void AppVersionTest::testCaseGT()
-{
-    AppVersion a("6.0.0.1");
-    AppVersion b("5.1.0.2");
-    QVERIFY2(a > b, "Greater than test failed");
-    QVERIFY2(!(a < b), "Greater than test failed");
+    const AppVersion a("6.0.0.1");
+    const AppVersion b("5.1.0.2");
+    EXPECT_GT(a, b) << "Greater than test failed";
+    EXPECT_FALSE(a < b) << "Greater than test failed";
 }
