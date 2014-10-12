@@ -1,59 +1,12 @@
-#include <QtTest/QtTest>
 #include <iostream>
+#include <QApplication>
 
 #include "common/DebugOut.hpp"
-#include "LightpackApiTest.hpp"
-#include "GrabTests.hpp"
-#include "GrabCalculationTest.hpp"
-#include "lightpackmathtest.hpp"
-#include "AppVersionTest.hpp"
-#include "SettingsSourceMockupTest.hpp"
-#include "SettingsTest.hpp"
-#ifdef Q_OS_WIN
-#include "HooksTest.h"
-#endif
-#include "LightpackCommandLineParserTest.hpp"
+#include "gtest/gtest.h"
 
 using namespace std;
 
 unsigned g_debugLevel = Debug::LowLevel;
-
-int main___(int argc, char *argv[])
-{
-    QTEST_DISABLE_KEYPAD_NAVIGATION
-    QApplication app(argc, argv);
-
-    QList<QObject *> tests;
-    QStringList summary;
-    tests.append(new GrabCalculationTest());
-
-#ifdef Q_OS_WIN
-    tests.append(new HooksTest());
-#endif
-
-    tests.append(new LightpackMathTest());
-    tests.append(new LightpackApiTest());
-    tests.append(new AppVersionTest());
-    tests.append(new SettingsSourceMockupTest());
-    tests.append(new SettingsTest());
-    tests.append(new GrabTests());
-
-    for(int i=0; i < tests.size(); i++) {
-        if (QTest::qExec(tests[i], argc, argv)) {
-            summary << QString(tests[i]->metaObject()->className()).append("\tFAILED");
-        } else {
-            summary << QString(tests[i]->metaObject()->className()).append("\tPASSED");
-        }
-        delete tests[i];
-    }
-
-    for (int i = 0; i < summary.size(); ++i)
-        cout << endl << summary.at(i).toLocal8Bit().constData() << endl;
-
-    return 0;
-}
-
-#include "gtest/gtest.h"
 
 int main(int argc, char *argv[])
 {

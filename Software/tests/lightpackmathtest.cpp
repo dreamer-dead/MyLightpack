@@ -1,17 +1,19 @@
-#include "lightpackmathtest.hpp"
 #include "PrismatikMath.hpp"
-#include <QtTest>
+#include "gtest/gtest.h"
 
-LightpackMathTest::LightpackMathTest(QObject *parent) :
-    QObject(parent)
+TEST(LightpackMathTest, HSV)
 {
-}
-void LightpackMathTest::testCase1()
-{
-    QVERIFY2( PrismatikMath::getValueHSV(qRgb(215,122,0)) == 215, "getValueHSV() is incorrect");
-    QRgb testRgb = qRgb(200,100,0);
-    QVERIFY2( PrismatikMath::withChromaHSV(testRgb, 100) == qRgb(200, 150, 100), "getChromaHSV() is incorrect");
-    QVERIFY2( PrismatikMath::withChromaHSV(testRgb, 250) == qRgb(200, 75, 0), "getChromaHSV() is incorrect");
+    namespace PM = PrismatikMath;
 
-    QVERIFY2( PrismatikMath::withChromaHSV(testRgb, PrismatikMath::getChromaHSV(testRgb)) == testRgb, "getChromaHSV() is incorrect");
+    const QRgb color = qRgb(215, 122, 0);
+    EXPECT_EQ(215, PM::getValueHSV(color)) << "getValueHSV() is incorrect";
+
+    const QRgb testRgb = qRgb(200, 100, 0);
+    EXPECT_EQ(qRgb(200, 150, 100), PM::withChromaHSV(testRgb, 100))
+        << "getChromaHSV() is incorrect";
+    EXPECT_EQ(qRgb(200, 75, 0), PM::withChromaHSV(testRgb, 250))
+        << "getChromaHSV() is incorrect";
+
+    EXPECT_EQ(testRgb, PM::withChromaHSV(testRgb, PM::getChromaHSV(testRgb)))
+        << "getChromaHSV() is incorrect";
 }
