@@ -18,7 +18,7 @@ using namespace std;
 
 unsigned g_debugLevel = Debug::LowLevel;
 
-int main(int argc, char *argv[])
+int main___(int argc, char *argv[])
 {
     QTEST_DISABLE_KEYPAD_NAVIGATION
     QApplication app(argc, argv);
@@ -51,4 +51,15 @@ int main(int argc, char *argv[])
         cout << endl << summary.at(i).toLocal8Bit().constData() << endl;
 
     return 0;
+}
+
+#include "gtest/gtest.h"
+
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
+
+    cout << "Run Lightpack tests:" << endl;
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

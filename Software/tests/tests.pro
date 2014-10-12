@@ -24,6 +24,11 @@ RCC_DIR     = tests_stuff
 include(../grab/configure-grabbers.prf)
 DEFINES += $${SUPPORTED_GRABBERS}
 
+CONFIG(gcc) {
+    QMAKE_CXXFLAGS += -isystem ../third_party/gtest/include
+    QMAKE_CXXFLAGS += -g -Wall -Wextra -pthread
+}
+
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
 LIBS += -L../lib -lprismatik-math -lgrab
@@ -34,20 +39,25 @@ win32 {
 }
 
 INCLUDEPATH += . \
+               .. \
+               ../third_party/gtest/include \
+               ../third_party/gtest \
                ../prismatic \
                ../prismatic/settings \
                ../hooks \
                ../grab/include \
                ../math/include \
-               ..
-
 
 HEADERS += \
+    # Use undocumented $$file function to list files with a wildcard.
+    # List needed Google Test files
+    $$files(../third_party/gtest/include/gtest/*.h) \
+    $$files(../third_party/gtest/include/gtest/internal/*.h) \
+    $$files(../third_party/gtest/src/*.h) \
     ../common/defs.h \
     ../prismatic/enums.hpp \
     ../prismatic/ApiServerSetColorTask.hpp \
     ../prismatic/ApiServer.hpp \
-    ../prismatic/debug.h \
     ../prismatic/settings/Settings.hpp \
     ../prismatic/settings/SettingsSignals.hpp \
     ../prismatic/Plugin.hpp \
@@ -69,6 +79,7 @@ HEADERS += \
     GrabTests.hpp
 
 SOURCES += \
+    ../third_party/gtest/src/gtest-all.cc \
     ../prismatic/ApiServerSetColorTask.cpp \
     ../prismatic/ApiServer.cpp \
     ../prismatic/settings/Settings.cpp \
