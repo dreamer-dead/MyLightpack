@@ -555,8 +555,7 @@ void LightpackApplication::startPluginManager()
         connect(m_pluginManager,SIGNAL(updatePlugin(QList<Plugin*>)),m_pluginInterface,SLOT(updatePlugin(QList<Plugin*>)), Qt::QueuedConnection);
     }
 
-    m_pluginManager->LoadPlugins(QString(settings()->getApplicationDirPath() + "Plugins"));
-    m_pluginManager->StartPlugins();
+    m_pluginManager->reloadPlugins();
 
     //m_PluginThread = new QThread();
     //m_pluginManager->moveToThread(m_PluginThread);
@@ -692,7 +691,7 @@ void LightpackApplication::free()
 
     m_moodlampManager->start(false);
     m_grabManager->start(false);
-    m_pluginManager->StopPlugins();
+    m_pluginManager->stopPlugins();
 
     QApplication::processEvents(QEventLoop::AllEvents, 1000);
 
