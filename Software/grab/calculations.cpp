@@ -26,7 +26,7 @@
 #include "calculations.hpp"
 
 namespace {
-    const char bytesPerPixel = 4;
+    static const int bytesPerPixel = 4;
 
     struct ColorValue {
         int r, g, b;
@@ -37,17 +37,21 @@ namespace {
             unsigned int pitch,
             const QRect &rect,
             ColorValue *resultColor) {
+        static const int kIndexIncrement = bytesPerPixel * 4;
+        const int width = rect.width();
+        const int height = rect.height();
         register unsigned int r=0, g=0, b=0;
         int count = 0; // count the amount of pixels taken into account
-        for(int currentY = 0; currentY < rect.height(); currentY++) {
+        for(int currentY = 0; currentY < height; currentY++) {
             int index = pitch * (rect.y()+currentY) + rect.x()*bytesPerPixel;
-            for(int currentX = 0; currentX < rect.width(); currentX += 4) {
+            int currentX = 0;
+            for(; currentX < width; currentX += bytesPerPixel) {
                 b += buffer[index]   + buffer[index + 4] + buffer[index + 8 ] + buffer[index + 12];
                 g += buffer[index+1] + buffer[index + 5] + buffer[index + 9 ] + buffer[index + 13];
                 r += buffer[index+2] + buffer[index + 6] + buffer[index + 10] + buffer[index + 14];
-                count += 4;
-                index += bytesPerPixel * 4;
+                index += kIndexIncrement;
             }
+            count += currentX - bytesPerPixel;
         }
 
         resultColor->r = r;
