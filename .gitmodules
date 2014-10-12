@@ -1,0 +1,3 @@
+[submodule "Software/third_party/gtest"]
+	path = Software/third_party/gtest
+	url = git@github.com:dreamer-dead/google-test.git
