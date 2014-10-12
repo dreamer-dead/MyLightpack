@@ -45,13 +45,13 @@ namespace {
         for(int currentY = 0; currentY < height; currentY++) {
             int index = pitch * (rect.y()+currentY) + rect.x()*bytesPerPixel;
             int currentX = 0;
-            for(; currentX < width; currentX += bytesPerPixel) {
+            for(; currentX < width; currentX += 4) {
                 b += buffer[index]   + buffer[index + 4] + buffer[index + 8 ] + buffer[index + 12];
                 g += buffer[index+1] + buffer[index + 5] + buffer[index + 9 ] + buffer[index + 13];
                 r += buffer[index+2] + buffer[index + 6] + buffer[index + 10] + buffer[index + 14];
                 index += kIndexIncrement;
             }
-            count += currentX - bytesPerPixel;
+            count += currentX;
         }
 
         resultColor->r = r;

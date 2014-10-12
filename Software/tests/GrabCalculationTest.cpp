@@ -36,6 +36,6 @@ TEST(GrabCalculationTest, AvgColor) {
     memset(buffer, 0xfa, sizeof(buffer));
     const QRgb color = calculateAvgColor(
         &result, buffer, BufferFormatArgb, sizeof(buffer), QRect(0, 0, 4, 1));
-    EXPECT_EQ(QColor(0xfa, 0xfa, 0xfa, 0xfa).rgb(), color)
+    EXPECT_EQ(qRgb(0xfa, 0xfa, 0xfa), color)
         << "Failure. calculateAvgColor returned wrong errorcode " << result;
 }
