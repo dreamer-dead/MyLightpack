@@ -109,7 +109,7 @@ private:
     QThread *m_grabbersThread;
     QWidget *m_parentWidget;
     QList<GrabWidget *> m_ledWidgets;
-    QList<GrabbedArea *> m_ledWidgetsToGrabbedArea;
+    QList<const GrabbedArea *> m_ledWidgetsToAreas;
     QList<QRgb> m_grabResult;
     const static QColor m_backgroundAndTextColors[10][2];
     TimeEvaluations *m_timeEval;

@@ -114,14 +114,14 @@ GrabManager::~GrabManager()
     }
 
     m_ledWidgets.clear();
-    m_ledWidgetsToGrabbedArea.clear();
-
-    for (int i = 0; i < m_grabbers.size(); i++)
+    m_ledWidgetsToAreas.clear();
+    for (int i = 0; i < m_grabbers.size(); i++) {
         if (m_grabbers[i]){
             DEBUG_OUT << "deleting " << m_grabbers[i]->name();
             delete m_grabbers[i];
             m_grabbers[i] = NULL;
         }
+    }
 
     m_grabbers.clear();
 
@@ -312,9 +312,18 @@ void GrabManager::handleGrabbedColors()
     int avgR = 0, avgG = 0, avgB = 0;
     int countGrabEnabled = 0;
 
+    const int colorsListSize = m_ledWidgets.size();
+    if (m_colorsNew.size() != colorsListSize) {
+        m_colorsNew.clear();
+        for (int i = 0; i < colorsListSize; i++)
+        {
+            m_colorsNew << 0;
+        }
+    }
+
     if (m_avgColorsOnAllLeds)
     {
-        for (int i = 0; i < m_ledWidgets.size(); i++)
+        for (int i = 0; i < colorsListSize; i++)
         {
             if (m_ledWidgets[i]->isAreaEnabled())
             {
@@ -331,7 +340,7 @@ void GrabManager::handleGrabbedColors()
             avgB /= countGrabEnabled;
         }
         // Set one AVG color to all LEDs
-        for (int ledIndex = 0; ledIndex < m_ledWidgets.size(); ledIndex++)
+        for (int ledIndex = 0; ledIndex < colorsListSize; ledIndex++)
         {
             if (m_ledWidgets[ledIndex]->isAreaEnabled())
             {
@@ -356,7 +365,7 @@ void GrabManager::handleGrabbedColors()
 //        m_colorsNew[i] = qRgb(r, g, b);
 //    }
 
-    for (int i = 0; i < m_ledWidgets.size(); i++)
+    for (int i = 0; i < colorsListSize; i++)
     {
         if (m_colorsCurrent[i] != m_colorsNew[i])
         {
@@ -473,11 +482,7 @@ void GrabManager::initGrabbers()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-    // TODO: remove this ugly hack.
-    for (int i = 0; i < m_ledWidgets.size(); ++i) {
-        m_ledWidgetsToGrabbedArea << m_ledWidgets[i];
-    }
-    m_grabberContext->grabWidgets = &m_ledWidgetsToGrabbedArea;
+    m_grabberContext->grabWidgets = &m_ledWidgetsToAreas;
     m_grabberContext->grabResult = &m_colorsNew;
 
     for (int i = 0; i < Grab::GrabbersCount; i++)
@@ -584,7 +589,6 @@ void GrabManager::initLedWidgets(int numberOfLeds)
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << numberOfLeds;
 
     if (m_ledWidgets.size() == 0)
-    if (m_ledWidgets.size() == 0)
     {
         DEBUG_LOW_LEVEL << Q_FUNC_INFO << "First widget initialization";
 
@@ -626,6 +630,11 @@ void GrabManager::initLedWidgets(int numberOfLeds)
             m_ledWidgets.last()->deleteLater();
             m_ledWidgets.removeLast();
         }
+    }
+
+    m_ledWidgetsToAreas.clear();
+    for (int i = 0; i < m_ledWidgets.size(); ++i) {
+        m_ledWidgetsToAreas << m_ledWidgets[i];
     }
 
     if (m_ledWidgets.size() != numberOfLeds)

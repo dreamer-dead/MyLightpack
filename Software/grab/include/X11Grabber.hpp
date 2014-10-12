@@ -47,7 +47,7 @@ public:
 protected:
     virtual GrabResult grabScreens();
     virtual bool reallocate(const QList<ScreenInfo> &screens);
-    virtual QList<ScreenInfo> * screensWithWidgets(QList<ScreenInfo> *result, const QList<GrabWidget *> &grabWidgets);
+    virtual QList<ScreenInfo> * screensWithWidgets(QList<ScreenInfo> *result, const GrabbedAreas& grabWidgets);
 
 private:
     void freeScreens();
