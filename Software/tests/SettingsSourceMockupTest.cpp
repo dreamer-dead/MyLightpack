@@ -1,4 +1,4 @@
-#include "SettingsSourceMockup.hpp"
+#include "mocks/SettingsSourceMockup.hpp"
 #include "gtest/gtest.h"
 
 TEST(SettingsSourceMockupTest, AddValue) {

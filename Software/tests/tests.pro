@@ -26,7 +26,7 @@ DEFINES += $${SUPPORTED_GRABBERS}
 
 CONFIG(gcc) {
     QMAKE_CXXFLAGS += -isystem ../third_party/gtest/include
-    QMAKE_CXXFLAGS += -g -Wall -Wextra -pthread
+    QMAKE_CXXFLAGS += -g -Wall -Wextra -pthread -Wno-missing-field-initializers
 }
 
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
@@ -67,8 +67,8 @@ HEADERS += \
     ../prismatic/settings/Settings.hpp \
     ../prismatic/settings/SettingsSignals.hpp \
     ../prismatic/UpdatesProcessor.hpp \
-    SettingsSourceMockup.hpp \
-    SettingsWindowMockup.hpp \
+    mocks/SettingsSourceMockup.hpp \
+    mocks/SettingsWindowMockup.hpp \
 
 SOURCES += \
     ../third_party/gtest/src/gtest-all.cc \
@@ -89,10 +89,10 @@ SOURCES += \
     LightpackApiTest.cpp \
     LightpackCommandLineParserTest.cpp \
     lightpackmathtest.cpp \
-    SettingsSourceMockup.cpp \
+    mocks/SettingsSourceMockup.cpp \
+    mocks/SettingsWindowMockup.cpp \
     SettingsSourceMockupTest.cpp \
     SettingsTest.cpp \
-    SettingsWindowMockup.cpp \
     TestsMain.cpp \
 
 win32{

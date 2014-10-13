@@ -33,10 +33,10 @@
 #include "ApiServer.hpp"
 #include "LightpackPluginInterface.hpp"
 #include "Settings.hpp"
-#include "SettingsWindowMockup.hpp"
 #include "common/DebugOut.hpp"
 #include "enums.hpp"
 #include "gtest/gtest.h"
+#include "mocks/SettingsWindowMockup.hpp"
 
 using namespace std;
 using namespace SettingsScope;

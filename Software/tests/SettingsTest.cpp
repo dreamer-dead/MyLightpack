@@ -3,9 +3,9 @@
 #include "BaseVersion.hpp"
 #include "Settings.hpp"
 #include "SettingsDefaults.hpp"
-#include "SettingsSourceMockup.hpp"
 #include "common/DebugOut.hpp"
 #include "gtest/gtest.h"
+#include "mocks/SettingsSourceMockup.hpp"
 
 using namespace SettingsScope;
 
