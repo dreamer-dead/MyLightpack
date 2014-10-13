@@ -67,6 +67,19 @@ const SettingsReader * LightpackApplication::settingsReader() const {
     return SettingsReader::instance();
 }
 
+void LightpackApplication::processMessageNoGUI(const QString& message) {
+    DEBUG_LOW_LEVEL << Q_FUNC_INFO << message;
+    if ("on" == message)
+        setStatusChanged(Backlight::StatusOn);
+    else if ("off" == message)
+        setStatusChanged(Backlight::StatusOff);
+    else if (message.startsWith("set-profile ")) {
+        const QString profile = message.mid(12);
+        DEBUG_LOW_LEVEL << "Query to change profile: " << profile;
+        settings()->loadOrCreateProfile(profile);
+    }
+}
+
 void LightpackApplication::initializeAll(const QString & appDirPath)
 {
     setApplicationName("Prismatik");
@@ -111,6 +124,9 @@ void LightpackApplication::initializeAll(const QString & appDirPath)
         // Process messages from another instances in SettingsWindow
         connect(this, SIGNAL(messageReceived(QString)), m_settingsWindow, SLOT(processMessage(QString)));
         connect(this, SIGNAL(focusChanged(QWidget*,QWidget*)), this, SLOT(onFocusChanged(QWidget*,QWidget*)));
+    } else {
+        // Process messages for profile switching, etc
+        connect(this, SIGNAL(messageReceived(QString)), this, SLOT(processMessageNoGUI(QString)));
     }
     // Register QMetaType for Qt::QueuedConnection
     qRegisterMetaType< QList<QRgb> >("QList<QRgb>");
