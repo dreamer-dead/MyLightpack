@@ -1,10 +1,10 @@
 #include <QMap>
 
-#include "SettingsSourceMockup.hpp"
-#include "SettingsDefaults.hpp"
-#include "SettingsTest.hpp"
-#include "Settings.hpp"
 #include "BaseVersion.hpp"
+#include "Settings.hpp"
+#include "SettingsDefaults.hpp"
+#include "SettingsSourceMockup.hpp"
+#include "gtest/gtest.h"
 
 using namespace SettingsScope;
 
@@ -12,87 +12,70 @@ namespace {
 static SettingsSource* SettingsSourceQMapFabricFunc(const QString&) {
     return new SettingsSourceMockup();
 }
+
+class SettingsTest : public ::testing::Test {
+public:
+    SettingsTest() {}
+
+    virtual void SetUp() {
+        g_debugLevel = Debug::MidLevel;
+        ConfigurationProfile::setSourceFabric(&SettingsSourceQMapFabricFunc);
+        EXPECT_FALSE(Settings::instance());
+    }
+
+    virtual void TearDown() {
+        EXPECT_TRUE(Settings::instance());
+        Settings::Shutdown();
+        EXPECT_FALSE(Settings::instance());
+        ConfigurationProfile::setSourceFabric(NULL);
+    }
+};
 } // namespace
 
-SettingsTest::SettingsTest() : QObject() {
-}
-
-void SettingsTest::init() {
-    g_debugLevel = Debug::MidLevel;
-    ConfigurationProfile::setSourceFabric(&SettingsSourceQMapFabricFunc);
-    QVERIFY(!Settings::instance());
-}
-
-void SettingsTest::cleanup() {
-    QVERIFY(Settings::instance());
-    Settings::Shutdown();
-    QVERIFY(!Settings::instance());
-    ConfigurationProfile::setSourceFabric(NULL);
-}
-
-void SettingsTest::initTestCase() {
-    QVERIFY(!Settings::instance());
-}
-
-void SettingsTest::cleanupTestCase() {
-    QVERIFY(!Settings::instance());
-}
-
-void SettingsTest::testCase_initMockSettings() {
-    g_debugLevel = Debug::MidLevel;
-
+TEST_F(SettingsTest, initMockSettings) {
     // There is no settings files.
-    QVERIFY(!Settings::Initialize("./", Settings::Overrides()));
-    QVERIFY(Settings::instance());
+    EXPECT_TRUE(Settings::Initialize("./", Settings::Overrides()));
+    EXPECT_TRUE(Settings::instance());
 }
 
-void SettingsTest::testCase_verifyMainSettings() {
-    g_debugLevel = Debug::MidLevel;
-
+TEST_F(SettingsTest, verifyMainSettings) {
     // Set invalid device.
     Settings::TestingOverrides overrides;
     overrides.setConnectedDeviceForTests(SupportedDevices::DeviceTypesCount);
 
     // There is no settings files.
-    QVERIFY(!Settings::Initialize("./", overrides));
-    QVERIFY(Settings::instance()->getConnectedDevice() != SupportedDevices::DeviceTypesCount);
-    QCOMPARE(Settings::instance()->getConnectedDevice(), SupportedDevices::DefaultDeviceType);
+    EXPECT_TRUE(Settings::Initialize("./", overrides));
+    EXPECT_NE(SupportedDevices::DeviceTypesCount, Settings::instance()->getConnectedDevice());
+    EXPECT_EQ(SupportedDevices::DefaultDeviceType, Settings::instance()->getConnectedDevice());
 }
 
-void SettingsTest::testCase_migrateMainSettingsFrom1_0() {
-    g_debugLevel = Debug::MidLevel;
-
+TEST_F(SettingsTest, migrateMainSettingsFrom1_0) {
     // Set minimal config version.
     Settings::TestingOverrides overrides;
     overrides.setConfigVersionForTests(BaseVersion(1, 0));
-    QVERIFY(!Settings::Initialize("./", overrides));
-    QCOMPARE(Settings::instance()->getVersion(), BaseVersion(4, 0));
+    EXPECT_TRUE(Settings::Initialize("./", overrides));
+    EXPECT_EQ(BaseVersion(4, 0), Settings::instance()->getVersion());
 }
 
-void SettingsTest::testCase_migrateMainSettingsFrom2_0() {
-    g_debugLevel = Debug::MidLevel;
-
+TEST_F(SettingsTest, migrateMainSettingsFrom2_0) {
     // Set minimal config version.
     Settings::TestingOverrides overrides;
     overrides.setConfigVersionForTests(BaseVersion(2, 0));
-    QVERIFY(!Settings::Initialize("./", overrides));
-    QCOMPARE(Settings::instance()->getVersion(), BaseVersion(4, 0));
+    EXPECT_TRUE(Settings::Initialize("./", overrides));
+    EXPECT_EQ(BaseVersion(4, 0), Settings::instance()->getVersion());
 }
 
-void SettingsTest::testCase_migrateMainSettingsFrom3_0() {
-    g_debugLevel = Debug::MidLevel;
-
+TEST_F(SettingsTest, migrateMainSettingsFrom3_0) {
     // Set minimal config version.
     Settings::TestingOverrides overrides;
     overrides.setConfigVersionForTests(BaseVersion(3, 0));
-    QVERIFY(!Settings::Initialize("./", overrides));
-    QCOMPARE(Settings::instance()->getVersion(), BaseVersion(4, 0));
+    EXPECT_TRUE(Settings::Initialize("./", overrides));
+    EXPECT_EQ(BaseVersion(4, 0), Settings::instance()->getVersion());
 }
 
-void SettingsTest::testCase_resetDefault() {
-    g_debugLevel = Debug::MidLevel;
-    QVERIFY(!Settings::Initialize("./", Settings::Overrides()));
-    QVERIFY(Settings::instance());
+TEST_F(SettingsTest, resetDefault) {
+    EXPECT_TRUE(Settings::Initialize("./", Settings::Overrides()));
+    EXPECT_TRUE(Settings::instance());
 
     // Set some non-default settings.
     // TODO: check all settings that listed in resetDefaults()
@@ -100,5 +83,5 @@ void SettingsTest::testCase_resetDefault() {
     Settings::instance()->resetDefaults();
 
     // Check that now settings filled with default values.
-    QCOMPARE(Settings::instance()->isMoodLampLiquidMode(), Profile::MoodLamp::IsLiquidMode);
+    EXPECT_EQ(Profile::MoodLamp::IsLiquidMode, Settings::instance()->isMoodLampLiquidMode());
 }

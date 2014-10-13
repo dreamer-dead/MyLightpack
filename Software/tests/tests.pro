@@ -69,7 +69,6 @@ HEADERS += \
     SettingsWindowMockup.hpp \
     LightpackApiTest.hpp \
     ../prismatic/UpdatesProcessor.hpp \
-    SettingsTest.hpp \
     SettingsSourceMockup.hpp \
     LightpackCommandLineParserTest.hpp \
 

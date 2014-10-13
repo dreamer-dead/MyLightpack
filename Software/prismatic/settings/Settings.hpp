@@ -38,8 +38,6 @@
 #include "enums.hpp"
 #include "types.h"
 
-class SettingsTest;
-
 namespace SettingsScope {
 
 /*!
@@ -179,19 +177,16 @@ public:
     QVariant pluginValue(const QString & pluginId, const QString & key) const;
     void setPluginValue(const QString & pluginId, const QString & key, const QVariant& value);
 
-private:
-    // This allows Settings to be deleted with private destructor.
-    friend struct QScopedPointerDeleter<Settings>;
-
-    // For testing only.
-    friend class ::SettingsTest;
-
     class TestingOverrides : public Overrides {
     public:
         TestingOverrides() {}
         TestingOverrides& setConnectedDeviceForTests(SupportedDevices::DeviceType deviceType);
         TestingOverrides& setConfigVersionForTests(const BaseVersion& version);
     };
+
+private:
+    // This allows Settings to be deleted with private destructor.
+    friend struct QScopedPointerDeleter<Settings>;
 
     Settings(const QString & mainConfigPath);
     ~Settings();
