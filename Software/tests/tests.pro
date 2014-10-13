@@ -55,45 +55,45 @@ HEADERS += \
     $$files(../third_party/gtest/include/gtest/internal/*.h) \
     $$files(../third_party/gtest/src/*.h) \
     ../common/defs.h \
-    ../prismatic/enums.hpp \
-    ../prismatic/ApiServerSetColorTask.hpp \
-    ../prismatic/ApiServer.hpp \
-    ../prismatic/settings/Settings.hpp \
-    ../prismatic/settings/SettingsSignals.hpp \
-    ../prismatic/Plugin.hpp \
-    ../prismatic/LightpackPluginInterface.hpp \
-    ../prismatic/LightpackCommandLineParser.hpp \
     ../grab/include/calculations.hpp \
     ../grab/include/GrabberContext.hpp \
     ../math/include/PrismatikMath.hpp \
-    SettingsWindowMockup.hpp \
+    ../prismatic/ApiServer.hpp \
+    ../prismatic/ApiServerSetColorTask.hpp \
+    ../prismatic/enums.hpp \
+    ../prismatic/LightpackCommandLineParser.hpp \
+    ../prismatic/LightpackPluginInterface.hpp \
+    ../prismatic/Plugin.hpp \
+    ../prismatic/settings/Settings.hpp \
+    ../prismatic/settings/SettingsSignals.hpp \
     ../prismatic/UpdatesProcessor.hpp \
     SettingsSourceMockup.hpp \
+    SettingsWindowMockup.hpp \
 
 SOURCES += \
     ../third_party/gtest/src/gtest-all.cc \
-    ../prismatic/ApiServerSetColorTask.cpp \
     ../prismatic/ApiServer.cpp \
-    ../prismatic/settings/Settings.cpp \
-    ../prismatic/settings/DeviceTypesInfo.cpp \
+    ../prismatic/ApiServerSetColorTask.cpp \
+    ../prismatic/LightpackCommandLineParser.cpp \
+    ../prismatic/LightpackPluginInterface.cpp \
+    ../prismatic/Plugin.cpp \
     ../prismatic/settings/ConfigurationProfile.cpp \
+    ../prismatic/settings/DeviceTypesInfo.cpp \
+    ../prismatic/settings/Settings.cpp \
     ../prismatic/settings/SettingsProfiles.cpp \
     ../prismatic/settings/SettingsSignals.cpp \
-    ../prismatic/Plugin.cpp \
-    ../prismatic/LightpackPluginInterface.cpp \
-    ../prismatic/LightpackCommandLineParser.cpp \
-    LightpackApiTest.cpp \
-    SettingsWindowMockup.cpp \
-    GrabCalculationTest.cpp \
-    lightpackmathtest.cpp \
-    TestsMain.cpp \
-    AppVersionTest.cpp \
     ../prismatic/UpdatesProcessor.cpp \
-    SettingsTest.cpp \
+    AppVersionTest.cpp \
+    GrabCalculationTest.cpp \
+    GrabTests.cpp \
+    LightpackApiTest.cpp \
+    LightpackCommandLineParserTest.cpp \
+    lightpackmathtest.cpp \
     SettingsSourceMockup.cpp \
     SettingsSourceMockupTest.cpp \
-    LightpackCommandLineParserTest.cpp \
-    GrabTests.cpp
+    SettingsTest.cpp \
+    SettingsWindowMockup.cpp \
+    TestsMain.cpp \
 
 win32{
     HEADERS += \
