@@ -4,6 +4,7 @@
 #include "Settings.hpp"
 #include "SettingsDefaults.hpp"
 #include "SettingsSourceMockup.hpp"
+#include "common/DebugOut.hpp"
 #include "gtest/gtest.h"
 
 using namespace SettingsScope;
@@ -18,18 +19,37 @@ public:
     SettingsTest() {}
 
     virtual void SetUp() {
-        g_debugLevel = Debug::MidLevel;
+        g_debugLevel = Debug::ZeroLevel;
+        s_errorCount = 0;
+        // Suppress any Qt messages.
+        m_oldHandler = qInstallMessageHandler(&SettingsTest::messageHandler);
         ConfigurationProfile::setSourceFabric(&SettingsSourceQMapFabricFunc);
         EXPECT_FALSE(Settings::instance());
     }
 
     virtual void TearDown() {
+        EXPECT_EQ(0u, s_errorCount);
         EXPECT_TRUE(Settings::instance());
         Settings::Shutdown();
         EXPECT_FALSE(Settings::instance());
         ConfigurationProfile::setSourceFabric(NULL);
+        // Restore old handler.
+        qInstallMessageHandler(m_oldHandler);
     }
+
+private:
+    static size_t s_errorCount;
+    static void messageHandler(QtMsgType type, const QMessageLogContext&, const QString&) {
+        if (type == QtCriticalMsg || type == QtFatalMsg) {
+            ++s_errorCount;
+        }
+    }
+
+    QtMessageHandler m_oldHandler;
 };
+
+//static
+size_t SettingsTest::s_errorCount = 0;
 } // namespace
 
 TEST_F(SettingsTest, initMockSettings) {
