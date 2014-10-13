@@ -70,7 +70,6 @@ HEADERS += \
     LightpackApiTest.hpp \
     ../prismatic/UpdatesProcessor.hpp \
     SettingsSourceMockup.hpp \
-    LightpackCommandLineParserTest.hpp \
 
 SOURCES += \
     ../third_party/gtest/src/gtest-all.cc \

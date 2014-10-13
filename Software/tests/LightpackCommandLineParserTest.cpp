@@ -1,81 +1,64 @@
-#include "LightpackCommandLineParserTest.hpp"
 #include "LightpackCommandLineParser.hpp"
-#include <QtTest/QtTest>
+#include "gtest/gtest.h"
 
-LightpackCommandLineParserTest::LightpackCommandLineParserTest(QObject *parent)
-    : QObject(parent)
-{
-}
-
-void LightpackCommandLineParserTest::initTestCase() {}
-void LightpackCommandLineParserTest::init() {}
-void LightpackCommandLineParserTest::cleanup() {}
-
-void LightpackCommandLineParserTest::testCase_parseVersion()
-{
+TEST(LightpackCommandLineParserTest, parseVersion) {
     LightpackCommandLineParser parser;
     const QStringList arguments = QStringList() << "app.binary" << "--version";
 
-    QVERIFY(parser.parse(arguments));
-    QVERIFY(parser.isSetVersion());
+    EXPECT_TRUE(parser.parse(arguments));
+    EXPECT_TRUE(parser.isSetVersion());
 
     const QStringList arguments2 = QStringList() << "app.binary" << "-v";
-    QVERIFY(parser.parse(arguments2));
-    QVERIFY(parser.isSetVersion());
+    EXPECT_TRUE(parser.parse(arguments2));
+    EXPECT_TRUE(parser.isSetVersion());
 }
 
-void LightpackCommandLineParserTest::testCase_parseHelp()
-{
+TEST(LightpackCommandLineParserTest, parseHelp) {
     LightpackCommandLineParser parser;
     const QStringList arguments = QStringList() << "app.binary" << "--help";
 
-    QVERIFY(parser.parse(arguments));
-    QVERIFY(parser.isSetHelp());
+    EXPECT_TRUE(parser.parse(arguments));
+    EXPECT_TRUE(parser.isSetHelp());
 
     const QStringList arguments2 = QStringList() << "app.binary" << "-h";
-    QVERIFY(parser.parse(arguments2));
-    QVERIFY(parser.isSetHelp());
+    EXPECT_TRUE(parser.parse(arguments2));
+    EXPECT_TRUE(parser.isSetHelp());
 }
 
-void LightpackCommandLineParserTest::testCase_parseWizard()
-{
+TEST(LightpackCommandLineParserTest, parseWizard) {
     LightpackCommandLineParser parser;
     const QStringList arguments = QStringList() << "app.binary" << "--wizard";
 
-    QVERIFY(parser.parse(arguments));
-    QVERIFY(parser.isSetWizard());
+    EXPECT_TRUE(parser.parse(arguments));
+    EXPECT_TRUE(parser.isSetWizard());
 }
 
-void LightpackCommandLineParserTest::testCase_parseBacklightOff()
-{
+TEST(LightpackCommandLineParserTest, parseBacklightOff) {
     LightpackCommandLineParser parser;
     const QStringList arguments = QStringList() << "app.binary" << "--off";
 
-    QVERIFY(parser.parse(arguments));
-    QVERIFY(parser.isSetBacklightOff());
+    EXPECT_TRUE(parser.parse(arguments));
+    EXPECT_TRUE(parser.isSetBacklightOff());
 }
 
-void LightpackCommandLineParserTest::testCase_parseBacklightOn()
-{
+TEST(LightpackCommandLineParserTest, parseBacklightOn) {
     LightpackCommandLineParser parser;
     const QStringList arguments = QStringList() << "app.binary" << "--on";
 
-    QVERIFY(parser.parse(arguments));
-    QVERIFY(parser.isSetBacklightOn());
+    EXPECT_TRUE(parser.parse(arguments));
+    EXPECT_TRUE(parser.isSetBacklightOn());
 }
 
-void LightpackCommandLineParserTest::testCase_parseBacklightOnAndOff()
-{
+TEST(LightpackCommandLineParserTest, parseBacklightOnAndOff) {
     LightpackCommandLineParser parser;
     const QStringList arguments = QStringList() << "app.binary" << "--on" << "--off";
 
-    QVERIFY(!parser.parse(arguments));
-    QVERIFY(parser.isSetBacklightOn());
-    QVERIFY(parser.isSetBacklightOff());
+    EXPECT_TRUE(!parser.parse(arguments));
+    EXPECT_TRUE(parser.isSetBacklightOn());
+    EXPECT_TRUE(parser.isSetBacklightOff());
 }
 
-void LightpackCommandLineParserTest::testCase_parseDebuglevel()
-{
+TEST(LightpackCommandLineParserTest, parseDebuglevel) {
     const QString levelNames[] = {
         QString("high"), QString("mid"), QString("low"), QString("zero")
     };
@@ -83,22 +66,22 @@ void LightpackCommandLineParserTest::testCase_parseDebuglevel()
         Debug::HighLevel, Debug::MidLevel, Debug::LowLevel, Debug::ZeroLevel
     };
 
-    QCOMPARE(sizeof(levelNames)/sizeof(levelNames[0]), sizeof(levelValues)/sizeof(levelValues[0]));
+    EXPECT_EQ(sizeof(levelNames)/sizeof(levelNames[0]), sizeof(levelValues)/sizeof(levelValues[0]));
     for (size_t i = 0; i < sizeof(levelNames)/sizeof(levelNames[0]); ++i)
     {
         LightpackCommandLineParser parser;
         QStringList arguments = QStringList() << "app.binary" << QString("--debug=") + levelNames[i];
-        QVERIFY(parser.parse(arguments));
-        QVERIFY(parser.isSetDebuglevel());
-        QCOMPARE(parser.debugLevel(), levelValues[i]);
+        EXPECT_TRUE(parser.parse(arguments));
+        EXPECT_TRUE(parser.isSetDebuglevel());
+        EXPECT_EQ(parser.debugLevel(), levelValues[i]);
     }
 
     for (size_t i = 0; i < sizeof(levelNames)/sizeof(levelNames[0]); ++i)
     {
         LightpackCommandLineParser parser;
         QStringList arguments = QStringList() << "app.binary" << QString("--debug-") + levelNames[i];
-        QVERIFY(parser.parse(arguments));
-        QVERIFY(parser.isSetDebuglevel());
-        QCOMPARE(parser.debugLevel(), levelValues[i]);
+        EXPECT_TRUE(parser.parse(arguments));
+        EXPECT_TRUE(parser.isSetDebuglevel());
+        EXPECT_EQ(parser.debugLevel(), levelValues[i]);
     }
 }
