@@ -29,6 +29,7 @@
 
 #include <cmath>
 
+#include "GrabbedArea.hpp"
 #include "common/DebugOut.hpp"
 #include "calculations.hpp"
 #include "../prismatic/enums.hpp"
@@ -81,11 +82,13 @@ void WinAPIGrabber::freeScreens()
     _screensWithWidgets.clear();
 }
 
-QList< ScreenInfo > * WinAPIGrabber::screensWithWidgets(QList< ScreenInfo > * result, const GrabbedAreas& grabWidgets)
+QList< ScreenInfo > * WinAPIGrabber::screensWithWidgets(
+    QList< ScreenInfo > * result,
+    const GrabbedAreas& grabWidgets)
 {
     result->clear();
     for (int i = 0; i < grabWidgets.size(); ++i) {
-        HMONITOR hMonitorNew = MonitorFromWindow(reinterpret_cast<HWND>(grabWidgets[i]->winId()), MONITOR_DEFAULTTONULL);
+        HMONITOR hMonitorNew = MonitorFromWindow(reinterpret_cast<HWND>(grabWidgets[i]->id()), MONITOR_DEFAULTTONULL);
 
         if (hMonitorNew != NULL) {
             MONITORINFO monitorInfo;

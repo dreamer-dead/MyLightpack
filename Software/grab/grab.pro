@@ -75,6 +75,7 @@ contains(DEFINES, QT_GRAB_SUPPORT) {
 
 HEADERS += \
     include/calculations.hpp \
+    include/GrabbedArea.hpp \
     include/GrabberBase.hpp \
     include/ColorProvider.hpp \
     include/GrabberContext.hpp \

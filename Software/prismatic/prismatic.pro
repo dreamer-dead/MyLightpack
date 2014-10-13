@@ -228,9 +228,10 @@ HEADERS += \
     version.h \
     TimeEvaluations.hpp \
     GrabManager.hpp \
-    debug.h \
     LogWriter.hpp \
     SpeedTest.hpp \
+    ../common/DebugOut.hpp \
+    ../common/PrintHelpers.hpp \
     ../common/defs.h \
     enums.hpp         ApiServer.hpp     ApiServerSetColorTask.hpp \
     ../../CommonHeaders/COMMANDS.h \
@@ -291,8 +292,8 @@ contains(DEFINES,UNITY_DESKTOP) {
 }
 
 win32 {
-    SOURCES += LedDeviceAlienFx.cpp
-    HEADERS += LedDeviceAlienFx.hpp
+    SOURCES += devices/LedDeviceAlienFx.cpp
+    HEADERS += devices/LedDeviceAlienFx.hpp
 }
 
 FORMS += ui/SettingsWindow.ui \

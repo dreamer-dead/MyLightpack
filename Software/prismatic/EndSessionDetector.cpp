@@ -3,6 +3,7 @@
 #include <exception>
 
 #include "LightpackApplication.hpp"
+#include "settings/SettingsReader.hpp"
 #include "common/DebugOut.hpp"
 #include "ui/SettingsWindow.hpp"
 
@@ -48,7 +49,7 @@ bool EndSessionDetector::nativeEventFilter(const QByteArray& eventType, void* me
 
 	if (msg->message == WM_QUERYENDSESSION)
 	{
-        if (!SettingsScope::Settings::instance()->isKeepLightsOnAfterExit())
+        if (!SettingsScope::SettingsReader::instance()->isKeepLightsOnAfterExit())
 		{
 			Destroy();
 			isSessionEnding = true;
@@ -56,7 +57,7 @@ bool EndSessionDetector::nativeEventFilter(const QByteArray& eventType, void* me
 	}
 	else if (msg->message == WM_WTSSESSION_CHANGE)
 	{
-        if (!SettingsScope::Settings::instance()->isKeepLightsOnAfterLock())
+        if (!SettingsScope::SettingsReader::instance()->isKeepLightsOnAfterLock())
 		{
 			if (msg->wParam == WTS_SESSION_LOCK)
 			{

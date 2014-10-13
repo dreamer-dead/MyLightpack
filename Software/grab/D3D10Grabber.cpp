@@ -41,8 +41,10 @@
 
 #include "common/DebugOut.hpp"
 #include "common/D3D10GrabberDefs.hpp"
+#include "common/PrintHelpers.hpp"
 #include "common/msvcstub.h"
 #include "calculations.hpp"
+#include "GrabbedArea.hpp"
 #include "WinUtils.hpp"
 #include "WinDXUtils.hpp"
 #include "../libraryinjector/ILibraryInjector.h"
@@ -229,7 +231,9 @@ public:
     void stop() { m_isStarted = false; }
     bool isStarted() const { return m_isStarted; }
 
-    QList< ScreenInfo > * screensWithWidgets(QList< ScreenInfo > * result, const GrabbedAreas& grabWidgets)
+    QList< ScreenInfo > * screensWithWidgets(
+        QList< ScreenInfo > * result,
+        const GrabberBase::GrabbedAreas& grabWidgets)
     {
         Q_UNUSED(grabWidgets);
 
