@@ -1,25 +1,18 @@
-#include "GrabTests.hpp"
-
-#include <QTest>
-
 #include "GrabberContext.hpp"
+#include "gtest/gtest.h"
 
-GrabTests::GrabTests(QObject *parent)
-    : QObject(parent) {
-}
-
-void GrabTests::testCase_GrabContextTest() {
+TEST(GrabTests, GrabContextTest) {
     GrabberContext context;
-    QVERIFY(context.buffersCount() == 0);
-    QVERIFY(context.queryBuf(10) != 0);
-    QVERIFY(context.buffersCount() == 1);
-    QVERIFY(context.queryBuf(100) != 0);
-    QVERIFY(context.buffersCount() == 2);
+    EXPECT_EQ(context.buffersCount(), 0);
+    EXPECT_TRUE(context.queryBuf(10));
+    EXPECT_EQ(context.buffersCount(), 1);
+    EXPECT_TRUE(context.queryBuf(100));
+    EXPECT_EQ(context.buffersCount(), 2);
     // Should return existring buffer
-    QVERIFY(context.queryBuf(50) != 0);
+    EXPECT_TRUE(context.queryBuf(50));
     // Still 2 buffers in list
-    QVERIFY(context.buffersCount() == 2);
+    EXPECT_EQ(context.buffersCount(), 2);
     context.releaseAllBufs();
     context.freeReleasedBufs();
-    QVERIFY(context.buffersCount() == 0);
+    EXPECT_EQ(context.buffersCount(), 0);
 }

@@ -72,7 +72,6 @@ HEADERS += \
     SettingsTest.hpp \
     SettingsSourceMockup.hpp \
     LightpackCommandLineParserTest.hpp \
-    GrabTests.hpp
 
 SOURCES += \
     ../third_party/gtest/src/gtest-all.cc \
