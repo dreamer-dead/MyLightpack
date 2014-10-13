@@ -33,6 +33,7 @@ public:
     virtual ~GrabbedArea() {}
     virtual bool isEnabled() const { return false; }
     virtual QRect geometry() const { return QRect(); }
+    virtual uintptr_t id() const { return reinterpret_cast<uintptr_t>(this); }
 };
 
 #endif // GRABBEDAREA_HPP

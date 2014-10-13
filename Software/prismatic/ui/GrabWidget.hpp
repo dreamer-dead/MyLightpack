@@ -52,6 +52,7 @@ public:
     // GrabbedArea methods
     virtual bool isEnabled() const { return isAreaEnabled(); }
     virtual QRect geometry() const { return frameGeometry(); }
+    virtual uintptr_t id() const { return winId(); }
 
 private:
     void fillBackground(int index);
