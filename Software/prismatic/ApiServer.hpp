@@ -171,6 +171,7 @@ signals:
     void errorOnStartListening(QString errorMessage);
     void clearColorBuffers();
     void updateApiDeviceNumberOfLeds(int value);
+    void finished();
 
 public slots:
     void apiServerSettingsChanged();
