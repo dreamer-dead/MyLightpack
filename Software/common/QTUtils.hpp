@@ -12,6 +12,9 @@ QString pathCombine(const QString& path1, const QString& path2) {
 template <typename T1 = QObject, typename T2 = QObject>
 class Connector {
 public:
+    typedef const T1* SignallingType;
+    typedef const T2* ReceivingType;
+
     explicit Connector(const T1* signalObj)
         : m_signallingObject(signalObj), m_receivingObject(signalObj) {
         Q_ASSERT(signalObj);
@@ -62,6 +65,8 @@ public:
         QObject::disconnect(this->m_signallingObject, signal, this->m_receivingObject, slot, m_type);
         return *this;
     }
+
+    Qt::ConnectionType type() const { return m_type; }
 
 private:
     const Qt::ConnectionType m_type;

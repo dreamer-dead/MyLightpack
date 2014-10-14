@@ -95,6 +95,7 @@ SOURCES += \
     SettingsSourceMockupTest.cpp \
     SettingsTest.cpp \
     TestsMain.cpp \
+    ConnectorTests.cpp
 
 win32{
     HEADERS += \
