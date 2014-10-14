@@ -122,7 +122,6 @@ private:
         return m_pluginInterface.data();
     }
 
-    QMutex m_mutex;
     QScopedPointer<SettingsWindow> m_settingsWindow;
     QScopedPointer<ApiServer> m_apiServer;
     QScopedPointer<LedDeviceManager> m_ledDeviceManager;
