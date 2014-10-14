@@ -160,7 +160,7 @@ macx{
     }
 
     CONFIG(clang) {
-        QMAKE_CXXFLAGS += -mmacosx-version-min=10.6 -stdlib=libstdc++ -x objective-c++
+        QMAKE_CXXFLAGS += -mmacosx-version-min=10.6 -std=c++11 -x objective-c++
     }
 }
 
