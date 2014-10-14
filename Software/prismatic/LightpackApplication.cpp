@@ -85,7 +85,6 @@ void LightpackApplication::initializeAll(const QString & appDirPath)
     m_applicationDirPath = appDirPath;
     m_noGui = false;
 
-
     processCommandLineArguments();
 
     printVersionsSoftwareQtOS();
@@ -95,8 +94,7 @@ void LightpackApplication::initializeAll(const QString & appDirPath)
     SettingsScope::Settings::Overrides overrides;
     if (m_isDebugLevelObtainedFromCmdArgs)
         overrides.setDebuglevel(static_cast<Debug::DebugLevels>(g_debugLevel));
-    if (!Settings::Initialize(m_applicationDirPath, overrides)
-            && !m_noGui) {
+    if (!Settings::Initialize(m_applicationDirPath, overrides) && !m_noGui) {
         runWizardLoop(false);
     }
 
@@ -129,7 +127,6 @@ void LightpackApplication::initializeAll(const QString & appDirPath)
     qRegisterMetaType<Backlight::Status>("Backlight::Status");
     qRegisterMetaType<DeviceLocked::DeviceLockStatus>("DeviceLocked::DeviceLockStatus");
     qRegisterMetaType< QList<Plugin*> >("QList<Plugin*>");
-
 
     if (settings()->isBacklightEnabled())
     {
@@ -242,10 +239,12 @@ void LightpackApplication::startBacklight()
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "m_backlightStatus =" << m_backlightStatus
                     << "m_deviceLockStatus =" << m_deviceLockStatus;
 
-    connect(settings(), SIGNAL(moodLampColorChanged(QColor)), m_moodlampManager, SLOT(setCurrentColor(QColor)));
-    connect(settings(), SIGNAL(moodLampSpeedChanged(int)),    m_moodlampManager, SLOT(setLiquidModeSpeed(int)));
-    connect(settings(), SIGNAL(moodLampLiquidModeChanged(bool)),    m_moodlampManager, SLOT(setLiquidMode(bool)));
-//    connect(settings(), SIGNAL(profileLoaded(const QString &)), m_moodlampManager, SLOT(settingsProfileChanged(const QString &)));
+    connect(settings(), SIGNAL(moodLampColorChanged(QColor)),
+            moodLampManager(), SLOT(setCurrentColor(QColor)));
+    connect(settings(), SIGNAL(moodLampSpeedChanged(int)),
+            moodLampManager(), SLOT(setLiquidModeSpeed(int)));
+    connect(settings(), SIGNAL(moodLampLiquidModeChanged(bool)),
+            moodLampManager(), SLOT(setLiquidMode(bool)));
 
     bool isBacklightEnabled = (m_backlightStatus == Backlight::StatusOn || m_backlightStatus == Backlight::StatusDeviceError);
     bool isCanStart = (isBacklightEnabled && m_deviceLockStatus == DeviceLocked::Unlocked);
@@ -601,7 +600,7 @@ void LightpackApplication::initGrabManager()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     m_grabManager.reset(new GrabManager(NULL));
-    m_moodlampManager = new MoodLampManager(NULL);
+    m_moodlampManager.reset(new MoodLampManager(NULL));
 
     m_moodlampManager->initFromSettings();
 
@@ -631,11 +630,11 @@ void LightpackApplication::initGrabManager()
 
     connect(grabManager(), SIGNAL(updateLedsColors(const QList<QRgb> &)),
             m_ledDeviceManager.data(), SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
-    connect(m_moodlampManager, SIGNAL(updateLedsColors(const QList<QRgb> &)),
+    connect(moodLampManager(), SIGNAL(updateLedsColors(const QList<QRgb> &)),
             m_ledDeviceManager.data(), SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
     connect(grabManager(), SIGNAL(updateLedsColors(const QList<QRgb> &)),
             m_pluginInterface, SLOT(updateColors(const QList<QRgb> &)), Qt::QueuedConnection);
-    connect(m_moodlampManager, SIGNAL(updateLedsColors(const QList<QRgb> &)),
+    connect(moodLampManager(), SIGNAL(updateLedsColors(const QList<QRgb> &)),
             m_pluginInterface, SLOT(updateColors(const QList<QRgb> &)), Qt::QueuedConnection);
     connect(grabManager(), SIGNAL(ambilightTimeOfUpdatingColors(double)),
             m_pluginInterface, SLOT(refreshAmbilightEvaluated(double)));
@@ -746,13 +745,10 @@ void LightpackApplication::free()
     Q_ASSERT(m_LedDeviceManagerThread->wait(1000));
 
     delete m_pluginManager;
-    delete m_moodlampManager;
-    // Manual reset for objects.
-    m_grabManager.reset();
+    // Manual reset for some objects.
     m_ledDeviceManager.reset();
 
     m_pluginManager = NULL;
-    m_moodlampManager = NULL;
 
     QApplication::processEvents(QEventLoop::AllEvents, 1000);
 }
