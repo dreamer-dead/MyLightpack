@@ -163,12 +163,11 @@ void LightpackApplication::initializeAll(const QString & appDirPath)
 
 void LightpackApplication::runWizardLoop(bool isInitFromSettings)
 {
-    Wizard *w = new Wizard(isInitFromSettings);
-    connect(w, SIGNAL(finished(int)), this, SLOT(quitFromWizard(int)));
-    w->setWindowFlags(Qt::WindowStaysOnTopHint);
-    w->show();
+    Wizard wizard(isInitFromSettings);
+    connect(&wizard, SIGNAL(finished(int)), this, SLOT(quitFromWizard(int)));
+    wizard.setWindowFlags(Qt::WindowStaysOnTopHint);
+    wizard.show();
     this->exec();
-    delete w;
 }
 
 #ifdef Q_OS_WIN
