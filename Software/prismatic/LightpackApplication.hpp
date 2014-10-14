@@ -113,20 +113,26 @@ private:
     const MoodLampManager* moodLampManager() const {
         return m_moodlampManager.data();
     }
+
     const PluginsManager* pluginsManager() const {
         return m_pluginManager.data();
+    }
+
+    const LightpackPluginInterface* lightpackPlugin() const {
+        return m_pluginInterface.data();
     }
 
     QMutex m_mutex;
     QScopedPointer<SettingsWindow> m_settingsWindow;
     QScopedPointer<ApiServer> m_apiServer;
     QScopedPointer<LedDeviceManager> m_ledDeviceManager;
+    // These objects will be deleted by their deleteLater slots.
     QThread *m_LedDeviceManagerThread;
     QThread *m_apiServerThread;
     QScopedPointer<GrabManager> m_grabManager;
     QScopedPointer<MoodLampManager> m_moodlampManager;
     QScopedPointer<PluginsManager> m_pluginManager;
-    LightpackPluginInterface *m_pluginInterface;
+    QScopedPointer<LightpackPluginInterface> m_pluginInterface;
 
     QString m_applicationDirPath;
     bool m_isDebugLevelObtainedFromCmdArgs;
