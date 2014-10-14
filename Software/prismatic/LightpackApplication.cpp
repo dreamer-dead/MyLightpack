@@ -578,17 +578,17 @@ void LightpackApplication::startPluginManager()
     // TODO: Extract utility function pathCombine(path1, path2)
     const QString pluginsDir = QDir::cleanPath(
         settings()->getApplicationDirPath() + QDir::separator() + PluginsManager::defaultPluginsDir());
-    m_pluginManager = new PluginsManager(pluginsDir, NULL);
+    m_pluginManager.reset(new PluginsManager(pluginsDir, NULL));
 
-    connect(this, SIGNAL(destroyed()),m_pluginManager, SLOT(StopPlugins()));
+    connect(this, SIGNAL(destroyed()), pluginsManager(), SLOT(StopPlugins()));
 
     if (!m_noGui)
     {
         connect(m_settingsWindow.data(), SIGNAL(reloadPlugins()),
-                m_pluginManager, SLOT(reloadPlugins()));
-        connect(m_pluginManager, SIGNAL(updatePlugin(QList<Plugin*>)),
+                pluginsManager(), SLOT(reloadPlugins()));
+        connect(pluginsManager(), SIGNAL(updatePlugin(QList<Plugin*>)),
                 m_settingsWindow.data(), SLOT(updatePlugin(QList<Plugin*>)), Qt::QueuedConnection);
-        connect(m_pluginManager, SIGNAL(updatePlugin(QList<Plugin*>)),
+        connect(pluginsManager(), SIGNAL(updatePlugin(QList<Plugin*>)),
                 m_pluginInterface, SLOT(updatePlugin(QList<Plugin*>)), Qt::QueuedConnection);
     }
 
@@ -744,11 +744,7 @@ void LightpackApplication::free()
     emit m_ledDeviceManager->finished();
     Q_ASSERT(m_LedDeviceManagerThread->wait(1000));
 
-    delete m_pluginManager;
     // Manual reset for some objects.
     m_ledDeviceManager.reset();
-
-    m_pluginManager = NULL;
-
     QApplication::processEvents(QEventLoop::AllEvents, 1000);
 }

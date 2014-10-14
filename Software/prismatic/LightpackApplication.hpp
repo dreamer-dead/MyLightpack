@@ -113,6 +113,9 @@ private:
     const MoodLampManager* moodLampManager() const {
         return m_moodlampManager.data();
     }
+    const PluginsManager* pluginsManager() const {
+        return m_pluginManager.data();
+    }
 
     QMutex m_mutex;
     QScopedPointer<SettingsWindow> m_settingsWindow;
@@ -122,10 +125,8 @@ private:
     QThread *m_apiServerThread;
     QScopedPointer<GrabManager> m_grabManager;
     QScopedPointer<MoodLampManager> m_moodlampManager;
-
-    PluginsManager *m_pluginManager;
+    QScopedPointer<PluginsManager> m_pluginManager;
     LightpackPluginInterface *m_pluginInterface;
-    QWidget *consolePlugin;
 
     QString m_applicationDirPath;
     bool m_isDebugLevelObtainedFromCmdArgs;
