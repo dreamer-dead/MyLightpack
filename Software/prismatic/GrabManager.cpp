@@ -75,7 +75,6 @@ GrabManager::GrabManager(QWidget *parent) : QObject(parent)
 
     m_isSendDataOnlyIfColorsChanged = m_settings->isSendDataOnlyIfColorsChanges();
 
-//    m_grabbersThread = new QThread();
     initGrabbers();
     m_grabber = queryGrabber(m_settings->getGrabberType());
 

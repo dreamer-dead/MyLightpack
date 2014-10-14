@@ -106,7 +106,6 @@ private:
 
     QTimer *m_timerGrab;
     QTimer *m_timerUpdateFPS;
-    QThread *m_grabbersThread;
     QWidget *m_parentWidget;
     QList<GrabWidget *> m_ledWidgets;
     QList<const GrabbedArea *> m_ledWidgetsToAreas;

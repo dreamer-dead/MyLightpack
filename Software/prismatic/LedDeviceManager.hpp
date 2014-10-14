@@ -52,6 +52,7 @@ signals:
     void ioDeviceSuccess(bool isSuccess);
     void firmwareVersion(const QString & fwVersion);
     void setColors_VirtualDeviceCallback(const QList<QRgb> & colors);
+    void finished();
 
     // This signals are directly connected to ILedDevice. Don't use outside.
     void ledDeviceOpen();
