@@ -48,12 +48,80 @@ using namespace std;
 using namespace SettingsScope;
 using namespace QtUtils;
 
+namespace {
+void printVersionsSoftwareQtOS() {
+    if (g_debugLevel > 0) {
+#       ifdef GIT_REVISION
+        qDebug() << "Prismatik:" << VERSION_STR << "rev." << GIT_REVISION;
+#       else
+        qDebug() << "Prismatik:" << VERSION_STR;
+#       endif
+
+        qDebug() << "Build with Qt verison:" << QT_VERSION_STR;
+        qDebug() << "Qt version currently in use:" << qVersion();
+
+#       ifdef Q_OS_WIN
+        switch(QSysInfo::windowsVersion()){
+        case QSysInfo::WV_NT:       qDebug() << "Windows NT (operating system version 4.0)"; break;
+        case QSysInfo::WV_2000:     qDebug() << "Windows 2000 (operating system version 5.0)"; break;
+        case QSysInfo::WV_XP:       qDebug() << "Windows XP (operating system version 5.1)"; break;
+        case QSysInfo::WV_2003:     qDebug() << "Windows Server 2003, Windows Server 2003 R2, Windows Home Server, Windows XP Professional x64 Edition (operating system version 5.2)"; break;
+        case QSysInfo::WV_VISTA:    qDebug() << "Windows Vista, Windows Server 2008 (operating system version 6.0)"; break;
+        case QSysInfo::WV_WINDOWS7: qDebug() << "Windows 7, Windows Server 2008 R2 (operating system version 6.1)"; break;
+        default:                    qDebug() << "Unknown windows version:" << QSysInfo::windowsVersion();
+        }
+#       elif defined(Q_OS_LINUX)
+        // TODO: print some details about OS (cat /proc/partitions? lsb_release -a?)
+#       elif defined(Q_OS_MAC)
+        qDebug() << "Mac OS";
+#       else
+        qDebug() << "Unknown operation system";
+#       endif
+    }
+}
+
+void outputMessage(const QString& message) {
+#ifdef Q_OS_WIN
+    QMessageBox::information(NULL, "Prismatik", message, QMessageBox::Ok);
+#else
+    fprintf(stderr, "%s\n", message.toStdString().c_str());
+#endif
+}
+
+bool checkSystemTrayAvailability()
+{
+#   ifdef Q_OS_LINUX
+    // When you add lightpack in the Startup in Ubuntu (10.04), tray starts later than the application runs.
+    // Check availability tray every second for 20 seconds.
+    for (int i = 0; i < 20; i++)
+    {
+        if (QSystemTrayIcon::isSystemTrayAvailable())
+            break;
+
+        QThread::sleep(1);
+    }
+#   endif
+
+    if (!QSystemTrayIcon::isSystemTrayAvailable())
+    {
+        QMessageBox::critical(0, "Prismatik", "I couldn't detect any system tray on this system.");
+        DEBUG_LOW_LEVEL << Q_FUNC_INFO << "Systray couldn't be detected, running in trayless mode";
+        return false;
+    }
+    return true;
+}
+
+}
+
 LightpackApplication::LightpackApplication(int &argc, char **argv)
-    : QtSingleApplication(argc, argv) {
+    : QtSingleApplication(argc, argv)
+    , m_ledDeviceManagerThread(NULL)
+    , m_apiServerThread(NULL) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 }
 
 LightpackApplication::~LightpackApplication() {
+    DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 }
 
 Settings * LightpackApplication::settings() const {
@@ -381,71 +449,6 @@ void LightpackApplication::processCommandLineArguments()
         qDebug() << "Debug level" << g_debugLevel;
 }
 
-void LightpackApplication::outputMessage(QString message) const
-{
-#ifdef Q_OS_WIN
-    QMessageBox::information(NULL, "Prismatik", message, QMessageBox::Ok);
-#else
-    fprintf(stderr, "%s\n", message.toStdString().c_str());
-#endif
-}
-
-void LightpackApplication::printVersionsSoftwareQtOS() const
-{
-    if (g_debugLevel > 0)
-    {
-#       ifdef GIT_REVISION
-        qDebug() << "Prismatik:" << VERSION_STR << "rev." << GIT_REVISION;
-#       else
-        qDebug() << "Prismatik:" << VERSION_STR;
-#       endif
-
-        qDebug() << "Build with Qt verison:" << QT_VERSION_STR;
-        qDebug() << "Qt version currently in use:" << qVersion();
-
-#       ifdef Q_OS_WIN
-        switch(QSysInfo::windowsVersion()){
-        case QSysInfo::WV_NT:       qDebug() << "Windows NT (operating system version 4.0)"; break;
-        case QSysInfo::WV_2000:     qDebug() << "Windows 2000 (operating system version 5.0)"; break;
-        case QSysInfo::WV_XP:       qDebug() << "Windows XP (operating system version 5.1)"; break;
-        case QSysInfo::WV_2003:     qDebug() << "Windows Server 2003, Windows Server 2003 R2, Windows Home Server, Windows XP Professional x64 Edition (operating system version 5.2)"; break;
-        case QSysInfo::WV_VISTA:    qDebug() << "Windows Vista, Windows Server 2008 (operating system version 6.0)"; break;
-        case QSysInfo::WV_WINDOWS7: qDebug() << "Windows 7, Windows Server 2008 R2 (operating system version 6.1)"; break;
-        default:                    qDebug() << "Unknown windows version:" << QSysInfo::windowsVersion();
-        }
-#       elif defined(Q_OS_LINUX)
-        // TODO: print some details about OS (cat /proc/partitions? lsb_release -a?)
-#       elif defined(Q_OS_MAC)
-        qDebug() << "Mac OS";
-#       else
-        qDebug() << "Unknown operation system";
-#       endif
-    }
-}
-
-bool LightpackApplication::checkSystemTrayAvailability() const
-{
-#   ifdef Q_OS_LINUX
-    // When you add lightpack in the Startup in Ubuntu (10.04), tray starts later than the application runs.
-    // Check availability tray every second for 20 seconds.
-    for (int i = 0; i < 20; i++)
-    {
-        if (QSystemTrayIcon::isSystemTrayAvailable())
-            break;
-
-        QThread::sleep(1);
-    }
-#   endif
-
-    if (QSystemTrayIcon::isSystemTrayAvailable() == false)
-    {
-        QMessageBox::critical(0, "Prismatik", "I couldn't detect any system tray on this system.");
-        DEBUG_LOW_LEVEL << Q_FUNC_INFO << "Systray couldn't be detected, running in trayless mode";
-        return false;
-    }
-    return true;
-}
-
 void LightpackApplication::startApiServer()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "Start API server";
@@ -487,7 +490,7 @@ void LightpackApplication::startLedDeviceManager()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     m_ledDeviceManager.reset(new LedDeviceManager());
-    m_LedDeviceManagerThread = new QThread();
+    m_ledDeviceManagerThread = new QThread();
     m_pluginInterface.reset(new LightpackPluginInterface(NULL));
 
     // LightpackPluginInterface connections.
@@ -546,10 +549,10 @@ void LightpackApplication::startLedDeviceManager()
             .connect(SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)),
                      SLOT(updateVirtualLedsColors(QList<QRgb>)));
     }
-    m_ledDeviceManager->moveToThread(m_LedDeviceManagerThread);
-    connect(m_ledDeviceManager.data(), SIGNAL(finished()), m_LedDeviceManagerThread, SLOT(quit()));
-    deleteLaterOn(m_LedDeviceManagerThread, SIGNAL(finished()));
-    m_LedDeviceManagerThread->start();
+    m_ledDeviceManager->moveToThread(m_ledDeviceManagerThread);
+    connect(m_ledDeviceManager.data(), SIGNAL(finished()), m_ledDeviceManagerThread, SLOT(quit()));
+    deleteLaterOn(m_ledDeviceManagerThread, SIGNAL(finished()));
+    m_ledDeviceManagerThread->start();
     QMetaObject::invokeMethod(m_ledDeviceManager.data(), "init", Qt::QueuedConnection);
 
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "end";
@@ -578,7 +581,6 @@ void LightpackApplication::startPluginManager()
 
     m_pluginManager->reloadPlugins();
 }
-
 
 void LightpackApplication::initGrabManager()
 {
@@ -624,7 +626,6 @@ void LightpackApplication::initGrabManager()
             lightpackPlugin(), SLOT(refreshAmbilightEvaluated(double)));
     connect(grabManager(), SIGNAL(changeScreen(QRect)),
             lightpackPlugin(), SLOT(refreshScreenRect(QRect)));
-
 }
 
 void LightpackApplication::commitData(QSessionManager &sessionManager)
@@ -665,7 +666,6 @@ void LightpackApplication::settingsChanged()
     m_grabManager->onSendDataOnlyIfColorsEnabledChanged(settings()->isSendDataOnlyIfColorsChanges());
 
     m_moodlampManager->setSendDataOnlyIfColorsChanged(settings()->isSendDataOnlyIfColorsChanges());
-
     m_moodlampManager->setCurrentColor(settings()->getMoodLampColor());
     m_moodlampManager->setLiquidModeSpeed(settings()->getMoodLampSpeed());
     m_moodlampManager->setLiquidMode(settings()->isMoodLampLiquidMode());
@@ -688,7 +688,6 @@ void LightpackApplication::settingsChanged()
     //Force update colors on device for start ping device
     m_grabManager->reset();
     m_moodlampManager->reset();
-
 }
 
 void LightpackApplication::showLedWidgets(bool visible)
@@ -706,7 +705,6 @@ void LightpackApplication::setColoredLedWidget(bool colored)
 
 void LightpackApplication::requestBacklightStatus()
 {
-    //m_apiServer->resultBacklightStatus(m_backlightStatus);
     m_pluginInterface->resultBacklightStatus(m_backlightStatus);
 }
 
@@ -714,21 +712,34 @@ void LightpackApplication::free()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-    m_moodlampManager->start(false);
-    m_grabManager->start(false);
-    m_pluginManager->stopPlugins();
+    if (m_moodlampManager)
+        m_moodlampManager->start(false);
+
+    if (m_grabManager)
+        m_grabManager->start(false);
+
+    if (m_pluginManager)
+        m_pluginManager->stopPlugins();
 
     QApplication::processEvents(QEventLoop::AllEvents, 1000);
 
-    emit m_apiServer->finished();
-    Q_ASSERT(m_apiServerThread->wait(1000));
-    // Prevent deleting this object.
-    m_apiServer.reset();
+    if (m_apiServer) {
+        Q_ASSERT(m_apiServerThread);
+        emit m_apiServer->finished();
+        Q_ASSERT(m_apiServerThread->wait(1000));
+        // Prevent deleting this object.
+        m_apiServer.reset();
+    }
 
-    emit m_ledDeviceManager->finished();
-    Q_ASSERT(m_LedDeviceManagerThread->wait(1000));
+    if (m_ledDeviceManager) {
+        Q_ASSERT(m_ledDeviceManagerThread);
+        emit m_ledDeviceManager->finished();
+        Q_ASSERT(m_ledDeviceManagerThread->wait(1000));
+    }
 
     // Manual reset for some objects.
-    m_ledDeviceManager.reset();
+    if (m_ledDeviceManager) {
+        m_ledDeviceManager.reset();
+    }
     QApplication::processEvents(QEventLoop::AllEvents, 1000);
 }

@@ -94,10 +94,9 @@ private slots:
     void processMessageNoGUI(const QString&);
 
 private:
+    LightpackApplication& operator=(const LightpackApplication&);
+
     void processCommandLineArguments();
-    void outputMessage(QString message) const;
-    void printVersionsSoftwareQtOS() const;
-    bool checkSystemTrayAvailability() const;
     void startApiServer();
     void startLedDeviceManager();
     void initGrabManager();
@@ -124,7 +123,7 @@ private:
     QScopedPointer<ApiServer> m_apiServer;
     QScopedPointer<LedDeviceManager> m_ledDeviceManager;
     // These objects will be deleted by their deleteLater slots.
-    QThread *m_LedDeviceManagerThread;
+    QThread *m_ledDeviceManagerThread;
     QThread *m_apiServerThread;
     QScopedPointer<GrabManager> m_grabManager;
     QScopedPointer<MoodLampManager> m_moodlampManager;
