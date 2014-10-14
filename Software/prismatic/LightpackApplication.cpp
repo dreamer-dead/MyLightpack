@@ -476,7 +476,7 @@ void LightpackApplication::startApiServer()
                 m_settingsWindow.data(), SLOT(onApiServer_ErrorOnStartListening(QString)));
     }
 
-    connect(m_ledDeviceManager, SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)),
+    connect(m_ledDeviceManager.data(), SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)),
             m_pluginInterface, SLOT(updateColors(QList<QRgb>)), Qt::QueuedConnection);
 
     m_apiServer->firstStart();
@@ -491,29 +491,46 @@ void LightpackApplication::startApiServer()
 void LightpackApplication::startLedDeviceManager()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-    m_ledDeviceManager = new LedDeviceManager();
+    m_ledDeviceManager.reset(new LedDeviceManager());
     m_LedDeviceManagerThread = new QThread();
     m_pluginInterface = new LightpackPluginInterface(NULL);
 
     // LightpackPluginInterface connections.
-    connect(m_pluginInterface, SIGNAL(updateDeviceLockStatus(DeviceLocked::DeviceLockStatus, QList<QString>)), this, SLOT(setDeviceLockViaAPI(DeviceLocked::DeviceLockStatus, QList<QString>)));
-    connect(m_pluginInterface, SIGNAL(updateLedsColors(const QList<QRgb> &)),    m_ledDeviceManager, SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
-    connect(m_pluginInterface, SIGNAL(updateGamma(double)),           m_ledDeviceManager, SLOT(setGamma(double)), Qt::QueuedConnection);
-    connect(m_pluginInterface, SIGNAL(updateBrightness(int)),         m_ledDeviceManager, SLOT(setBrightness(int)), Qt::QueuedConnection);
-    connect(m_pluginInterface, SIGNAL(updateSmooth(int)),             m_ledDeviceManager, SLOT(setSmoothSlowdown(int)), Qt::QueuedConnection);
-    connect(m_pluginInterface, SIGNAL(requestBacklightStatus()),       this, SLOT(requestBacklightStatus()));
+    const LedDeviceManager* const ledManager = m_ledDeviceManager.data();
+    connect(m_pluginInterface, SIGNAL(updateDeviceLockStatus(DeviceLocked::DeviceLockStatus, QList<QString>)),
+            this, SLOT(setDeviceLockViaAPI(DeviceLocked::DeviceLockStatus, QList<QString>)));
+    connect(m_pluginInterface, SIGNAL(updateLedsColors(const QList<QRgb> &)),
+            ledManager, SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
+    connect(m_pluginInterface, SIGNAL(updateGamma(double)),
+            ledManager, SLOT(setGamma(double)), Qt::QueuedConnection);
+    connect(m_pluginInterface, SIGNAL(updateBrightness(int)),
+            ledManager, SLOT(setBrightness(int)), Qt::QueuedConnection);
+    connect(m_pluginInterface, SIGNAL(updateSmooth(int)),
+            ledManager, SLOT(setSmoothSlowdown(int)), Qt::QueuedConnection);
+    connect(m_pluginInterface, SIGNAL(requestBacklightStatus()),
+            this, SLOT(requestBacklightStatus()));
 
     // LedDeviceManager connections.
-    connect(settings(), SIGNAL(deviceColorDepthChanged(int)),       m_ledDeviceManager, SLOT(setColorDepth(int)), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(deviceSmoothChanged(int)),           m_ledDeviceManager, SLOT(setSmoothSlowdown(int)), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(deviceRefreshDelayChanged(int)),     m_ledDeviceManager, SLOT(setRefreshDelay(int)), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(deviceGammaChanged(double)),         m_ledDeviceManager, SLOT(setGamma(double)), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(deviceBrightnessChanged(int)),       m_ledDeviceManager, SLOT(setBrightness(int)), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(luminosityThresholdChanged(int))      ,m_ledDeviceManager, SLOT(setLuminosityThreshold(int)), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(minimumLuminosityEnabledChanged(bool)),m_ledDeviceManager, SLOT(setMinimumLuminosityEnabled(bool)), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(ledCoefBlueChanged(int,double))  ,m_ledDeviceManager, SLOT(updateWBAdjustments()), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(ledCoefRedChanged(int,double))   ,m_ledDeviceManager, SLOT(updateWBAdjustments()), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(ledCoefGreenChanged(int,double)) ,m_ledDeviceManager, SLOT(updateWBAdjustments()), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(deviceColorDepthChanged(int)),
+            ledManager, SLOT(setColorDepth(int)), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(deviceSmoothChanged(int)),
+            ledManager, SLOT(setSmoothSlowdown(int)), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(deviceRefreshDelayChanged(int)),
+            ledManager, SLOT(setRefreshDelay(int)), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(deviceGammaChanged(double)),
+            ledManager, SLOT(setGamma(double)), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(deviceBrightnessChanged(int)),
+            ledManager, SLOT(setBrightness(int)), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(luminosityThresholdChanged(int)),
+            ledManager, SLOT(setLuminosityThreshold(int)), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(minimumLuminosityEnabledChanged(bool)),
+            ledManager, SLOT(setMinimumLuminosityEnabled(bool)), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(ledCoefBlueChanged(int,double)),
+            ledManager, SLOT(updateWBAdjustments()), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(ledCoefRedChanged(int,double)),
+            ledManager, SLOT(updateWBAdjustments()), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(ledCoefGreenChanged(int,double)),
+            ledManager, SLOT(updateWBAdjustments()), Qt::QueuedConnection);
 
     if (m_noGui) {
         connect(m_pluginInterface, SIGNAL(updateProfile(QString)),
@@ -531,25 +548,25 @@ void LightpackApplication::startLedDeviceManager()
         connect(m_pluginInterface, SIGNAL(updateStatus(Backlight::Status)),
                 window, SLOT(setBacklightStatus(Backlight::Status)));
         connect(window, SIGNAL(requestFirmwareVersion()),
-                m_ledDeviceManager, SLOT(requestFirmwareVersion()), Qt::QueuedConnection);
+                ledManager, SLOT(requestFirmwareVersion()), Qt::QueuedConnection);
         connect(window, SIGNAL(switchOffLeds()),
-                m_ledDeviceManager, SLOT(switchOffLeds()), Qt::QueuedConnection);
+                ledManager, SLOT(switchOffLeds()), Qt::QueuedConnection);
         connect(window, SIGNAL(switchOnLeds()),
-                m_ledDeviceManager, SLOT(switchOnLeds()), Qt::QueuedConnection);
-        connect(m_ledDeviceManager, SIGNAL(openDeviceSuccess(bool)),
+                ledManager, SLOT(switchOnLeds()), Qt::QueuedConnection);
+        connect(ledManager, SIGNAL(openDeviceSuccess(bool)),
                 window, SLOT(ledDeviceOpenSuccess(bool)), Qt::QueuedConnection);
-        connect(m_ledDeviceManager, SIGNAL(ioDeviceSuccess(bool)),
+        connect(ledManager, SIGNAL(ioDeviceSuccess(bool)),
                 window, SLOT(ledDeviceCallSuccess(bool)), Qt::QueuedConnection);
-        connect(m_ledDeviceManager, SIGNAL(firmwareVersion(QString)),
+        connect(ledManager, SIGNAL(firmwareVersion(QString)),
                 window, SLOT(ledDeviceFirmwareVersionResult(QString)), Qt::QueuedConnection);
-        connect(m_ledDeviceManager, SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)),
+        connect(ledManager, SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)),
                 window, SLOT(updateVirtualLedsColors(QList<QRgb>)), Qt::QueuedConnection);
     }
     m_ledDeviceManager->moveToThread(m_LedDeviceManagerThread);
-    connect(m_ledDeviceManager, SIGNAL(finished()), m_LedDeviceManagerThread, SLOT(quit()));
+    connect(ledManager, SIGNAL(finished()), m_LedDeviceManagerThread, SLOT(quit()));
     connect(m_LedDeviceManagerThread, SIGNAL(finished()), m_LedDeviceManagerThread, SLOT(deleteLater()));
     m_LedDeviceManagerThread->start();
-    QMetaObject::invokeMethod(m_ledDeviceManager, "init", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(m_ledDeviceManager.data(), "init", Qt::QueuedConnection);
 
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "end";
 
@@ -608,9 +625,9 @@ void LightpackApplication::initGrabManager()
     }
 
     connect(m_grabManager, SIGNAL(updateLedsColors(const QList<QRgb> &)),
-            m_ledDeviceManager, SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
+            m_ledDeviceManager.data(), SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
     connect(m_moodlampManager, SIGNAL(updateLedsColors(const QList<QRgb> &)),
-            m_ledDeviceManager, SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
+            m_ledDeviceManager.data(), SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
     connect(m_grabManager, SIGNAL(updateLedsColors(const QList<QRgb> &)),
             m_pluginInterface, SLOT(updateColors(const QList<QRgb> &)), Qt::QueuedConnection);
     connect(m_moodlampManager, SIGNAL(updateLedsColors(const QList<QRgb> &)),
@@ -632,9 +649,9 @@ void LightpackApplication::commitData(QSessionManager &sessionManager)
     {
         // Disable signals with new colors
         disconnect(m_settingsWindow.data(), SIGNAL(updateLedsColors(QList<QRgb>)),
-                   m_ledDeviceManager, SLOT(setColors(QList<QRgb>)));
+                   m_ledDeviceManager.data(), SLOT(setColors(QList<QRgb>)));
         disconnect(m_apiServer.data(), SIGNAL(updateLedsColors(QList<QRgb>)),
-                   m_ledDeviceManager, SLOT(setColors(QList<QRgb>)));
+                   m_ledDeviceManager.data(), SLOT(setColors(QList<QRgb>)));
 
         // Process all currently pending signals
         QApplication::processEvents(QEventLoop::AllEvents, 1000);
@@ -726,12 +743,11 @@ void LightpackApplication::free()
     delete m_pluginManager;
     delete m_moodlampManager;
     delete m_grabManager;
-    delete m_ledDeviceManager;
+    m_ledDeviceManager.reset();
 
     m_pluginManager = NULL;
     m_moodlampManager = NULL;
     m_grabManager = NULL;
-    m_ledDeviceManager = NULL;
 
     QApplication::processEvents(QEventLoop::AllEvents, 1000);
 }
