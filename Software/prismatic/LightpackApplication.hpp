@@ -108,13 +108,15 @@ private:
     virtual void commitData(QSessionManager &sessionManager);
 
 private:
+    const GrabManager* grabManager() const { return m_grabManager.data(); }
+
     QMutex m_mutex;
     QScopedPointer<SettingsWindow> m_settingsWindow;
     QScopedPointer<ApiServer> m_apiServer;
     QScopedPointer<LedDeviceManager> m_ledDeviceManager;
     QThread *m_LedDeviceManagerThread;
     QThread *m_apiServerThread;
-    GrabManager *m_grabManager;
+    QScopedPointer<GrabManager> m_grabManager;
     MoodLampManager *m_moodlampManager;
 
     PluginsManager *m_pluginManager;
