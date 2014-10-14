@@ -27,6 +27,7 @@
 #pragma once
 
 #include <QScopedPointer>
+#include <QSharedPointer>
 
 #include "EndSessionDetector.hpp"
 #include "LedDeviceManager.hpp"
@@ -102,12 +103,9 @@ private:
     void initGrabManager();
     void startPluginManager();
     void startBacklight();
-
     void runWizardLoop(bool isInitFromSettings);
-
     virtual void commitData(QSessionManager &sessionManager);
 
-private:
     // Helper getters for using in connect/disconnect
     const GrabManager* grabManager() const { return m_grabManager.data(); }
     const MoodLampManager* moodLampManager() const {
@@ -141,5 +139,5 @@ private:
     Backlight::Status m_backlightStatus;
 
     typedef std::vector<QSharedPointer<QAbstractNativeEventFilter> > EventFilters;
-    EventFilters m_EventFilters;
+    EventFilters m_eventFilters;
 };
