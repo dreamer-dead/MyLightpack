@@ -176,6 +176,10 @@ ApiServer::ApiServer(quint16 port, QObject *parent)
     }
 }
 
+ApiServer::~ApiServer() {
+    DEBUG_LOW_LEVEL << Q_FUNC_INFO;
+}
+
 void ApiServer::setInterface(LightpackPluginInterface *lightpackInterface)
 {
     QString test = lightpack->Version();
