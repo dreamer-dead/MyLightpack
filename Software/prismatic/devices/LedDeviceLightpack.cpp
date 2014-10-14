@@ -77,8 +77,6 @@ void LedDeviceLightpack::setColors(const QList<QRgb> & colors)
         return;
     }
 
-//    QMutexLocker locker(&getLightpackApp()->m_mutex);
-
     resizeColorsBuffer(colors.count());
 
     // Save colors for showing changes of the brightness
