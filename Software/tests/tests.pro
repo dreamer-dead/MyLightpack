@@ -13,6 +13,7 @@ CONFIG     += console
 CONFIG     -= app_bundle
 
 CONFIG(gcc):QMAKE_CXXFLAGS += -std=c++11
+CONFIG(clang):QMAKE_CXXFLAGS += -std=c++11
 
 # QMake and GCC produce a lot of stuff
 OBJECTS_DIR = tests_stuff
