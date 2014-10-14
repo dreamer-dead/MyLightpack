@@ -600,17 +600,22 @@ void LightpackApplication::startPluginManager()
 void LightpackApplication::initGrabManager()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-    m_grabManager = new GrabManager(NULL);
+    m_grabManager.reset(new GrabManager(NULL));
     m_moodlampManager = new MoodLampManager(NULL);
 
     m_moodlampManager->initFromSettings();
 
-    connect(settings(), SIGNAL(grabberTypeChanged(const Grab::GrabberType &)), m_grabManager, SLOT(onGrabberTypeChanged(const Grab::GrabberType &)), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(grabSlowdownChanged(int)), m_grabManager, SLOT(onGrabSlowdownChanged(int)), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(grabAvgColorsEnabledChanged(bool)), m_grabManager, SLOT(onGrabAvgColorsEnabledChanged(bool)), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(grabberTypeChanged(const Grab::GrabberType &)),
+            grabManager(), SLOT(onGrabberTypeChanged(const Grab::GrabberType &)), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(grabSlowdownChanged(int)),
+            grabManager(), SLOT(onGrabSlowdownChanged(int)), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(grabAvgColorsEnabledChanged(bool)),
+            grabManager(), SLOT(onGrabAvgColorsEnabledChanged(bool)), Qt::QueuedConnection);
 
-    connect(settings(), SIGNAL(profileLoaded(const QString &)),        m_grabManager, SLOT(settingsProfileChanged(const QString &)), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(currentProfileInited(const QString &)), m_grabManager, SLOT(settingsProfileChanged(const QString &)), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(profileLoaded(const QString &)),
+            grabManager(), SLOT(settingsProfileChanged(const QString &)), Qt::QueuedConnection);
+    connect(settings(), SIGNAL(currentProfileInited(const QString &)),
+            grabManager(), SLOT(settingsProfileChanged(const QString &)), Qt::QueuedConnection);
     // Connections to signals which will be connected to ILedDevice
     if (!m_noGui)
     {
@@ -620,21 +625,21 @@ void LightpackApplication::initGrabManager()
                 this, SLOT(setColoredLedWidget(bool)));
 
         // GrabManager to this
-        connect(m_grabManager, SIGNAL(ambilightTimeOfUpdatingColors(double)),
+        connect(grabManager(), SIGNAL(ambilightTimeOfUpdatingColors(double)),
                 m_settingsWindow.data(), SLOT(refreshAmbilightEvaluated(double)));
     }
 
-    connect(m_grabManager, SIGNAL(updateLedsColors(const QList<QRgb> &)),
+    connect(grabManager(), SIGNAL(updateLedsColors(const QList<QRgb> &)),
             m_ledDeviceManager.data(), SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
     connect(m_moodlampManager, SIGNAL(updateLedsColors(const QList<QRgb> &)),
             m_ledDeviceManager.data(), SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
-    connect(m_grabManager, SIGNAL(updateLedsColors(const QList<QRgb> &)),
+    connect(grabManager(), SIGNAL(updateLedsColors(const QList<QRgb> &)),
             m_pluginInterface, SLOT(updateColors(const QList<QRgb> &)), Qt::QueuedConnection);
     connect(m_moodlampManager, SIGNAL(updateLedsColors(const QList<QRgb> &)),
             m_pluginInterface, SLOT(updateColors(const QList<QRgb> &)), Qt::QueuedConnection);
-    connect(m_grabManager, SIGNAL(ambilightTimeOfUpdatingColors(double)),
+    connect(grabManager(), SIGNAL(ambilightTimeOfUpdatingColors(double)),
             m_pluginInterface, SLOT(refreshAmbilightEvaluated(double)));
-    connect(m_grabManager, SIGNAL(changeScreen(QRect)),
+    connect(grabManager(), SIGNAL(changeScreen(QRect)),
             m_pluginInterface, SLOT(refreshScreenRect(QRect)));
 
 }
@@ -742,12 +747,12 @@ void LightpackApplication::free()
 
     delete m_pluginManager;
     delete m_moodlampManager;
-    delete m_grabManager;
+    // Manual reset for objects.
+    m_grabManager.reset();
     m_ledDeviceManager.reset();
 
     m_pluginManager = NULL;
     m_moodlampManager = NULL;
-    m_grabManager = NULL;
 
     QApplication::processEvents(QEventLoop::AllEvents, 1000);
 }
