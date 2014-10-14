@@ -26,9 +26,11 @@
 
 #pragma once
 
+#include <QScopedPointer>
+
+#include "EndSessionDetector.hpp"
 #include "LedDeviceManager.hpp"
 #include "qtsingleapplication.h"
-#include "EndSessionDetector.hpp"
 
 #define getLightpackApp() static_cast<LightpackApplication *>(QCoreApplication::instance())
 
@@ -48,13 +50,14 @@ class LightpackApplication : public QtSingleApplication
     Q_OBJECT
 public:
     LightpackApplication(int &argc, char **argv);
+    ~LightpackApplication();
 
     void initializeAll(const QString & appDirPath);
 #ifdef Q_OS_WIN
     bool winEventFilter ( MSG * msg, long * result );
     HWND getMainWindowHandle();
 #endif
-    SettingsWindow * settingsWnd() const { return m_settingsWindow; }
+    SettingsWindow * settingsWnd() const { return m_settingsWindow.data(); }
     const SettingsScope::SettingsReader * settingsReader() const;
     SettingsScope::Settings * settings() const;
 
@@ -83,10 +86,8 @@ private slots:
     void setDeviceLockViaAPI(DeviceLocked::DeviceLockStatus status, QList<QString> modules);
     void profileSwitch(const QString & configName);
     void settingsChanged();
-//    void numberOfLedsChanged(int);
     void showLedWidgets(bool visible);
     void setColoredLedWidget(bool colored);
-//    void handleConnectedDeviceChange(const SupportedDevices::DeviceType);
     void onFocusChanged(QWidget *, QWidget *);
     void quitFromWizard(int result);
     void processMessageNoGUI(const QString&);
@@ -106,23 +107,18 @@ private:
 
     virtual void commitData(QSessionManager &sessionManager);
 
-public:
-    QMutex m_mutex;
-
 private:
-    SettingsWindow *m_settingsWindow;
-    ApiServer *m_apiServer;
+    QMutex m_mutex;
+    QScopedPointer<SettingsWindow> m_settingsWindow;
+    QScopedPointer<ApiServer> m_apiServer;
     LedDeviceManager *m_ledDeviceManager;
     QThread *m_LedDeviceManagerThread;
     QThread *m_apiServerThread;
     GrabManager *m_grabManager;
     MoodLampManager *m_moodlampManager;
-    QThread *m_grabManagerThread;
-    QThread *m_moodlampManagerThread;
 
     PluginsManager *m_pluginManager;
     LightpackPluginInterface *m_pluginInterface;
-    QThread* m_PluginThread;
     QWidget *consolePlugin;
 
     QString m_applicationDirPath;

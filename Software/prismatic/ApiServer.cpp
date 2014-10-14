@@ -1075,15 +1075,16 @@ void ApiServer::initApiSetColorTask()
     m_apiSetColorTask = new ApiServerSetColorTask();
     m_apiSetColorTask->setApiDeviceNumberOfLeds(m_settings->getNumberOfLeds(m_settings->getConnectedDevice()));
 
-    //connect(m_apiSetColorTask, SIGNAL(taskParseSetColorDone(QList<QRgb>)), this, SIGNAL(updateLedsColors(QList<QRgb>)), Qt::QueuedConnection);
     connect(m_apiSetColorTask, SIGNAL(taskParseSetColorIsSuccess(bool)), this, SLOT(taskSetColorIsSuccess(bool)), Qt::QueuedConnection);
-
     connect(this, SIGNAL(startParseSetColorTask(QByteArray)), m_apiSetColorTask, SLOT(startParseSetColorTask(QByteArray)), Qt::QueuedConnection);
     connect(this, SIGNAL(updateApiDeviceNumberOfLeds(int)),   m_apiSetColorTask, SLOT(setApiDeviceNumberOfLeds(int)), Qt::QueuedConnection);
     connect(this, SIGNAL(clearColorBuffers()),                m_apiSetColorTask, SLOT(reinitColorBuffers()));
 
-
     m_apiSetColorTask->moveToThread(m_apiSetColorTaskThread);
+    // Setup deleting sequence.
+    connect(this, SIGNAL(finished()), m_apiSetColorTaskThread, SLOT(quit()));
+    connect(m_apiSetColorTaskThread, SIGNAL(finished()),
+            m_apiSetColorTaskThread, SLOT(deleteLater()));
     m_apiSetColorTaskThread->start();
 }
 

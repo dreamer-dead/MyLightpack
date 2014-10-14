@@ -46,6 +46,8 @@ LedDeviceManager::LedDeviceManager(QObject *parent)
     m_isLastCommandCompleted = true;
 
     m_ledDeviceThread = new QThread();
+    connect(this, SIGNAL(finished()), m_ledDeviceThread, SLOT(quit()));
+    connect(m_ledDeviceThread, SIGNAL(finished()), m_ledDeviceThread, SLOT(deleteLater()));
 
     m_backlightStatus = Backlight::StatusOn;
 
@@ -61,7 +63,6 @@ LedDeviceManager::LedDeviceManager(QObject *parent)
 
 LedDeviceManager::~LedDeviceManager()
 {
-    m_ledDeviceThread->deleteLater();
     for (int i = 0; i < m_ledDevices.size(); i++) {
         if(m_ledDevices[i])
             m_ledDevices[i]->close();
