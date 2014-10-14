@@ -111,7 +111,7 @@ private:
     QMutex m_mutex;
     QScopedPointer<SettingsWindow> m_settingsWindow;
     QScopedPointer<ApiServer> m_apiServer;
-    LedDeviceManager *m_ledDeviceManager;
+    QScopedPointer<LedDeviceManager> m_ledDeviceManager;
     QThread *m_LedDeviceManagerThread;
     QThread *m_apiServerThread;
     GrabManager *m_grabManager;
