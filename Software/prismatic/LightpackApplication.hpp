@@ -108,7 +108,11 @@ private:
     virtual void commitData(QSessionManager &sessionManager);
 
 private:
+    // Helper getters for using in connect/disconnect
     const GrabManager* grabManager() const { return m_grabManager.data(); }
+    const MoodLampManager* moodLampManager() const {
+        return m_moodlampManager.data();
+    }
 
     QMutex m_mutex;
     QScopedPointer<SettingsWindow> m_settingsWindow;
@@ -117,7 +121,7 @@ private:
     QThread *m_LedDeviceManagerThread;
     QThread *m_apiServerThread;
     QScopedPointer<GrabManager> m_grabManager;
-    MoodLampManager *m_moodlampManager;
+    QScopedPointer<MoodLampManager> m_moodlampManager;
 
     PluginsManager *m_pluginManager;
     LightpackPluginInterface *m_pluginInterface;
