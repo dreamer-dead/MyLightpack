@@ -453,15 +453,14 @@ void LightpackApplication::startApiServer()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "Start API server";
 
-    m_apiServer.reset(new ApiServer());
+    m_apiServer = new ApiServer();
     m_apiServer->setInterface(m_pluginInterface.data());
     m_apiServerThread = new QThread();
 
-    const ApiServer* const api = m_apiServer.data();
     connect(this, SIGNAL(clearColorBuffers()),
-            m_apiServer.data(), SIGNAL(clearColorBuffers()));
+            m_apiServer, SIGNAL(clearColorBuffers()));
 
-    makeConnector(settings(), m_apiServer.data())
+    makeConnector(settings(), m_apiServer)
         .connect(SIGNAL(apiServerSettingsChanged()), SLOT(apiServerSettingsChanged()))
         .connect(SIGNAL(apiKeyChanged(const QString &)), SLOT(updateApiKey(const QString &)))
         .connect(SIGNAL(lightpackNumberOfLedsChanged(int)), SIGNAL(updateApiDeviceNumberOfLeds(int)))
@@ -471,7 +470,7 @@ void LightpackApplication::startApiServer()
 
     if (!m_noGui)
     {
-        connect(api, SIGNAL(errorOnStartListening(QString)),
+        connect(m_apiServer, SIGNAL(errorOnStartListening(QString)),
                 m_settingsWindow.data(), SLOT(onApiServer_ErrorOnStartListening(QString)));
     }
 
@@ -480,8 +479,6 @@ void LightpackApplication::startApiServer()
 
     m_apiServer->firstStart();
     m_apiServer->moveToThread(m_apiServerThread);
-    connect(m_apiServer.data(), SIGNAL(finished()), m_apiServerThread, SLOT(quit()));
-    deleteLaterOn(m_apiServer, SIGNAL(finished()));
     deleteLaterOn(m_apiServerThread, SIGNAL(finished()));
     m_apiServerThread->start();
 }
@@ -550,7 +547,6 @@ void LightpackApplication::startLedDeviceManager()
                      SLOT(updateVirtualLedsColors(QList<QRgb>)));
     }
     m_ledDeviceManager->moveToThread(m_ledDeviceManagerThread);
-    connect(m_ledDeviceManager.data(), SIGNAL(finished()), m_ledDeviceManagerThread, SLOT(quit()));
     deleteLaterOn(m_ledDeviceManagerThread, SIGNAL(finished()));
     m_ledDeviceManagerThread->start();
     QMetaObject::invokeMethod(m_ledDeviceManager.data(), "init", Qt::QueuedConnection);
@@ -639,7 +635,7 @@ void LightpackApplication::commitData(QSessionManager &sessionManager)
         // Disable signals with new colors
         disconnect(m_settingsWindow.data(), SIGNAL(updateLedsColors(QList<QRgb>)),
                    m_ledDeviceManager.data(), SLOT(setColors(QList<QRgb>)));
-        disconnect(m_apiServer.data(), SIGNAL(updateLedsColors(QList<QRgb>)),
+        disconnect(m_apiServer, SIGNAL(updateLedsColors(QList<QRgb>)),
                    m_ledDeviceManager.data(), SLOT(setColors(QList<QRgb>)));
 
         // Process all currently pending signals
@@ -726,20 +722,21 @@ void LightpackApplication::free()
     if (m_apiServer) {
         Q_ASSERT(m_apiServerThread);
         emit m_apiServer->finished();
-        Q_ASSERT(m_apiServerThread->wait(1000));
-        // Prevent deleting this object.
-        m_apiServer.reset();
+        m_apiServer->deleteLater();
+        m_apiServerThread->quit();
+        const bool threadJoined = m_apiServerThread->wait(1000);
+        Q_ASSERT(threadJoined);
     }
 
     if (m_ledDeviceManager) {
         Q_ASSERT(m_ledDeviceManagerThread);
         emit m_ledDeviceManager->finished();
-        Q_ASSERT(m_ledDeviceManagerThread->wait(1000));
-    }
-
-    // Manual reset for some objects.
-    if (m_ledDeviceManager) {
-        m_ledDeviceManager.reset();
+        m_ledDeviceManager->deleteLater();
+        m_ledDeviceManagerThread->quit();
+        const bool threadJoined = m_ledDeviceManagerThread->wait(1000);
+        Q_ASSERT(threadJoined);
+        // Prevent deleting this object.
+        m_ledDeviceManager.take();
     }
     QApplication::processEvents(QEventLoop::AllEvents, 1000);
 }
