@@ -2,12 +2,10 @@
 #define QTUTILS_HPP
 
 #include <QString>
-#include <QDir>
+#include <QScopedPointer>
 
 namespace QtUtils {
-QString pathCombine(const QString& path1, const QString& path2) {
-    return QDir::cleanPath(path1 + QDir::separator() + path2);
-}
+QString pathCombine(const QString& path1, const QString& path2);
 
 template <typename T1 = QObject, typename T2 = QObject>
 class Connector {
