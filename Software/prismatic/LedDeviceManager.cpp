@@ -63,6 +63,7 @@ LedDeviceManager::LedDeviceManager(QObject *parent)
 
 LedDeviceManager::~LedDeviceManager()
 {
+    DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     for (int i = 0; i < m_ledDevices.size(); i++) {
         if(m_ledDevices[i])
             m_ledDevices[i]->close();
