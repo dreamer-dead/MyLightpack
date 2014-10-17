@@ -1,6 +1,7 @@
 #ifndef QTUTILS_HPP
 #define QTUTILS_HPP
 
+#include <QObject>
 #include <QString>
 #include <QScopedPointer>
 

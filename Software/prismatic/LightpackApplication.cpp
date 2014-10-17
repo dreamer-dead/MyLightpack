@@ -40,7 +40,7 @@
 #include "SettingsDefaults.hpp"
 #include "devices/LedDeviceLightpack.hpp"
 #include "version.h"
-#include "common/QTUtils.hpp"
+#include "third_party/qtutils/include/QTUtils.hpp"
 #include "ui/SettingsWindow.hpp"
 #include "wizard/Wizard.hpp"
 
