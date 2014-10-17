@@ -1,7 +1,7 @@
 #include <QScopedPointer>
 
-#include "common/QTUtils.hpp"
 #include "gtest/gtest.h"
+#include "third_party/qtutils/include/QTUtils.hpp"
 
 namespace {
 // Helper class to get access to protected fields of QtUtils::Connector.
