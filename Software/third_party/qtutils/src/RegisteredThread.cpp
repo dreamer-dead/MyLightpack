@@ -1,5 +1,7 @@
 #include "RegisteredThread.hpp"
 
+#include <QDebug>
+
 namespace {
 static size_t g_threadsCount = 0;
 }  // namespace
@@ -15,5 +17,9 @@ size_t registerThread(const QThread* thread, const char* location, int line) {
 void deregisterThread(const QThread* thread) {
     --g_threadsCount;
     qDebug() << "deregisterThread(" << thread << "), count =" << g_threadsCount;
+}
+
+size_t registeredThreadsCount() {
+    return g_threadsCount;
 }
 }

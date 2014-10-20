@@ -37,6 +37,7 @@
 #include "enums.hpp"
 #include "gtest/gtest.h"
 #include "mocks/SettingsWindowMockup.hpp"
+#include "third_party/qtutils/include/ThreadedObject.hpp"
 
 using namespace std;
 using namespace SettingsScope;
@@ -106,8 +107,7 @@ protected:
 protected:
     static const quint16 kApiPort = 3636;
 
-    QScopedPointer<ApiServer> m_apiServer;
-    QScopedPointer<QThread> m_apiServerThread;
+    QtUtils::ThreadedObject<ApiServer> m_apiServer;
     QScopedPointer<LightpackPluginInterface> m_interfaceApi;
     QScopedPointer<SettingsWindowMockup> m_little;
 
@@ -131,22 +131,13 @@ void LightpackApiTest::SetUp()
     EXPECT_TRUE(Settings::instance());
 
     // Start Api Server in separate thread for access by QTcpSocket-s
-    m_apiServer.reset(new ApiServer(kApiPort));
+    QScopedPointer<ApiServer> apiServer(new ApiServer(kApiPort));
     m_interfaceApi.reset(new LightpackPluginInterface());
-    m_apiServer->setInterface(m_interfaceApi.data());
-    m_apiServerThread.reset(new QThread());
-
-    m_apiServer->moveToThread(m_apiServerThread.data());
-
-    QObject::connect(m_apiServer.data(), SIGNAL(finished()), m_apiServerThread.data(), SLOT(quit()));
-    QObject::connect(m_apiServer.data(), SIGNAL(finished()), m_apiServer.data(), SLOT(deleteLater()));
-    QObject::connect(m_apiServerThread.data(), SIGNAL(finished()), m_apiServerThread.data(), SLOT(deleteLater()));
+    apiServer->setInterface(m_interfaceApi.data());
 
     m_little.reset(new SettingsWindowMockup(NULL));
 
-    QObject::connect(m_little.data(), SIGNAL(enableApiServer(bool)), m_apiServer.data(), SLOT(enableApiServer(bool)), Qt::DirectConnection);
-    QObject::connect(m_little.data(), SIGNAL(updateApiKey(QString)), m_apiServer.data(), SLOT(updateApiKey(QString)), Qt::DirectConnection);
-    QObject::connect(m_little.data(), SIGNAL(updateApiPort(int)), m_apiServer.data(), SLOT(updateApiPort(int)), Qt::DirectConnection);
+    QObject::connect(m_little.data(), SIGNAL(updateApiKey(QString)), apiServer.data(), SLOT(updateApiKey(QString)), Qt::DirectConnection);
 
     QObject::connect(m_interfaceApi.data(), SIGNAL(requestBacklightStatus()), m_little.data(), SLOT(requestBacklightStatus()), Qt::QueuedConnection);
     QObject::connect(m_little.data(), SIGNAL(resultBacklightStatus(Backlight::Status)), m_interfaceApi.data(), SLOT(resultBacklightStatus(Backlight::Status)));
@@ -159,7 +150,7 @@ void LightpackApiTest::SetUp()
     QObject::connect(m_interfaceApi.data(), SIGNAL(updateStatus(Backlight::Status)), m_little.data(), SLOT(setStatus(Backlight::Status)), Qt::QueuedConnection);
 
     m_little->setApiKey("");
-    m_apiServerThread->start();
+    m_apiServer.init(apiServer.take());
 
     m_socket.reset(new QTcpSocket());
 
@@ -180,8 +171,9 @@ void LightpackApiTest::TearDown()
     m_socket->abort();
     m_socket.reset();
 
-    emit m_apiServer->finished();
-    m_apiServerThread->wait();
+    emit m_apiServer.get()->finished();
+    const bool joined = m_apiServer.join(1000);
+    Q_ASSERT(joined);
     Settings::Shutdown();
     EXPECT_FALSE(Settings::instance());
 }

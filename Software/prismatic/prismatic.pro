@@ -10,9 +10,11 @@ TARGET      = Prismatik
 CONFIG(msvc) {
     PRE_TARGETDEPS += ../lib/grab.lib
     PRE_TARGETDEPS += ../lib/hidapi.lib
+    PRE_TARGETDEPS += ../lib/qtutils.lib
 } else {
     PRE_TARGETDEPS += ../lib/libgrab.a
     PRE_TARGETDEPS += ../lib/libhidapi.a
+    PRE_TARGETDEPS += ../lib/libqtutils.a
 }
 DESTDIR     = bin
 TEMPLATE    = app
@@ -58,7 +60,7 @@ include(../build-config.prf)
 include(../grab/configure-grabbers.prf)
 DEFINES += $${SUPPORTED_GRABBERS}
 
-LIBS    += -L../lib -lgrab -lprismatik-math -lhidapi
+LIBS    += -L../lib -lgrab -lprismatik-math -lhidapi -lqtutils
 
 unix:!macx{
     CONFIG    += link_pkgconfig debug

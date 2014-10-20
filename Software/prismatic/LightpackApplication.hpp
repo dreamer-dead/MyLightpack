@@ -32,6 +32,7 @@
 #include "EndSessionDetector.hpp"
 #include "LedDeviceManager.hpp"
 #include "qtsingleapplication.h"
+#include "third_party/qtutils/include/ThreadedObject.hpp"
 
 #define getLightpackApp() static_cast<LightpackApplication *>(QCoreApplication::instance())
 
@@ -119,12 +120,20 @@ private:
         return m_pluginInterface.data();
     }
 
+    ApiServer* apiServer() const { return m_apiServer.get(); }
+    LedDeviceManager* ledDeviceManager() const { return m_ledDeviceManager.get(); }
+
+    struct ExitedThreadsGuard {
+        ~ExitedThreadsGuard();
+    };
+
+    // This must be the first member in class!
+    ExitedThreadsGuard m_threadsGuard;
+
     QScopedPointer<SettingsWindow> m_settingsWindow;
-    QScopedPointer<LedDeviceManager> m_ledDeviceManager;
     // These objects will be deleted by their deleteLater slots.
-    ApiServer* m_apiServer;
-    QThread* m_ledDeviceManagerThread;
-    QThread* m_apiServerThread;
+    QtUtils::ThreadedObject<ApiServer> m_apiServer;
+    QtUtils::ThreadedObject<LedDeviceManager> m_ledDeviceManager;
     QScopedPointer<GrabManager> m_grabManager;
     QScopedPointer<MoodLampManager> m_moodlampManager;
     QScopedPointer<PluginsManager> m_pluginManager;

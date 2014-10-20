@@ -32,7 +32,7 @@
 TEMPLATE = subdirs
 CONFIG += ordered
 
-SUBDIRS = math grab third_party/hidapi
+SUBDIRS = math grab third_party/hidapi third_party/qtutils
 
 win32:SUBDIRS += libraryinjector hooks
 SUBDIRS += prismatic tests

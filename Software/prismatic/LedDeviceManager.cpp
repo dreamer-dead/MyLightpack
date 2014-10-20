@@ -37,24 +37,18 @@
 #include "devices/LedDeviceArdulight.hpp"
 #include "devices/LedDeviceVirtual.hpp"
 #include "Settings.hpp"
+#include "third_party/qtutils/include/QTUtils.hpp"
 
 using namespace SettingsScope;
 
 LedDeviceManager::LedDeviceManager(QObject *parent)
     : QObject(parent)
+    , m_isLastCommandCompleted(true)
+    , m_isColorsSaved(false)
+    , m_backlightStatus(Backlight::StatusOn)
+    , m_ledDevice(CURRENT_LOCATION)
+    , m_cmdTimeoutTimer(NULL)
 {
-    m_isLastCommandCompleted = true;
-
-    m_ledDeviceThread = new QThread();
-    connect(this, SIGNAL(finished()), m_ledDeviceThread, SLOT(quit()));
-    connect(m_ledDeviceThread, SIGNAL(finished()), m_ledDeviceThread, SLOT(deleteLater()));
-
-    m_backlightStatus = Backlight::StatusOn;
-
-    m_isColorsSaved = false;
-
-    m_cmdTimeoutTimer = NULL;
-
     for (int i = 0; i < SupportedDevices::DeviceTypesCount; i++)
         m_ledDevices.append(NULL);
 
@@ -67,7 +61,13 @@ LedDeviceManager::~LedDeviceManager()
     for (int i = 0; i < m_ledDevices.size(); i++) {
         if(m_ledDevices[i])
             m_ledDevices[i]->close();
+
+        if (m_ledDevices[i] != m_ledDevice.get())
+            delete m_ledDevices[i];
     }
+    const bool joined = m_ledDevice.join(1000);
+    Q_ASSERT(joined);
+    Q_UNUSED(joined);
 
     if (m_cmdTimeoutTimer)
         delete m_cmdTimeoutTimer;
@@ -89,7 +89,7 @@ void LedDeviceManager::recreateLedDevice(const SupportedDevices::DeviceType devi
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     Q_UNUSED(deviceType)
 
-    disconnectSignalSlotsLedDevice();
+    disconnectCurrentLedDevice();
 
     initLedDevice();
 }
@@ -339,18 +339,12 @@ void LedDeviceManager::initLedDevice()
 
     if (m_ledDevices[connectedDevice] == NULL)
     {
-        m_ledDevice = m_ledDevices[connectedDevice] = createLedDevice(connectedDevice);
-
-        connectSignalSlotsLedDevice();
-
-        m_ledDevice->moveToThread(m_ledDeviceThread);
-        m_ledDeviceThread->start();
+        m_ledDevices[connectedDevice] = createLedDevice(connectedDevice);
+        connectLedDevice(m_ledDevices[connectedDevice]);
     } else {
-        disconnectSignalSlotsLedDevice();
-
-        m_ledDevice = m_ledDevices[connectedDevice];
-
-        connectSignalSlotsLedDevice();
+        Q_ASSERT(m_ledDevices[connectedDevice] != m_ledDevice.get());
+        disconnectCurrentLedDevice();
+        connectLedDevice(m_ledDevices[connectedDevice]);
     }
     emit ledDeviceUpdateDeviceSettings();
     emit ledDeviceOpen();
@@ -411,66 +405,73 @@ AbstractLedDevice * LedDeviceManager::createLedDevice(SupportedDevices::DeviceTy
     return NULL; // Avoid compiler warning
 }
 
-void LedDeviceManager::connectSignalSlotsLedDevice()
-{
-    if (m_ledDevice == NULL)
-    {
-        qWarning() << Q_FUNC_INFO << "m_ledDevice == NULL";
+void LedDeviceManager::connectLedDevice(AbstractLedDevice * device) {
+    if (device == NULL) {
+        qWarning() << Q_FUNC_INFO << "device == NULL";
         return;
     }
 
-    connect(m_ledDevice, SIGNAL(commandCompleted(bool)),        this, SLOT(ledDeviceCommandCompleted(bool)), Qt::QueuedConnection);
+    QtUtils::makeQueuedConnector(device, this)
+        .connect(SIGNAL(commandCompleted(bool)), SLOT(ledDeviceCommandCompleted(bool)))
+        .connect(SIGNAL(firmwareVersion(QString)), SIGNAL(firmwareVersion(QString)))
+        .connect(SIGNAL(ioDeviceSuccess(bool)), SIGNAL(ioDeviceSuccess(bool)))
+        .connect(SIGNAL(openDeviceSuccess(bool)), SIGNAL(openDeviceSuccess(bool)))
+        .connect(SIGNAL(colorsUpdated(QList<QRgb>)),
+                 SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)));
 
-    connect(m_ledDevice, SIGNAL(firmwareVersion(QString)),      this, SIGNAL(firmwareVersion(QString)), Qt::QueuedConnection);
-    connect(m_ledDevice, SIGNAL(ioDeviceSuccess(bool)),         this, SIGNAL(ioDeviceSuccess(bool)), Qt::QueuedConnection);
-    connect(m_ledDevice, SIGNAL(openDeviceSuccess(bool)),       this, SIGNAL(openDeviceSuccess(bool)), Qt::QueuedConnection);    
-    connect(m_ledDevice, SIGNAL(colorsUpdated(QList<QRgb>)),    this, SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)), Qt::QueuedConnection);
+    QtUtils::makeQueuedConnector(this, device)
+        .connect(SIGNAL(ledDeviceOpen()), SLOT(open()))
+        .connect(SIGNAL(ledDeviceSetColors(QList<QRgb>)), SLOT(setColors(QList<QRgb>)))
+        .connect(SIGNAL(ledDeviceOffLeds()), SLOT(switchOffLeds()))
+        .connect(SIGNAL(ledDeviceSetRefreshDelay(int)), SLOT(setRefreshDelay(int)))
+        .connect(SIGNAL(ledDeviceSetColorDepth(int)), SLOT(setColorDepth(int)))
+        .connect(SIGNAL(ledDeviceSetSmoothSlowdown(int)), SLOT(setSmoothSlowdown(int)))
+        .connect(SIGNAL(ledDeviceSetGamma(double)), SLOT(setGamma(double)))
+        .connect(SIGNAL(ledDeviceSetBrightness(int)), SLOT(setBrightness(int)))
+        .connect(SIGNAL(ledDeviceSetColorSequence(QString)), SLOT(setColorSequence(QString)))
+        .connect(SIGNAL(ledDeviceSetLuminosityThreshold(int)) ,SLOT(setLuminosityThreshold(int)))
+        .connect(SIGNAL(ledDeviceSetMinimumLuminosityEnabled(bool)),
+                 SLOT(setMinimumLuminosityThresholdEnabled(bool)))
+        .connect(SIGNAL(ledDeviceRequestFirmwareVersion()), SLOT(requestFirmwareVersion()))
+        .connect(SIGNAL(ledDeviceUpdateWBAdjustments()), SLOT(updateDeviceSettings()))
+        .connect(SIGNAL(ledDeviceUpdateDeviceSettings()), SLOT(updateDeviceSettings()));
 
-    connect(this, SIGNAL(ledDeviceOpen()),                      m_ledDevice, SLOT(open()), Qt::QueuedConnection);
-    connect(this, SIGNAL(ledDeviceSetColors(QList<QRgb>)),      m_ledDevice, SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
-    connect(this, SIGNAL(ledDeviceOffLeds()),                   m_ledDevice, SLOT(switchOffLeds()), Qt::QueuedConnection);
-    connect(this, SIGNAL(ledDeviceSetRefreshDelay(int)),        m_ledDevice, SLOT(setRefreshDelay(int)), Qt::QueuedConnection);
-    connect(this, SIGNAL(ledDeviceSetColorDepth(int)),          m_ledDevice, SLOT(setColorDepth(int)), Qt::QueuedConnection);
-    connect(this, SIGNAL(ledDeviceSetSmoothSlowdown(int)),      m_ledDevice, SLOT(setSmoothSlowdown(int)), Qt::QueuedConnection);
-    connect(this, SIGNAL(ledDeviceSetGamma(double)),            m_ledDevice, SLOT(setGamma(double)), Qt::QueuedConnection);
-    connect(this, SIGNAL(ledDeviceSetBrightness(int)),          m_ledDevice, SLOT(setBrightness(int)), Qt::QueuedConnection);
-    connect(this, SIGNAL(ledDeviceSetColorSequence(QString)),   m_ledDevice, SLOT(setColorSequence(QString)), Qt::QueuedConnection);
-    connect(this, SIGNAL(ledDeviceSetLuminosityThreshold(int))      ,m_ledDevice, SLOT(setLuminosityThreshold(int)));
-    connect(this, SIGNAL(ledDeviceSetMinimumLuminosityEnabled(bool)),m_ledDevice, SLOT(setMinimumLuminosityThresholdEnabled(bool)));
-    connect(this, SIGNAL(ledDeviceRequestFirmwareVersion()),    m_ledDevice, SLOT(requestFirmwareVersion()), Qt::QueuedConnection);
-    connect(this, SIGNAL(ledDeviceUpdateWBAdjustments()),       m_ledDevice, SLOT(updateDeviceSettings()),  Qt::QueuedConnection);
-    connect(this, SIGNAL(ledDeviceUpdateDeviceSettings()),      m_ledDevice, SLOT(updateDeviceSettings()), Qt::QueuedConnection);
+    m_ledDevice.init(device);
 }
 
-void LedDeviceManager::disconnectSignalSlotsLedDevice()
+void LedDeviceManager::disconnectCurrentLedDevice()
 {
-    if (m_ledDevice == NULL)
+    const AbstractLedDevice* const device = m_ledDevice.get();
+    if (device == NULL)
     {
-        qWarning() << Q_FUNC_INFO << "m_ledDevice == NULL";
+        qWarning() << Q_FUNC_INFO << "device == NULL";
         return;
     }
 
-    disconnect(m_ledDevice, SIGNAL(commandCompleted(bool)),     this, SLOT(ledDeviceCommandCompleted(bool)));
+    QtUtils::makeConnector(device, this)
+        .disconnect(SIGNAL(commandCompleted(bool)), SLOT(ledDeviceCommandCompleted(bool)))
+        .disconnect(SIGNAL(firmwareVersion(QString)), SIGNAL(firmwareVersion(QString)))
+        .disconnect(SIGNAL(ioDeviceSuccess(bool)), SIGNAL(ioDeviceSuccess(bool)))
+        .disconnect(SIGNAL(openDeviceSuccess(bool)), SIGNAL(openDeviceSuccess(bool)))
+        .disconnect(SIGNAL(colorsUpdated(QList<QRgb>)),
+                    SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)));
 
-    disconnect(m_ledDevice, SIGNAL(firmwareVersion(QString)),   this, SIGNAL(firmwareVersion(QString)));
-    disconnect(m_ledDevice, SIGNAL(ioDeviceSuccess(bool)),      this, SIGNAL(ioDeviceSuccess(bool)));
-    disconnect(m_ledDevice, SIGNAL(openDeviceSuccess(bool)),    this, SIGNAL(openDeviceSuccess(bool)));
-    disconnect(m_ledDevice, SIGNAL(colorsUpdated(QList<QRgb>)), this, SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)));
-
-    disconnect(this, SIGNAL(ledDeviceOpen()),                   m_ledDevice, SLOT(open()));
-    disconnect(this, SIGNAL(ledDeviceSetColors(QList<QRgb>)),   m_ledDevice, SLOT(setColors(QList<QRgb>)));
-    disconnect(this, SIGNAL(ledDeviceOffLeds()),                m_ledDevice, SLOT(switchOffLeds()));
-    disconnect(this, SIGNAL(ledDeviceSetRefreshDelay(int)),     m_ledDevice, SLOT(setRefreshDelay(int)));
-    disconnect(this, SIGNAL(ledDeviceSetColorDepth(int)),       m_ledDevice, SLOT(setColorDepth(int)));
-    disconnect(this, SIGNAL(ledDeviceSetSmoothSlowdown(int)),   m_ledDevice, SLOT(setSmoothSlowdown(int)));
-    disconnect(this, SIGNAL(ledDeviceSetGamma(double)),         m_ledDevice, SLOT(setGamma(double)));
-    disconnect(this, SIGNAL(ledDeviceSetBrightness(int)),       m_ledDevice, SLOT(setBrightness(int)));
-    disconnect(this, SIGNAL(ledDeviceSetColorSequence(QString)),m_ledDevice, SLOT(setColorSequence(QString)));
-    disconnect(this, SIGNAL(ledDeviceSetLuminosityThreshold(int))      ,m_ledDevice, SLOT(setLuminosityThreshold(int)));
-    disconnect(this, SIGNAL(ledDeviceSetMinimumLuminosityEnabled(bool)),m_ledDevice, SLOT(setMinimumLuminosityThresholdEnabled(bool)));
-    disconnect(this, SIGNAL(ledDeviceRequestFirmwareVersion()), m_ledDevice, SLOT(requestFirmwareVersion()));
-    disconnect(this, SIGNAL(ledDeviceUpdateWBAdjustments()),    m_ledDevice, SLOT(updateDeviceSettings()));
-    disconnect(this, SIGNAL(ledDeviceUpdateDeviceSettings()),   m_ledDevice, SLOT(updateDeviceSettings()));
+    QtUtils::makeConnector(this, device)
+        .disconnect(SIGNAL(ledDeviceOpen()), SLOT(open()))
+        .disconnect(SIGNAL(ledDeviceSetColors(QList<QRgb>)), SLOT(setColors(QList<QRgb>)))
+        .disconnect(SIGNAL(ledDeviceOffLeds()), SLOT(switchOffLeds()))
+        .disconnect(SIGNAL(ledDeviceSetRefreshDelay(int)), SLOT(setRefreshDelay(int)))
+        .disconnect(SIGNAL(ledDeviceSetColorDepth(int)), SLOT(setColorDepth(int)))
+        .disconnect(SIGNAL(ledDeviceSetSmoothSlowdown(int)), SLOT(setSmoothSlowdown(int)))
+        .disconnect(SIGNAL(ledDeviceSetGamma(double)), SLOT(setGamma(double)))
+        .disconnect(SIGNAL(ledDeviceSetBrightness(int)), SLOT(setBrightness(int)))
+        .disconnect(SIGNAL(ledDeviceSetColorSequence(QString)), SLOT(setColorSequence(QString)))
+        .disconnect(SIGNAL(ledDeviceSetLuminosityThreshold(int)), SLOT(setLuminosityThreshold(int)))
+        .disconnect(SIGNAL(ledDeviceSetMinimumLuminosityEnabled(bool)),
+                    SLOT(setMinimumLuminosityThresholdEnabled(bool)))
+        .disconnect(SIGNAL(ledDeviceRequestFirmwareVersion()), SLOT(requestFirmwareVersion()))
+        .disconnect(SIGNAL(ledDeviceUpdateWBAdjustments()), SLOT(updateDeviceSettings()))
+        .disconnect(SIGNAL(ledDeviceUpdateDeviceSettings()), SLOT(updateDeviceSettings()));
 }
 
 void LedDeviceManager::cmdQueueAppend(LedDeviceCommands::Cmd cmd)

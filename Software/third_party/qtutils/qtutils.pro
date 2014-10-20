@@ -11,4 +11,5 @@ HEADERS += include/QTUtils.hpp \
            include/ThreadedObject.hpp \
            include/RegisteredThread.hpp
 
-SOURCES += src/RegisteredThread.cpp
+SOURCES += src/RegisteredThread.cpp \
+           src/QTUtils.cpp

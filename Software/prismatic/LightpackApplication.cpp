@@ -40,7 +40,6 @@
 #include "SettingsDefaults.hpp"
 #include "devices/LedDeviceLightpack.hpp"
 #include "version.h"
-#include "third_party/qtutils/include/QTUtils.hpp"
 #include "ui/SettingsWindow.hpp"
 #include "wizard/Wizard.hpp"
 
@@ -113,10 +112,14 @@ bool checkSystemTrayAvailability()
 
 }
 
+LightpackApplication::ExitedThreadsGuard::~ExitedThreadsGuard() {
+    Q_ASSERT(registeredThreadsCount() == 0);
+}
+
 LightpackApplication::LightpackApplication(int &argc, char **argv)
     : QtSingleApplication(argc, argv)
-    , m_ledDeviceManagerThread(NULL)
-    , m_apiServerThread(NULL) {
+    , m_apiServer(CURRENT_LOCATION)
+    , m_ledDeviceManager(CURRENT_LOCATION) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 }
 
@@ -259,14 +262,14 @@ bool LightpackApplication::winEventFilter ( MSG * msg, long * result ) {
         switch(msg->wParam) {
         case PBT_APMRESUMEAUTOMATIC :
             if ( !(POWER_RESUME & processed) ) {
-                m_ledDeviceManager->switchOnLeds();
+                ledDeviceManager()->switchOnLeds();
                 processed = POWER_RESUME;
                 return true;
             }
             break;
         case PBT_APMSUSPEND :
             if ( !(POWER_SUSPEND & processed) ) {
-                m_ledDeviceManager->switchOffLeds();
+                ledDeviceManager()->switchOffLeds();
                 processed = POWER_SUSPEND;
                 return true;
             }
@@ -340,9 +343,9 @@ void LightpackApplication::startBacklight()
     }
 
     if (m_backlightStatus == Backlight::StatusOff)
-        m_ledDeviceManager->switchOffLeds();
+        ledDeviceManager()->switchOffLeds();
     else
-        m_ledDeviceManager->switchOnLeds();
+        ledDeviceManager()->switchOnLeds();
 
 
     switch (m_backlightStatus)
@@ -453,14 +456,13 @@ void LightpackApplication::startApiServer()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "Start API server";
 
-    m_apiServer = new ApiServer();
-    m_apiServer->setInterface(m_pluginInterface.data());
-    m_apiServerThread = new QThread();
+    QScopedPointer<ApiServer> apiServer(new ApiServer());
+    apiServer.data()->setInterface(m_pluginInterface.data());
 
     connect(this, SIGNAL(clearColorBuffers()),
-            m_apiServer, SIGNAL(clearColorBuffers()));
+            apiServer.data(), SIGNAL(clearColorBuffers()));
 
-    makeConnector(settings(), m_apiServer)
+    makeConnector(settings(), apiServer.data())
         .connect(SIGNAL(apiServerSettingsChanged()), SLOT(apiServerSettingsChanged()))
         .connect(SIGNAL(apiKeyChanged(const QString &)), SLOT(updateApiKey(const QString &)))
         .connect(SIGNAL(lightpackNumberOfLedsChanged(int)), SIGNAL(updateApiDeviceNumberOfLeds(int)))
@@ -470,24 +472,22 @@ void LightpackApplication::startApiServer()
 
     if (!m_noGui)
     {
-        connect(m_apiServer, SIGNAL(errorOnStartListening(QString)),
+        connect(apiServer.data(), SIGNAL(errorOnStartListening(QString)),
                 m_settingsWindow.data(), SLOT(onApiServer_ErrorOnStartListening(QString)));
     }
 
-    connect(m_ledDeviceManager.data(), SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)),
+    Q_ASSERT(ledDeviceManager());
+    connect(ledDeviceManager(), SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)),
             lightpackPlugin(), SLOT(updateColors(QList<QRgb>)), Qt::QueuedConnection);
 
-    m_apiServer->firstStart();
-    m_apiServer->moveToThread(m_apiServerThread);
-    deleteLaterOn(m_apiServerThread, SIGNAL(finished()));
-    m_apiServerThread->start();
+    apiServer.data()->firstStart();
+    m_apiServer.init(apiServer.take());
 }
 
 void LightpackApplication::startLedDeviceManager()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-    m_ledDeviceManager.reset(new LedDeviceManager());
-    m_ledDeviceManagerThread = new QThread();
+    QScopedPointer<LedDeviceManager> ledManager(new LedDeviceManager());
     m_pluginInterface.reset(new LightpackPluginInterface(NULL));
 
     // LightpackPluginInterface connections.
@@ -496,7 +496,7 @@ void LightpackApplication::startLedDeviceManager()
         SIGNAL(updateDeviceLockStatus(DeviceLocked::DeviceLockStatus, QList<QString>)),
         SLOT(setDeviceLockViaAPI(DeviceLocked::DeviceLockStatus, QList<QString>)));
 
-    makeQueuedConnector(m_pluginInterface, m_ledDeviceManager)
+    makeQueuedConnector(m_pluginInterface, ledManager)
         .connect(SIGNAL(updateLedsColors(const QList<QRgb> &)), SLOT(setColors(QList<QRgb>)))
         .connect(SIGNAL(updateGamma(double)), SLOT(setGamma(double)))
         .connect(SIGNAL(updateBrightness(int)), SLOT(setBrightness(int)))
@@ -506,7 +506,7 @@ void LightpackApplication::startLedDeviceManager()
                                  SLOT(requestBacklightStatus()));
 
     // LedDeviceManager connections.
-    makeQueuedConnector(settings(), m_ledDeviceManager.data())
+    makeQueuedConnector(settings(), ledManager.data())
         .connect(SIGNAL(deviceColorDepthChanged(int)), SLOT(setColorDepth(int)))
         .connect(SIGNAL(deviceSmoothChanged(int)), SLOT(setSmoothSlowdown(int)))
         .connect(SIGNAL(deviceRefreshDelayChanged(int)), SLOT(setRefreshDelay(int)))
@@ -535,7 +535,7 @@ void LightpackApplication::startLedDeviceManager()
             .connect(SIGNAL(updateStatus(Backlight::Status)), SLOT(setBacklightStatus(Backlight::Status)));
 
         // Window-LedManager connections.
-        makeQueuedConnector(m_settingsWindow, m_ledDeviceManager)
+        makeQueuedConnector(m_settingsWindow, ledManager)
             .connect(SIGNAL(requestFirmwareVersion()), SLOT(requestFirmwareVersion()))
             .connect(SIGNAL(switchOffLeds()), SLOT(switchOffLeds()))
             .connect(SIGNAL(switchOnLeds()), SLOT(switchOnLeds()))
@@ -546,21 +546,18 @@ void LightpackApplication::startLedDeviceManager()
             .connect(SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)),
                      SLOT(updateVirtualLedsColors(QList<QRgb>)));
     }
-    m_ledDeviceManager->moveToThread(m_ledDeviceManagerThread);
-    deleteLaterOn(m_ledDeviceManagerThread, SIGNAL(finished()));
-    m_ledDeviceManagerThread->start();
-    QMetaObject::invokeMethod(m_ledDeviceManager.data(), "init", Qt::QueuedConnection);
+    m_ledDeviceManager.init(ledManager.take());
+    QMetaObject::invokeMethod(m_ledDeviceManager.get(), "init", Qt::QueuedConnection);
 
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "end";
 }
 
-void LightpackApplication::startPluginManager()
-{
+void LightpackApplication::startPluginManager() {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-    // TODO: Extract utility function pathCombine(path1, path2)
-    const QString pluginsDir = QDir::cleanPath(
-        settings()->getApplicationDirPath() + QDir::separator() + PluginsManager::defaultPluginsDir());
+    const QString pluginsDir = QtUtils::pathCombine(
+        settings()->getApplicationDirPath(),
+        PluginsManager::defaultPluginsDir());
     m_pluginManager.reset(new PluginsManager(pluginsDir, NULL));
 
     connect(this, SIGNAL(destroyed()), pluginsManager(), SLOT(StopPlugins()));
@@ -611,9 +608,9 @@ void LightpackApplication::initGrabManager()
     }
 
     connect(grabManager(), SIGNAL(updateLedsColors(const QList<QRgb> &)),
-            m_ledDeviceManager.data(), SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
+            ledDeviceManager(), SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
     connect(moodLampManager(), SIGNAL(updateLedsColors(const QList<QRgb> &)),
-            m_ledDeviceManager.data(), SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
+            ledDeviceManager(), SLOT(setColors(QList<QRgb>)), Qt::QueuedConnection);
     connect(grabManager(), SIGNAL(updateLedsColors(const QList<QRgb> &)),
             lightpackPlugin(), SLOT(updateColors(const QList<QRgb> &)), Qt::QueuedConnection);
     connect(moodLampManager(), SIGNAL(updateLedsColors(const QList<QRgb> &)),
@@ -630,19 +627,19 @@ void LightpackApplication::commitData(QSessionManager &sessionManager)
 
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "Off leds before quit";
 
-    if (m_ledDeviceManager != NULL)
+    if (ledDeviceManager())
     {
         // Disable signals with new colors
         disconnect(m_settingsWindow.data(), SIGNAL(updateLedsColors(QList<QRgb>)),
-                   m_ledDeviceManager.data(), SLOT(setColors(QList<QRgb>)));
-        disconnect(m_apiServer, SIGNAL(updateLedsColors(QList<QRgb>)),
-                   m_ledDeviceManager.data(), SLOT(setColors(QList<QRgb>)));
+                   ledDeviceManager(), SLOT(setColors(QList<QRgb>)));
+        disconnect(apiServer(), SIGNAL(updateLedsColors(QList<QRgb>)),
+                   ledDeviceManager(), SLOT(setColors(QList<QRgb>)));
 
         // Process all currently pending signals
         QApplication::processEvents(QEventLoop::AllEvents, 1000);
 
         // Send signal and process it
-        m_ledDeviceManager->switchOffLeds();
+        ledDeviceManager()->switchOffLeds();
         QApplication::processEvents(QEventLoop::AllEvents, 1000);
     }
 }
@@ -704,8 +701,7 @@ void LightpackApplication::requestBacklightStatus()
     m_pluginInterface->resultBacklightStatus(m_backlightStatus);
 }
 
-void LightpackApplication::free()
-{
+void LightpackApplication::free() {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
     if (m_moodlampManager)
@@ -719,24 +715,18 @@ void LightpackApplication::free()
 
     QApplication::processEvents(QEventLoop::AllEvents, 1000);
 
-    if (m_apiServer) {
-        Q_ASSERT(m_apiServerThread);
+    if (apiServer()) {
         emit m_apiServer->finished();
-        m_apiServer->deleteLater();
-        m_apiServerThread->quit();
-        const bool threadJoined = m_apiServerThread->wait(1000);
+        const bool threadJoined = m_apiServer.join(1000);
         Q_ASSERT(threadJoined);
+        Q_UNUSED(threadJoined);
     }
 
-    if (m_ledDeviceManager) {
-        Q_ASSERT(m_ledDeviceManagerThread);
+    if (ledDeviceManager()) {
         emit m_ledDeviceManager->finished();
-        m_ledDeviceManager->deleteLater();
-        m_ledDeviceManagerThread->quit();
-        const bool threadJoined = m_ledDeviceManagerThread->wait(1000);
+        const bool threadJoined = m_ledDeviceManager.join(1000);
         Q_ASSERT(threadJoined);
-        // Prevent deleting this object.
-        m_ledDeviceManager.take();
+        Q_UNUSED(threadJoined);
     }
     QApplication::processEvents(QEventLoop::AllEvents, 1000);
 }
