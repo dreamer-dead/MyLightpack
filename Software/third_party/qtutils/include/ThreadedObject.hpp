@@ -51,6 +51,8 @@ public:
         return m_object;
     }
 
+    const QThread& thread() const { return m_workingThread; }
+
     void init(TObj* object) {
         Q_ASSERT(object);
         m_object = object;
