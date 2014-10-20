@@ -61,7 +61,8 @@ public:
     }
 
     bool join(int ms) {
-        m_object->deleteLater();
+        if (m_object)
+            m_object->deleteLater();
         m_workingThread.quit();
         m_object = NULL;
         return m_workingThread.wait(ms);
