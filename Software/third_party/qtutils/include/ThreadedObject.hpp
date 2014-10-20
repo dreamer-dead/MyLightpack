@@ -20,13 +20,13 @@ struct Location {
     int line;
 };
 
-#define CURRENT_LOCATION Location(__FILE__, __LINE__)
+#define CURRENT_LOCATION QtUtils::Location(__FILE__, __LINE__)
 
-template <TObj>
+template <typename TObj>
 class ThreadedObject {
-#if !defined Q_NO_DEBUG
+#if defined Q_NO_DEBUG
     typedef QThread ThreadType;
-#define THREAD_LOCATION
+#define THREAD_LOCATION(from)
 #else
     typedef RegisteredThread ThreadType;
 #define THREAD_LOCATION(from) from.location, from.line
@@ -34,20 +34,28 @@ class ThreadedObject {
 
 public:
     explicit ThreadedObject(TObj* object)
-            : m_workingThread(THREAD_LOCATION(CURRENT_LOCATION)) {
+            : m_object(NULL)
+            , m_workingThread(THREAD_LOCATION(CURRENT_LOCATION)) {
         init(object);
     }
 
     ThreadedObject(const Location& from = CURRENT_LOCATION)
-            : m_workingThread(THREAD_LOCATION(from)) {
-        init(object);
+            : m_object(NULL)
+            , m_workingThread(THREAD_LOCATION(from)) {
+    }
+
+    inline TObj* get() const { return m_object; }
+
+    TObj* operator ->() const {
+        Q_ASSERT(m_object);
+        return m_object;
     }
 
     void init(TObj* object) {
         Q_ASSERT(object);
         m_object = object;
         m_object->moveToThread(&m_workingThread);
-        m_workingThread->start();
+        m_workingThread.start();
     }
 
     bool join(int ms) {
@@ -59,6 +67,7 @@ public:
 
     ~ThreadedObject() {
         Q_ASSERT(!m_object);
+        Q_ASSERT(m_workingThread.isFinished());
     }
 
 private:

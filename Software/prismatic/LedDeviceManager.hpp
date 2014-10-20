@@ -26,8 +26,9 @@
 
 #pragma once
 
-#include "enums.hpp"
 #include "AbstractLedDevice.hpp"
+#include "enums.hpp"
+#include "third_party/qtutils/include/ThreadedObject.hpp"
 
 class QTimer;
 
@@ -98,8 +99,8 @@ private slots:
 private:    
     void initLedDevice();
     AbstractLedDevice * createLedDevice(SupportedDevices::DeviceType deviceType);
-    void connectSignalSlotsLedDevice();
-    void disconnectSignalSlotsLedDevice();
+    void connectLedDevice(AbstractLedDevice * device);
+    void disconnectCurrentLedDevice();
     void cmdQueueAppend(LedDeviceCommands::Cmd);
     void cmdQueueProcessNext();
     void processOffLeds();
@@ -122,8 +123,7 @@ private:
     QString m_savedColorSequence;
 
     QList<AbstractLedDevice *> m_ledDevices;
-    AbstractLedDevice *m_ledDevice;
-    QThread *m_ledDeviceThread;
+    QtUtils::ThreadedObject<AbstractLedDevice> m_ledDevice;
     QTimer *m_cmdTimeoutTimer;
     const SettingsScope::SettingsReader* m_settings;
 };

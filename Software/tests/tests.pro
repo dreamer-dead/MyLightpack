@@ -32,7 +32,7 @@ CONFIG(gcc) {
 
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
-LIBS += -L../lib -lprismatik-math -lgrab
+LIBS += -L../lib -lprismatik-math -lgrab -lqtutils
 
 win32 {
     CONFIG(msvc):DEFINES += _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE
