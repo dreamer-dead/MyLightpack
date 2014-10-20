@@ -36,12 +36,14 @@
 #include <QTime>
 
 #include "LightpackPluginInterface.hpp"
-#include "ApiServerSetColorTask.hpp"
 #include "enums.hpp"
+#include "third_party/qtutils/include/ThreadedObject.hpp"
 
 namespace SettingsScope {
 class SettingsReader;
 }
+
+class ApiServerSetColorTask;
 
 struct ClientInfo
 {
@@ -65,7 +67,7 @@ public:
     void firstStart();
 
 public:
-    static const char * ApiVersion;   
+    static const char * ApiVersion;
     static const char * CmdUnknown;
     static const char * CmdExit;
     static const char * CmdHelp;
@@ -208,9 +210,7 @@ private:
     QTime m_time;
 
     QMap <QTcpSocket*, ClientInfo> m_clients;
-
-    QThread *m_apiSetColorTaskThread;
-    ApiServerSetColorTask *m_apiSetColorTask;
+    QtUtils::ThreadedObject<ApiServerSetColorTask> m_apiSetColorTask;
 
     bool m_isTaskSetColorDone;
     bool m_isTaskSetColorParseSuccess;

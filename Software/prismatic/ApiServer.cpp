@@ -150,6 +150,7 @@ const int ApiServer::SignalWaitTimeoutMs = 1000; // 1 second
 
 ApiServer::ApiServer(QObject *parent)
     : QTcpServer(parent)
+    , m_apiSetColorTask(CURRENT_LOCATION)
 {
     initPrivateVariables();
     initApiSetColorTask();
@@ -158,15 +159,9 @@ ApiServer::ApiServer(QObject *parent)
 }
 
 ApiServer::ApiServer(quint16 port, QObject *parent)
-    : QTcpServer(parent)
+    : ApiServer(parent)
 {
     // This constructor is for using in ApiTests
-
-    initPrivateVariables();
-    initApiSetColorTask();
-    initHelpMessage();
-    initShortHelpMessage();
-
     m_apiPort = port;
 
     bool ok = listen(QHostAddress::Any, m_apiPort);
@@ -178,6 +173,11 @@ ApiServer::ApiServer(quint16 port, QObject *parent)
 
 ApiServer::~ApiServer() {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
+    if (m_apiSetColorTask.get()) {
+        const bool threadJoined = m_apiSetColorTask.join(500);
+        Q_ASSERT(threadJoined);
+        Q_UNUSED(threadJoined);
+    }
 }
 
 void ApiServer::setInterface(LightpackPluginInterface *lightpackInterface)
@@ -185,9 +185,11 @@ void ApiServer::setInterface(LightpackPluginInterface *lightpackInterface)
     QString test = lightpack->Version();
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << test;
     lightpack = lightpackInterface;
-    connect(m_apiSetColorTask, SIGNAL(taskParseSetColorDone(QList<QRgb>)), lightpack, SIGNAL(updateLedsColors(QList<QRgb>)), Qt::QueuedConnection);
-    connect(m_apiSetColorTask, SIGNAL(taskParseSetColorDone(const QList<QRgb> &)), lightpack, SLOT(updateColors(const QList<QRgb> &)), Qt::QueuedConnection);
-
+    QtUtils::makeQueuedConnector(m_apiSetColorTask.get(), lightpack)
+        .connect(&ApiServerSetColorTask::taskParseSetColorDone,
+                 &LightpackPluginInterface::updateLedsColors)
+        .connect(&ApiServerSetColorTask::taskParseSetColorDone,
+                 &LightpackPluginInterface::updateColors);
 }
 
 
@@ -1075,21 +1077,21 @@ void ApiServer::initApiSetColorTask()
 {
     m_isTaskSetColorDone = true;
 
-    m_apiSetColorTaskThread = new QThread();
-    m_apiSetColorTask = new ApiServerSetColorTask();
-    m_apiSetColorTask->setApiDeviceNumberOfLeds(m_settings->getNumberOfLeds(m_settings->getConnectedDevice()));
+    QScopedPointer<ApiServerSetColorTask> apiTask(new ApiServerSetColorTask());
+    apiTask->setApiDeviceNumberOfLeds(m_settings->getNumberOfConnectedDeviceLeds());
 
-    connect(m_apiSetColorTask, SIGNAL(taskParseSetColorIsSuccess(bool)), this, SLOT(taskSetColorIsSuccess(bool)), Qt::QueuedConnection);
-    connect(this, SIGNAL(startParseSetColorTask(QByteArray)), m_apiSetColorTask, SLOT(startParseSetColorTask(QByteArray)), Qt::QueuedConnection);
-    connect(this, SIGNAL(updateApiDeviceNumberOfLeds(int)),   m_apiSetColorTask, SLOT(setApiDeviceNumberOfLeds(int)), Qt::QueuedConnection);
-    connect(this, SIGNAL(clearColorBuffers()),                m_apiSetColorTask, SLOT(reinitColorBuffers()));
+    connect(apiTask.data(), &ApiServerSetColorTask::taskParseSetColorIsSuccess,
+            this, &ApiServer::taskSetColorIsSuccess,
+            Qt::QueuedConnection);
+    QtUtils::makeQueuedConnector(this, apiTask.data())
+        .connect(&ApiServer::startParseSetColorTask,
+                 &ApiServerSetColorTask::startParseSetColorTask)
+        .connect(&ApiServer::updateApiDeviceNumberOfLeds,
+                 &ApiServerSetColorTask::setApiDeviceNumberOfLeds)
+        .connect(&ApiServer::clearColorBuffers,
+                 &ApiServerSetColorTask::reinitColorBuffers);
 
-    m_apiSetColorTask->moveToThread(m_apiSetColorTaskThread);
-    // Setup deleting sequence.
-    connect(this, SIGNAL(finished()), m_apiSetColorTaskThread, SLOT(quit()));
-    connect(m_apiSetColorTaskThread, SIGNAL(finished()),
-            m_apiSetColorTaskThread, SLOT(deleteLater()));
-    m_apiSetColorTaskThread->start();
+    m_apiSetColorTask.init(apiTask.take());
 }
 
 void ApiServer::startListening()
