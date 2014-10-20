@@ -26,18 +26,17 @@
 
 #pragma once
 
-#include <QDesktopWidget>
 #include <QStringList>
 #include <QTcpServer>
-#include <QTcpSocket>
 #include <QMap>
-#include <QSet>
 #include <QRgb>
 #include <QTime>
 
 #include "LightpackPluginInterface.hpp"
 #include "enums.hpp"
 #include "third_party/qtutils/include/ThreadedObject.hpp"
+
+class QTcpSocket;
 
 namespace SettingsScope {
 class SettingsReader;

@@ -26,7 +26,9 @@
 
 #include "ApiServer.hpp"
 
+#include <QDesktopWidget>
 #include <QtNetwork>
+#include <QTcpSocket>
 #include <QtWidgets/QApplication>
 #include <stdlib.h>
 
