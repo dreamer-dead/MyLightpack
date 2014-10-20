@@ -70,6 +70,7 @@ HEADERS += \
     ../prismatic/UpdatesProcessor.hpp \
     mocks/SettingsSourceMockup.hpp \
     mocks/SettingsWindowMockup.hpp \
+    mocks/SignalAndSlotObject.hpp
 
 SOURCES += \
     ../third_party/gtest/src/gtest-all.cc \
@@ -96,7 +97,8 @@ SOURCES += \
     SettingsTest.cpp \
     TestsMain.cpp \
     ConnectorTests.cpp \
-    QtUtilsTests.cpp
+    QtUtilsTests.cpp \
+    mocks/SignalAndSlotObject.cpp
 
 win32{
     HEADERS += \

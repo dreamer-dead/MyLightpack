@@ -1,6 +1,9 @@
+#include <QDebug>
 #include <QScopedPointer>
+#include <QCoreApplication>
 
 #include "gtest/gtest.h"
+#include "mocks/SignalAndSlotObject.hpp"
 #include "third_party/qtutils/include/QTUtils.hpp"
 
 namespace {
@@ -98,5 +101,39 @@ TEST(ConnectorTests, CheckSmartPointersMakers) {
             QtUtils::makeQueuedConnector(smartPointer, smartPointer2);
     EXPECT_EQ(smartPointer.data(), getSignalObj(queuedConnector));
     EXPECT_EQ(smartPointer2.data(), getRecvObj(queuedConnector));
+}
+
+TEST(ConnectorTests, ConnectToSignalAsMember) {
+    SignalAndSlotObject::State state;
+    SignalAndSlotObject object(state);
+    SignalAndSlotObject::State state2;
+    SignalAndSlotObject object2(state2);
+    const auto& connector = QtUtils::makeConnector(&object, &object2);
+    connector.connect(&SignalAndSlotObject::fireSignal,
+                      &SignalAndSlotObject::handleSignal);
+    emit object.fireSignal();
+    EXPECT_TRUE(state2.signalHandled);
+}
+
+TEST(ConnectorTests, ConnectToSINAL_SLOT_Macro) {
+    SignalAndSlotObject::State state;
+    SignalAndSlotObject object(state);
+    SignalAndSlotObject::State state2;
+    SignalAndSlotObject object2(state2);
+    const auto& connector = QtUtils::makeConnector(&object, &object2);
+    connector.connect(SIGNAL(fireSignal()), SLOT(handleSignal()));
+    EXPECT_FALSE(state.signalHandled);
+    emit object.fireSignal();
+    EXPECT_TRUE(state2.signalHandled);
+}
+
+TEST(ConnectorTests, DeleteLater) {
+    SignalAndSlotObject::State state;
+    SignalAndSlotObject* object(new SignalAndSlotObject(state));
+    QtUtils::deleteLaterOn(object, SIGNAL(fireSignal()));
+    EXPECT_FALSE(state.wasDeleted);
+    emit object->fireSignal();
+    QCoreApplication::sendPostedEvents(object, QEvent::DeferredDelete);
+    EXPECT_TRUE(state.wasDeleted);
 }
 

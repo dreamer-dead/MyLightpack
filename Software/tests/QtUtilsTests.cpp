@@ -1,6 +1,7 @@
 #include <QObject>
 
 #include "gtest/gtest.h"
+#include "mocks/SignalAndSlotObject.hpp"
 #include "third_party/qtutils/include/QTUtils.hpp"
 #include "third_party/qtutils/include/RegisteredThread.hpp"
 #include "third_party/qtutils/include/ThreadedObject.hpp"
@@ -24,20 +25,23 @@ TEST(RegisteredThreadTests, RegisteredThreadLifecycle) {
 }
 
 TEST(ThreadedObjectTests, CreateObject) {
-    QtUtils::ThreadedObject<QObject> object;
-    EXPECT_EQ(static_cast<QObject*>(NULL), object.get());
-    QObject* qobject = new QObject();
-    object.init(qobject);
+    SignalAndSlotObject::State state;
+    SignalAndSlotObject* signalHandler = new SignalAndSlotObject(state);
+    QtUtils::ThreadedObject<SignalAndSlotObject> object;
+    EXPECT_EQ(static_cast<SignalAndSlotObject*>(NULL), object.get());
+    object.init(signalHandler);
 
-    EXPECT_EQ(qobject, object.get());
-    EXPECT_EQ(qobject, object.operator->());
-    EXPECT_EQ(&object.thread(), qobject->thread());
+    EXPECT_EQ(signalHandler, object.get());
+    EXPECT_EQ(signalHandler, object.operator->());
+    EXPECT_EQ(&object.thread(), signalHandler->thread());
     EXPECT_TRUE(object.thread().isRunning());
 
+    EXPECT_FALSE(state.wasDeleted);
     // To avoid asserting in ~ThreadedObject() we should join the thread.
     EXPECT_TRUE(object.join(500));
-    EXPECT_EQ(static_cast<QObject*>(NULL), object.get());
+    EXPECT_EQ(static_cast<SignalAndSlotObject*>(NULL), object.get());
     EXPECT_FALSE(object.thread().isRunning());
     EXPECT_TRUE(object.thread().isFinished());
+    EXPECT_TRUE(state.wasDeleted);
 }
 
