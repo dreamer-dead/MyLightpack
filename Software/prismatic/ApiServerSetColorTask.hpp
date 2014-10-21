@@ -29,10 +29,10 @@
 #include <QObject>
 #include <QRgb>
 
-class ApiServerSetColorTask : public QObject
-{
+class ApiServerSetColorTask : public QObject {
     Q_OBJECT
 public:
+    static bool parseCommandSequence(const QByteArray& buffer, QList<QRgb>& result);
     explicit ApiServerSetColorTask(QObject *parent = 0);
 
 signals:
