@@ -98,7 +98,8 @@ SOURCES += \
     TestsMain.cpp \
     ConnectorTests.cpp \
     QtUtilsTests.cpp \
-    mocks/SignalAndSlotObject.cpp
+    mocks/SignalAndSlotObject.cpp \
+    CommandSetColorParsingTests.cpp
 
 win32{
     HEADERS += \
