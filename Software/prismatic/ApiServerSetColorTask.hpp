@@ -40,17 +40,11 @@ signals:
     void taskParseSetColorIsSuccess(bool isSuccess);
 
 public slots:
-    void startParseSetColorTask(QByteArray buffer);
+    void startParseSetColorTask(const QByteArray& buffer);
     void reinitColorBuffers();
     void setApiDeviceNumberOfLeds(int value);
 
 private:
     QList<QRgb> m_colors;
     int m_numberOfLeds;
-
-    enum BuffRgbIndexes{
-        bRed, bGreen, bBlue, bSize
-    };
-    int buffRgb[bSize]; // buffer for store temp red, green and blue values
-
 };

@@ -34,6 +34,7 @@
 #include "LightpackPluginInterface.hpp"
 #include "Settings.hpp"
 #include "common/DebugOut.hpp"
+#include "common/PrintHelpers.hpp"
 #include "enums.hpp"
 #include "gtest/gtest.h"
 #include "mocks/SettingsWindowMockup.hpp"
@@ -43,21 +44,6 @@ using namespace std;
 using namespace SettingsScope;
 
 #define VERSION_API_TESTS   "1.4"
-
-// Print helpers
-// It's important that the << operator is defined in the SAME
-// namespace that defines Bar.  C++'s look-up rules rely on that.
-::std::ostream& operator<<(::std::ostream& os, const QString& str) {
-  return os << str.constData();
-}
-
-::std::ostream& operator<<(::std::ostream& os, const QByteArray& bytes) {
-  return os << bytes.constData();
-}
-
-void PrintTo(const QRgb& rgb, ::std::ostream* os) {
-    *os << (int)rgb << "=" << qRed(rgb) << qGreen(rgb) << qBlue(rgb);
-}
 
 namespace
 {
