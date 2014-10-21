@@ -24,12 +24,32 @@
  *
  */
 #include <QThread>
+#include <algorithm>
 #include <cmath>
 
 #include "ApiServerSetColorTask.hpp"
 #include "PrismatikMath.hpp"
 #include "SettingsDefaults.hpp"
 #include "common/DebugOut.hpp"
+#include "common/PrintHelpers.hpp"
+
+namespace {
+struct IndexAndColor {
+    int index;
+    QRgb color;
+};
+
+const char* parseSingleCommand(const char* start, const char* end, IndexAndColor& result) {
+    // buffer can contains only something like this:
+    // 1-34,9,125
+    // 2-0,255,0;3-0,255,0;6-0,255,0;
+    Q_UNUSED(start);
+    Q_UNUSED(end);
+    Q_UNUSED(result);
+    return end;
+}
+
+}
 
 ApiServerSetColorTask::ApiServerSetColorTask(QObject *parent) :
     QObject(parent)
@@ -39,6 +59,58 @@ ApiServerSetColorTask::ApiServerSetColorTask(QObject *parent) :
     reinitColorBuffers();
 }
 
+// static
+bool ApiServerSetColorTask::parseCommandSequence(const QByteArray& buffer, QList<QRgb>& result) {
+    // Minimum 7 - '2-0,0,0'
+    static const int kMinBufferLength = 7u;
+
+    const char* it = buffer.constData();
+    const char* const end = buffer.constData() + buffer.size();
+    IndexAndColor parsedCommand = {-1, 0};
+    while (it != end) {
+        // Check the buffer length.
+        if (std::distance(it, end) < kMinBufferLength) {
+            API_DEBUG_OUT << "error: Too small buffer.length() = " << buffer.length();
+            return false;
+        }
+        const char* parsedEnd = parseSingleCommand(it, end, parsedCommand);
+        if (parsedEnd != end) {
+            if (parsedCommand.index < 0 || parsedCommand.index >= result.size()) {
+                API_DEBUG_OUT << "error: incorrect color index = " << parsedCommand.index;
+                return false;
+            }
+
+            // Convert for using in zero-based arrays
+            const int ledNumber = parsedCommand.index - 1;
+
+            // Save colors
+            result[ledNumber] = parsedCommand.color;
+            API_DEBUG_OUT
+                << "result color:" << qRed(parsedCommand.color)
+                                   << qGreen(parsedCommand.color)
+                                   << qBlue(parsedCommand.color)
+                << "buffer:" << QLatin1String(it, std::distance(it, end));
+        }
+        it = parsedEnd;
+    }
+    return !buffer.isEmpty();
+}
+
+void ApiServerSetColorTask::startParseSetColorTask(QByteArray buffer) {
+    API_DEBUG_OUT << QString(buffer) << "task thread:" << thread()->currentThreadId();
+
+    if (!parseCommandSequence(buffer, m_colors))
+    {
+        API_DEBUG_OUT << "errors while reading buffer";
+        emit taskParseSetColorIsSuccess(false);
+    } else {
+        API_DEBUG_OUT << "read setcolor buffer - ok";
+        emit taskParseSetColorDone(m_colors);
+        emit taskParseSetColorIsSuccess(true);
+    }
+}
+
+/*
 void ApiServerSetColorTask::startParseSetColorTask(QByteArray buffer)
 {
     API_DEBUG_OUT << QString(buffer) << "task thread:" << thread()->currentThreadId();
@@ -172,6 +244,7 @@ end:
         emit taskParseSetColorIsSuccess(true);
     }
 }
+*/
 
 void ApiServerSetColorTask::reinitColorBuffers()
 {
