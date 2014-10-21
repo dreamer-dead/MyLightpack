@@ -41,6 +41,19 @@
 
 using namespace SettingsScope;
 
+namespace {
+struct SetRefreshDelay {
+    static void run(LedDeviceManager& manager,
+                    LedDeviceManager::CommandContext& context) {
+        emit manager.ledDeviceSetRefreshDelay(context.savedRefreshDelay);
+    }
+
+    static void saveContext(LedDeviceManager::CommandContext& context, int value) {
+        context.savedRefreshDelay = value;
+    }
+};
+}
+
 LedDeviceManager::LedDeviceManager(const SettingsScope::SettingsReader* settings,
                                    QObject *parent)
     : QObject(parent)
@@ -123,6 +136,19 @@ void LedDeviceManager::setColors(const QList<QRgb> & colors)
     }
 }
 
+namespace {
+struct SwitchOffLeds {
+    static void run(LedDeviceManager& manager,
+                    LedDeviceManager::CommandContext& context) {
+        emit manager.processOffLeds();
+    }
+
+    static void saveContext(LedDeviceManager::CommandContext& context, int value) {
+        context.savedRefreshDelay = value;
+    }
+};
+}
+
 void LedDeviceManager::switchOffLeds()
 {
     DEBUG_MID_LEVEL << Q_FUNC_INFO << "Is last command completed:" << m_isLastCommandCompleted;
@@ -146,18 +172,7 @@ void LedDeviceManager::processOffLeds()
 
 void LedDeviceManager::setRefreshDelay(int value)
 {
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << value
-                    << "Is last command completed:" << m_isLastCommandCompleted;
-
-    if (m_isLastCommandCompleted)
-    {
-        m_cmdTimeoutTimer->start();
-        m_isLastCommandCompleted = false;
-        emit ledDeviceSetRefreshDelay(value);
-    } else {
-        m_savedRefreshDelay = value;
-        cmdQueueAppend(LedDeviceCommands::SetRefreshDelay);
-    }
+    postCommand<SetRefreshDelay>(value);
 }
 
 void LedDeviceManager::setColorDepth(int value)
@@ -474,14 +489,12 @@ void LedDeviceManager::disconnectCurrentLedDevice()
         .disconnect(SIGNAL(ledDeviceUpdateDeviceSettings()), SLOT(updateDeviceSettings()));
 }
 
-void LedDeviceManager::cmdQueueAppend(LedDeviceCommands::Cmd cmd)
+void LedDeviceManager::cmdQueueAppend(CommandRunner cmd)
 {
     DEBUG_MID_LEVEL << Q_FUNC_INFO << cmd;
 
-    if (m_cmdQueue.contains(cmd) == false)
-    {
+    if (!m_cmdQueue.contains(cmd))
         m_cmdQueue.append(cmd);
-    }
 }
 
 void LedDeviceManager::cmdQueueProcessNext()
@@ -490,10 +503,12 @@ void LedDeviceManager::cmdQueueProcessNext()
 
     if (m_cmdQueue.isEmpty() == false)
     {
-        LedDeviceCommands::Cmd cmd = m_cmdQueue.takeFirst();
+        const CommandRunner runner = m_cmdQueue.takeFirst();
 
         DEBUG_HIGH_LEVEL << Q_FUNC_INFO << "processing cmd = " << cmd;
+        runner(*this, m_context);
 
+        /*
         switch(cmd)
         {
         case LedDeviceCommands::OffLeds:
@@ -567,6 +582,7 @@ void LedDeviceManager::cmdQueueProcessNext()
             qCritical() << Q_FUNC_INFO << "fail process cmd =" << cmd;
             break;
         }
+        //*/
     }
 }
 
