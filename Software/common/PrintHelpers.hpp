@@ -25,6 +25,7 @@
 #pragma once
 
 #include <qglobal.h>
+#include <QRect>
 
 #define DEBUG_OUT_RGB( RGB_VALUE ) \
     qDebug() << #RGB_VALUE << "=" << qRed(RGB_VALUE) << qGreen(RGB_VALUE) << qBlue(RGB_VALUE)
