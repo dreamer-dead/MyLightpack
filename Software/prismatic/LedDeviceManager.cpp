@@ -41,18 +41,18 @@
 
 using namespace SettingsScope;
 
-LedDeviceManager::LedDeviceManager(QObject *parent)
+LedDeviceManager::LedDeviceManager(const SettingsScope::SettingsReader* settings,
+                                   QObject *parent)
     : QObject(parent)
     , m_isLastCommandCompleted(true)
     , m_isColorsSaved(false)
     , m_backlightStatus(Backlight::StatusOn)
     , m_ledDevice(CURRENT_LOCATION)
     , m_cmdTimeoutTimer(NULL)
-{
+    , m_settings(settings) {
+    Q_ASSERT(settings);
     for (int i = 0; i < SupportedDevices::DeviceTypesCount; i++)
         m_ledDevices.append(NULL);
-
-    m_settings = SettingsReader::instance();
 }
 
 LedDeviceManager::~LedDeviceManager()
@@ -413,11 +413,11 @@ void LedDeviceManager::connectLedDevice(AbstractLedDevice * device) {
 
     QtUtils::makeQueuedConnector(device, this)
         .connect(SIGNAL(commandCompleted(bool)), SLOT(ledDeviceCommandCompleted(bool)))
-        .connect(SIGNAL(firmwareVersion(QString)), SIGNAL(firmwareVersion(QString)))
-        .connect(SIGNAL(ioDeviceSuccess(bool)), SIGNAL(ioDeviceSuccess(bool)))
-        .connect(SIGNAL(openDeviceSuccess(bool)), SIGNAL(openDeviceSuccess(bool)))
+        .connect(SIGNAL(firmwareVersion(QString)), SLOT(firmwareVersion(QString)))
+        .connect(SIGNAL(ioDeviceSuccess(bool)), SLOT(ioDeviceSuccess(bool)))
+        .connect(SIGNAL(openDeviceSuccess(bool)), SLOT(openDeviceSuccess(bool)))
         .connect(SIGNAL(colorsUpdated(QList<QRgb>)),
-                 SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)));
+                 SLOT(setColors_VirtualDeviceCallback(QList<QRgb>)));
 
     QtUtils::makeQueuedConnector(this, device)
         .connect(SIGNAL(ledDeviceOpen()), SLOT(open()))
@@ -450,11 +450,11 @@ void LedDeviceManager::disconnectCurrentLedDevice()
 
     QtUtils::makeConnector(device, this)
         .disconnect(SIGNAL(commandCompleted(bool)), SLOT(ledDeviceCommandCompleted(bool)))
-        .disconnect(SIGNAL(firmwareVersion(QString)), SIGNAL(firmwareVersion(QString)))
-        .disconnect(SIGNAL(ioDeviceSuccess(bool)), SIGNAL(ioDeviceSuccess(bool)))
-        .disconnect(SIGNAL(openDeviceSuccess(bool)), SIGNAL(openDeviceSuccess(bool)))
+        .disconnect(SIGNAL(firmwareVersion(QString)), SLOT(firmwareVersion(QString)))
+        .disconnect(SIGNAL(ioDeviceSuccess(bool)), SLOT(ioDeviceSuccess(bool)))
+        .disconnect(SIGNAL(openDeviceSuccess(bool)), SLOT(openDeviceSuccess(bool)))
         .disconnect(SIGNAL(colorsUpdated(QList<QRgb>)),
-                    SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)));
+                    SLOT(setColors_VirtualDeviceCallback(QList<QRgb>)));
 
     QtUtils::makeConnector(this, device)
         .disconnect(SIGNAL(ledDeviceOpen()), SLOT(open()))

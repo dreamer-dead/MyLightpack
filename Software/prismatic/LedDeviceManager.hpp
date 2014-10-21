@@ -45,7 +45,8 @@ class LedDeviceManager : public QObject
     Q_OBJECT
 
 public:
-    explicit LedDeviceManager(QObject *parent = 0);
+    explicit LedDeviceManager(const SettingsScope::SettingsReader* settings,
+                              QObject *parent = 0);
     virtual ~LedDeviceManager();
 
 signals:
@@ -96,7 +97,7 @@ private slots:
     void ledDeviceCommandCompleted(bool ok);
     void ledDeviceCommandTimedOut();
 
-private:    
+private:
     void initLedDevice();
     AbstractLedDevice * createLedDevice(SupportedDevices::DeviceType deviceType);
     void connectLedDevice(AbstractLedDevice * device);
@@ -125,5 +126,5 @@ private:
     QList<AbstractLedDevice *> m_ledDevices;
     QtUtils::ThreadedObject<AbstractLedDevice> m_ledDevice;
     QTimer *m_cmdTimeoutTimer;
-    const SettingsScope::SettingsReader* m_settings;
+    const SettingsScope::SettingsReader* const m_settings;
 };
