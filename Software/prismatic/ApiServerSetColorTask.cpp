@@ -24,6 +24,7 @@
  *
  */
 #include <QThread>
+#include <QRegExp>
 #include <algorithm>
 #include <cmath>
 
@@ -34,19 +35,63 @@
 #include "common/PrintHelpers.hpp"
 
 namespace {
+// Minimum 7 - '2-0,0,0'
+static const int kMinBufferLength = 7u;
+
+// Minimum 7 - '99-999,999,999'
+static const int kMaxBufferLength = 14u;
+
 struct IndexAndColor {
     int index;
     QRgb color;
 };
 
-const char* parseSingleCommand(const char* start, const char* end, IndexAndColor& result) {
+int parseSingleCommand(const char* start, const char* end, IndexAndColor& result) {
     // buffer can contains only something like this:
     // 1-34,9,125
     // 2-0,255,0;3-0,255,0;6-0,255,0;
-    Q_UNUSED(start);
-    Q_UNUSED(end);
-    Q_UNUSED(result);
-    return end;
+    Q_ASSERT(start != end);
+    const char* delim = (const char*)memchr(start, ';', std::distance(start, end));
+    int delimOffset = 1;
+    // There can be no ';' delimiter if it's a last command in sequence.
+    if (!delim) {
+        delim = end;
+        delimOffset = 0;
+    }
+
+    const int length = std::distance(start, delim);
+    if (length < kMinBufferLength || length > kMaxBufferLength)
+        return -1;
+
+    const QRegExp commandRegex("(\\d{1,2})\\-(\\d{1,3})\\,(\\d{1,3})\\,(\\d{1,3})");
+    if (commandRegex.indexIn(QLatin1String(start, length), 0) < 0)
+        return -1;
+
+    if (commandRegex.captureCount() < 4)
+        return -1;
+    bool parseResult = false;
+    result.index = commandRegex.cap(1).toInt(&parseResult);
+    if (!parseResult)
+        return -1;
+
+    enum BuffRgbIndexes {
+        bRed, bGreen, bBlue, bSize
+    };
+    // Buffer for store temp red, green and blue values.
+    int buffRgb[bSize] = {0, 0, 0};
+    buffRgb[bRed] = commandRegex.cap(2).toInt(&parseResult);
+    if (!parseResult || buffRgb[bRed] > 255)
+        return -1;
+
+    buffRgb[bGreen] = commandRegex.cap(3).toInt(&parseResult);
+    if (!parseResult || buffRgb[bGreen] > 255)
+        return -1;
+
+    buffRgb[bBlue] = commandRegex.cap(4).toInt(&parseResult);
+    if (!parseResult || buffRgb[bBlue] > 255)
+        return -1;
+    result.color = qRgb(buffRgb[bRed], buffRgb[bGreen], buffRgb[bBlue]);
+    return length + delimOffset;
 }
 
 }
@@ -61,9 +106,6 @@ ApiServerSetColorTask::ApiServerSetColorTask(QObject *parent) :
 
 // static
 bool ApiServerSetColorTask::parseCommandSequence(const QByteArray& buffer, QList<QRgb>& result) {
-    // Minimum 7 - '2-0,0,0'
-    static const int kMinBufferLength = 7u;
-
     const char* it = buffer.constData();
     const char* const end = buffer.constData() + buffer.size();
     IndexAndColor parsedCommand = {-1, 0};
@@ -73,30 +115,32 @@ bool ApiServerSetColorTask::parseCommandSequence(const QByteArray& buffer, QList
             API_DEBUG_OUT << "error: Too small buffer.length() = " << buffer.length();
             return false;
         }
-        const char* parsedEnd = parseSingleCommand(it, end, parsedCommand);
-        if (parsedEnd != end) {
-            if (parsedCommand.index < 0 || parsedCommand.index >= result.size()) {
-                API_DEBUG_OUT << "error: incorrect color index = " << parsedCommand.index;
-                return false;
-            }
-
-            // Convert for using in zero-based arrays
-            const int ledNumber = parsedCommand.index - 1;
-
-            // Save colors
-            result[ledNumber] = parsedCommand.color;
-            API_DEBUG_OUT
-                << "result color:" << qRed(parsedCommand.color)
-                                   << qGreen(parsedCommand.color)
-                                   << qBlue(parsedCommand.color)
-                << "buffer:" << QLatin1String(it, std::distance(it, end));
+        const int pos = parseSingleCommand(it, end, parsedCommand);
+        if (pos < 0) {
+            API_DEBUG_OUT << "error: couldn't parse command!";
+            return false;
         }
-        it = parsedEnd;
+
+        // Convert for using in zero-based arrays
+        const int ledNumber = parsedCommand.index - 1;
+        if (ledNumber < 0 || ledNumber >= result.size()) {
+            API_DEBUG_OUT << "error: incorrect color index = " << parsedCommand.index;
+            return false;
+        }
+
+        // Save colors
+        result[ledNumber] = parsedCommand.color;
+        API_DEBUG_OUT
+            << "result color:" << qRed(parsedCommand.color)
+                               << qGreen(parsedCommand.color)
+                               << qBlue(parsedCommand.color)
+            << "buffer:" << QLatin1String(it, std::distance(it, end));
+        it += pos;
     }
     return !buffer.isEmpty();
 }
 
-void ApiServerSetColorTask::startParseSetColorTask(QByteArray buffer) {
+void ApiServerSetColorTask::startParseSetColorTask(const QByteArray& buffer) {
     API_DEBUG_OUT << QString(buffer) << "task thread:" << thread()->currentThreadId();
 
     if (!parseCommandSequence(buffer, m_colors))
@@ -110,152 +154,12 @@ void ApiServerSetColorTask::startParseSetColorTask(QByteArray buffer) {
     }
 }
 
-/*
-void ApiServerSetColorTask::startParseSetColorTask(QByteArray buffer)
-{
-    API_DEBUG_OUT << QString(buffer) << "task thread:" << thread()->currentThreadId();
-    bool isReadFail = false;
-
-    // buffer can contains only something like this:
-    // 1-34,9,125
-    // 2-0,255,0;3-0,255,0;6-0,255,0;
-
-    while (buffer.isEmpty() == false)
-    {
-        if (isReadFail == true)
-        {
-            qWarning() << "got it!";
-        }
-
-        // Check buffer length, minimum 7 - '2-0,0,0'
-        if (buffer.length() < 7)
-        {
-            API_DEBUG_OUT << "error: buffer.length() < 7";
-            isReadFail = true;
-            goto end;
-        }
-
-        // Read led number
-        int ledNumber = PrismatikMath::getDigit(buffer[0]); // first char of ledNumber
-        int ledNumber2 = PrismatikMath::getDigit(buffer[1]); // second char of ledNumber
-        if (ledNumber > 0)
-        {
-            if (buffer[1] == '-')
-            {
-                buffer.remove(0, 2); // remove "2-"
-            }
-            else if (ledNumber2 >= 0 && buffer[2] == '-')
-            {
-                ledNumber = ledNumber * 10 + ledNumber2; // 10,11,12..99
-                buffer.remove(0, 3); // remove "10-"
-            } else {
-                API_DEBUG_OUT << "lednumber fail:" << QString(buffer);
-                isReadFail = true;
-                goto end;
-            }
-        } else {
-            API_DEBUG_OUT << "isdigit fail:" << QString(buffer);
-            isReadFail = true;
-            goto end;
-        }
-
-        API_DEBUG_OUT << "lednumber-" << ledNumber << "buff-" << QString(buffer);
-
-        if (ledNumber <= 0 || ledNumber > m_numberOfLeds)
-        {
-            API_DEBUG_OUT << "ledNumber is out of bounds:" << ledNumber;
-            isReadFail = true;
-            goto end;
-        }
-
-        // Convert for using in zero-based arrays
-        ledNumber = ledNumber - 1;
-
-        // Read led red, green and blue colors to buffer buffRgb[]
-        int indexBuffer = 0;
-        int indexRgb = 0;        
-        memset(buffRgb, 0, sizeof(buffRgb));
-
-        bool isDigitExpected = true;
-        for (indexBuffer = 0; indexBuffer < buffer.length(); indexBuffer++)
-        {
-            int d = PrismatikMath::getDigit(buffer[indexBuffer]);
-            if (d < 0)
-            {
-                if (buffer[indexBuffer] == ';')
-                {
-                    break;
-                }
-                else if (buffer[indexBuffer] != ',')
-                {
-                    API_DEBUG_OUT << "expected comma, buffer:" << QString(buffer) << indexBuffer << buffer[indexBuffer];
-                    isReadFail = true;
-                    goto end;
-                }
-                else if (isDigitExpected)
-                {
-                    API_DEBUG_OUT << "expected digit, buffer:" << QString(buffer) << indexBuffer << buffer[indexBuffer];
-                    isReadFail = true;
-                    goto end;
-                }
-                isDigitExpected = true;
-                indexRgb++;
-            } else {
-                buffRgb[indexRgb] *= 10;
-                buffRgb[indexRgb] += d;
-
-                isDigitExpected = false;
-
-                if (buffRgb[indexRgb] > 255)
-                {
-                    API_DEBUG_OUT << "rgb value > 255";
-                    isReadFail = true;
-                    goto end;
-                }
-            }
-        }
-
-        // Remove read colors
-        buffer.remove(0, indexBuffer);
-
-        // Save colors
-        m_colors[ledNumber] = qRgb(buffRgb[bRed], buffRgb[bGreen], buffRgb[bBlue]);
-
-        API_DEBUG_OUT << "result color:" << buffRgb[bRed] << buffRgb[bGreen] << buffRgb[bBlue]
-                      << "buffer:" << QString(buffer);
-
-        if (buffer[0] == ';')
-        {
-            // Remove semicolon
-            buffer.remove(0, 1);
-
-            API_DEBUG_OUT << "buffer.isEmpty() == " << buffer.isEmpty();
-        }
-    }
-
-end:
-    if (isReadFail)
-    {
-        API_DEBUG_OUT << "errors while reading buffer";
-        emit taskParseSetColorIsSuccess(false);
-    } else {
-        API_DEBUG_OUT << "read setcolor buffer - ok";
-        emit taskParseSetColorDone(m_colors);
-        emit taskParseSetColorIsSuccess(true);
-    }
-}
-*/
-
 void ApiServerSetColorTask::reinitColorBuffers()
 {
     m_colors.clear();
 
     for (int i = 0; i < m_numberOfLeds; i++)
         m_colors << 0;
-
-    buffRgb[bRed] = 0;
-    buffRgb[bGreen] = 0;
-    buffRgb[bBlue] = 0;
 }
 
 void ApiServerSetColorTask::setApiDeviceNumberOfLeds(int value)

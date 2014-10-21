@@ -26,6 +26,7 @@
 
 #include <qglobal.h>
 #include <QRect>
+#include <QString>
 
 #define DEBUG_OUT_RGB( RGB_VALUE ) \
     qDebug() << #RGB_VALUE << "=" << qRed(RGB_VALUE) << qGreen(RGB_VALUE) << qBlue(RGB_VALUE)
@@ -47,4 +48,19 @@ inline const QString toString(const QRect& rect) {
         QString::number(rect.width()),
         QString::number(rect.height()));
 }
+}
+
+// Print helpers
+// It's important that the << operator is defined in the SAME
+// namespace that defines Bar.  C++'s look-up rules rely on that.
+inline ::std::ostream& operator<<(::std::ostream& os, const QString& str) {
+  return os << str.toStdString();
+}
+
+inline ::std::ostream& operator<<(::std::ostream& os, const QByteArray& bytes) {
+  return os << bytes.constData();
+}
+
+inline void PrintTo(const QRgb& rgb, ::std::ostream* os) {
+    *os << (int)rgb << "=" << qRed(rgb) << qGreen(rgb) << qBlue(rgb);
 }

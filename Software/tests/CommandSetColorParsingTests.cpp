@@ -1,7 +1,11 @@
 #include <QColor>
 #include <QList>
+#include <QRegExp>
+#include <QStringList>
+#include <iostream>
 
 #include "ApiServerSetColorTask.hpp"
+#include "common/PrintHelpers.hpp"
 #include "gtest/gtest.h"
 
 namespace
@@ -113,7 +117,11 @@ TEST(CommandSetColorParsingTest, SingleColorInvalidCommand) {
         "1-1,1;",
         "1-1,100000000000000000000000;",
         "1-1,1,1;2-4,5,,;",
-        "1-1,1,1;2-2,2,2;3-3,3,3;4-4,4,4;5-5,5,5;;6-6,6,6;7-7,7,7;8-8,8,8;9-9,9,9;"
+        "1-1,1,1;2-2,2,2;3-3,3,3;4-4,4,4;5-5,5,5;;6-6,6,6;7-7,7,7;8-8,8,8;9-9,9,9;",
+        "100-0,0,1",
+        "10-256,0,1",
+        "10-0,256,1",
+        "10-0,0,256",
     };
 
     ResultReceiver handler;
@@ -125,5 +133,37 @@ TEST(CommandSetColorParsingTest, SingleColorInvalidCommand) {
         emit parser.startParseSetColorTask(QByteArray(colorStrings[ii]));
         EXPECT_FALSE(handler.result());
     }
+}
+
+TEST(CommandSetColorParsingTest, RegexTest) {
+    const QRegExp regexp("\\d{1,2}\\-\\d{1,3}\\,\\d{1,3}\\,\\d{1,3}");
+    EXPECT_TRUE(regexp.exactMatch("1-1,185,1"));
+
+    const QRegExp regexp2("\\d{1,2}\\-\\d{1,3}\\,\\d{1,3}\\,\\d{1,3}\\;?");
+    EXPECT_TRUE(regexp2.exactMatch("1-1,185,1;"));
+    EXPECT_TRUE(regexp2.exactMatch("1-1,185,1"));
+
+    const QString input("2-1,185,33;10-0,0,1");
+    const QRegExp regexp3("(\\d{1,2}\\-\\d{1,3}\\,\\d{1,3}\\,\\d{1,3}\\;?)");
+    EXPECT_NE(-1, regexp3.indexIn(input));
+    int pos = regexp3.indexIn(input, 0);
+    EXPECT_NE(-1, pos);
+    EXPECT_EQ(QString("2-1,185,33;"), regexp3.cap(1)) << regexp3.cap(0);
+    pos += regexp3.matchedLength();
+    pos = regexp3.indexIn(input, pos);
+    EXPECT_NE(-1, pos);
+    EXPECT_EQ(QString("10-0,0,1"), regexp3.cap(1)) << regexp3.cap(0);
+
+    EXPECT_NE(-1, regexp3.indexIn("1-1,185,1;"));
+    EXPECT_NE(-1, regexp3.indexIn("1-1,185,1"));
+
+    const QRegExp regexp4("((\\d{1,2})\\-(\\d{1,3})\\,(\\d{1,3})\\,(\\d{1,3})\\;?)");
+    pos = regexp4.indexIn(input, 0);
+    EXPECT_NE(-1, pos);
+    EXPECT_EQ(QString("2-1,185,33;"), regexp4.cap(1)) << regexp4.cap(1);
+    EXPECT_EQ(QString("2"), regexp4.cap(2)) << regexp4.cap(2) << " : " << regexp4.capturedTexts().join(',');
+    EXPECT_EQ(QString("1"), regexp4.cap(3)) << regexp4.cap(3);
+    EXPECT_EQ(QString("185"), regexp4.cap(4)) << regexp4.cap(4);
+    EXPECT_EQ(QString("33"), regexp4.cap(5)) << regexp4.cap(5);
 }
 
