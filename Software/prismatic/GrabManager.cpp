@@ -31,8 +31,6 @@
 #include "common/DebugOut.hpp"
 #include "PrismatikMath.hpp"
 #include "SettingsReader.hpp"
-#include "GrabberContext.hpp"
-#include "TimeEvaluations.hpp"
 #include "WinAPIGrabber.hpp"
 #include "WinAPIGrabberEachWidget.hpp"
 #include "QtGrabber.hpp"
@@ -56,35 +54,32 @@ static void *GetMainWindowHandle()
 }
 #endif
 
-GrabManager::GrabManager(QWidget *parent) : QObject(parent)
+GrabManager::GrabManager(const SettingsScope::SettingsReader *settings,
+                         QWidget *parent)
+    : QObject(parent)
+    , m_timerGrab(this)
+    , m_timerUpdateFPS(this)
+    , m_parentWidget(parent)
+    , m_fpsMs(0)
+    , m_isPauseGrabWhileResizeOrMoving(false)
+    , m_isGrabWidgetsVisible(false)
+    , m_settings(settings)
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
     qRegisterMetaType<GrabResult>("GrabResult");
 
-    m_settings = SettingsScope::SettingsReader::instance();
     Q_ASSERT(m_settings);
-    m_parentWidget = parent;
-
-    m_timerGrab = new QTimer(this);
-    m_timeEval = new TimeEvaluations();
-
-    m_fpsMs = 0;
-
-    m_grabberContext = new GrabberContext();
 
     m_isSendDataOnlyIfColorsChanged = m_settings->isSendDataOnlyIfColorsChanges();
 
     initGrabbers();
     m_grabber = queryGrabber(m_settings->getGrabberType());
 
-    m_timerUpdateFPS = new QTimer(this);
-    connect(m_timerUpdateFPS, SIGNAL(timeout()), this, SLOT(timeoutUpdateFPS()));
-    m_timerUpdateFPS->setSingleShot(false);
-    m_timerUpdateFPS->start(500);
-
-    m_isPauseGrabWhileResizeOrMoving = false;
-    m_isGrabWidgetsVisible = false;
+    connect(&m_timerUpdateFPS, &QTimer::timeout,
+            this, &GrabManager::timeoutUpdateFPS);
+    m_timerUpdateFPS.setSingleShot(false);
+    m_timerUpdateFPS.start(500);
 
     initColorLists(MaximumNumberOfLeds::Default);
     initLedWidgets(MaximumNumberOfLeds::Default);
@@ -103,8 +98,6 @@ GrabManager::~GrabManager()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-    delete m_timerGrab;
-    delete m_timeEval;
     m_grabber = NULL;
 
     for (int i = 0; i < m_ledWidgets.size(); i++)
@@ -128,8 +121,6 @@ GrabManager::~GrabManager()
     delete m_d3d10Grabber;
     m_d3d10Grabber = NULL;
 #endif
-
-    delete m_grabberContext;
 }
 
 void GrabManager::start(bool isGrabEnabled)
@@ -138,16 +129,17 @@ void GrabManager::start(bool isGrabEnabled)
 
     clearColorsNew();
 
-    if (m_grabber != NULL) {
-        if (isGrabEnabled) {
-            m_timerUpdateFPS->start();
-            m_grabber->startGrabbing();
-        } else {
-            clearColorsCurrent();
-            m_timerUpdateFPS->stop();
-            m_grabber->stopGrabbing();
-            emit ambilightTimeOfUpdatingColors(0);
-        }
+    if (!m_grabber)
+        return;
+
+    if (isGrabEnabled) {
+        m_timerUpdateFPS.start();
+        m_grabber->startGrabbing();
+    } else {
+        clearColorsCurrent();
+        m_timerUpdateFPS.stop();
+        m_grabber->stopGrabbing();
+        emit ambilightTimeOfUpdatingColors(0);
     }
 }
 
@@ -302,7 +294,7 @@ void GrabManager::handleGrabbedColors()
     // if one of LED widgets resizing or moving
     if (m_isPauseGrabWhileResizeOrMoving)
     {
-        m_timerGrab->start(50); // check in 50 ms
+        m_timerGrab.start(50); // check in 50 ms
         return;
     }    
 
@@ -378,8 +370,8 @@ void GrabManager::handleGrabbedColors()
         emit updateLedsColors(m_colorsCurrent);
     }
 
-    m_fpsMs = m_timeEval->howLongItEnd();
-    m_timeEval->howLongItStart();
+    m_fpsMs = m_timeEval.howLongItEnd();
+    m_timeEval.howLongItStart();
 
 }
 
@@ -481,37 +473,37 @@ void GrabManager::initGrabbers()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-    m_grabberContext->grabWidgets = &m_ledWidgetsToAreas;
-    m_grabberContext->grabResult = &m_colorsNew;
+    m_grabberContext.grabWidgets = &m_ledWidgetsToAreas;
+    m_grabberContext.grabResult = &m_colorsNew;
 
     for (int i = 0; i < Grab::GrabbersCount; i++)
         m_grabbers.append(NULL);
 
 #ifdef WINAPI_GRAB_SUPPORT
-    m_grabbers[Grab::GrabberTypeWinAPI] = initGrabber(new WinAPIGrabber(NULL, m_grabberContext));
+    m_grabbers[Grab::GrabberTypeWinAPI] = initGrabber(new WinAPIGrabber(NULL, &m_grabberContext));
 #endif
 
 #ifdef D3D9_GRAB_SUPPORT
-    m_grabbers[Grab::GrabberTypeD3D9] = initGrabber(new D3D9Grabber(NULL, m_grabberContext));
+    m_grabbers[Grab::GrabberTypeD3D9] = initGrabber(new D3D9Grabber(NULL, &m_grabberContext));
 #endif
 
 #ifdef X11_GRAB_SUPPORT
-    m_grabbers[Grab::GrabberTypeX11] = initGrabber(new X11Grabber(NULL, m_grabberContext));
+    m_grabbers[Grab::GrabberTypeX11] = initGrabber(new X11Grabber(NULL, &m_grabberContext));
 #endif
 
 #ifdef MAC_OS_CG_GRAB_SUPPORT
-    m_grabbers[Grab::GrabberTypeMacCoreGraphics] = initGrabber(new MacOSGrabber(NULL, m_grabberContext));
+    m_grabbers[Grab::GrabberTypeMacCoreGraphics] = initGrabber(new MacOSGrabber(NULL, &m_grabberContext));
 #endif
 #ifdef QT_GRAB_SUPPORT
     //TODO: migrate Qt grabbers to the new hierarchy
-    m_grabbers[Grab::GrabberTypeQtEachWidget] = initGrabber(new QtGrabberEachWidget(NULL, m_grabberContext));
-    m_grabbers[Grab::GrabberTypeQt] = initGrabber(new QtGrabber(NULL, m_grabberContext));
+    m_grabbers[Grab::GrabberTypeQtEachWidget] = initGrabber(new QtGrabberEachWidget(NULL, &m_grabberContext));
+    m_grabbers[Grab::GrabberTypeQt] = initGrabber(new QtGrabber(NULL, &m_grabberContext));
 #endif
 #ifdef WINAPI_EACH_GRAB_SUPPORT
-    m_grabbers[Grab::GrabberTypeWinAPIEachWidget] = initGrabber(new WinAPIGrabberEachWidget(NULL, m_grabberContext));
+    m_grabbers[Grab::GrabberTypeWinAPIEachWidget] = initGrabber(new WinAPIGrabberEachWidget(NULL, &m_grabberContext));
 #endif
 #ifdef D3D10_GRAB_SUPPORT
-    m_d3d10Grabber = static_cast<D3D10Grabber *>(initGrabber(new D3D10Grabber(NULL, m_grabberContext, &GetMainWindowHandle)));
+    m_d3d10Grabber = static_cast<D3D10Grabber *>(initGrabber(new D3D10Grabber(NULL, &m_grabberContext, &GetMainWindowHandle)));
     connect(m_d3d10Grabber, SIGNAL(grabberStateChangeRequested(bool)), SLOT(onGrabberStateChangeRequested(bool)));
     connect(getLightpackApp(), SIGNAL(postInitialization()), m_d3d10Grabber,  SLOT(init()));
 #endif

@@ -26,8 +26,11 @@
 #pragma once
 
 #include <QtGui>
+#include <QTimer>
 
 #include "GrabberBase.hpp"
+#include "GrabberContext.hpp"
+#include "TimeEvaluations.hpp"
 #include "enums.hpp"
 
 class GrabberContext;
@@ -36,17 +39,15 @@ class GrabWidget;
 class TimeEvaluations;
 class D3D10Grabber;
 
-namespace SettingsScope
-{
+namespace SettingsScope {
 class SettingsReader;
 }
 
-class GrabManager : public QObject
-{
+class GrabManager : public QObject {
     Q_OBJECT
 
 public:
-    GrabManager(QWidget *parent = 0);
+    GrabManager(const SettingsScope::SettingsReader *settings, QWidget *parent = 0);
     virtual ~GrabManager();
 
 signals:
@@ -104,14 +105,13 @@ private:
     D3D10Grabber *m_d3d10Grabber;
 #endif
 
-    QTimer *m_timerGrab;
-    QTimer *m_timerUpdateFPS;
+    QTimer m_timerGrab;
+    QTimer m_timerUpdateFPS;
     QWidget *m_parentWidget;
     QList<GrabWidget *> m_ledWidgets;
     QList<const GrabbedArea *> m_ledWidgetsToAreas;
     QList<QRgb> m_grabResult;
-    const static QColor m_backgroundAndTextColors[10][2];
-    TimeEvaluations *m_timeEval;
+    TimeEvaluations m_timeEval;
 
     QList<QRgb> m_colorsCurrent;
     QList<QRgb> m_colorsNew;
@@ -127,6 +127,6 @@ private:
     double m_fpsMs;
 
     bool m_isGrabWidgetsVisible;
-    GrabberContext * m_grabberContext;
-    SettingsScope::SettingsReader *m_settings;
+    GrabberContext m_grabberContext;
+    const SettingsScope::SettingsReader * const m_settings;
 };

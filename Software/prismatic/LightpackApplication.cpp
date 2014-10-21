@@ -487,7 +487,7 @@ void LightpackApplication::startApiServer()
 void LightpackApplication::startLedDeviceManager()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-    QScopedPointer<LedDeviceManager> ledManager(new LedDeviceManager());
+    QScopedPointer<LedDeviceManager> ledManager(new LedDeviceManager(settingsReader()));
     m_pluginInterface.reset(new LightpackPluginInterface(NULL));
 
     // LightpackPluginInterface connections.
@@ -578,7 +578,7 @@ void LightpackApplication::startPluginManager() {
 void LightpackApplication::initGrabManager()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
-    m_grabManager.reset(new GrabManager(NULL));
+    m_grabManager.reset(new GrabManager(settingsReader()));
     m_moodlampManager.reset(new MoodLampManager(NULL));
 
     m_moodlampManager->initFromSettings();
