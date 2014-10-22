@@ -45,21 +45,6 @@ class LedDeviceManager : public QObject
     Q_OBJECT
 
 public:
-    struct CommandContext {
-        QList<QRgb> savedColors;
-        int savedRefreshDelay;
-        int savedColorDepth;
-        int savedSmoothSlowdown;
-        double savedGamma;
-        int savedBrightness;
-        int savedLuminosityThreshold;
-        bool savedIsMinimumLuminosityEnabled;
-        QString savedColorSequence;
-    };
-
-    typedef void (*CommandRunner)(LedDeviceManager& context,
-                                  const CommandContext& context);
-
     explicit LedDeviceManager(const SettingsScope::SettingsReader* settings,
                               QObject *parent = 0);
     virtual ~LedDeviceManager();
@@ -117,41 +102,14 @@ private:
     AbstractLedDevice * createLedDevice(SupportedDevices::DeviceType deviceType);
     void connectLedDevice(AbstractLedDevice * device);
     void disconnectCurrentLedDevice();
-    //void cmdQueueAppend(LedDeviceCommands::Cmd);
-    void cmdQueueAppend(CommandRunner);
-    void cmdQueueProcessNext();
     void processOffLeds();
 
 private:
-    template <typename Command, typename ValueType>
-    void postCommand(ValueType value)
-    {
-        DEBUG_MID_LEVEL << Q_FUNC_INFO << value
-                        << "Is last command completed:" << m_isLastCommandCompleted;
+    class CommandDispatcher;
 
-        if (m_isLastCommandCompleted)
-        {
-            m_cmdTimeoutTimer->start();
-            m_isLastCommandCompleted = false;
-            //emit ledDeviceSetRefreshDelay(value);
-            Command::run(*this);
-        } else {
-            //m_savedRefreshDelay = value;
-            cmdQueueAppend(Command::saveContext(m_context, value));
-        }
-    }
-
-    bool m_isLastCommandCompleted;
-    bool m_isColorsSaved;
     Backlight::Status m_backlightStatus;
-
-    //QList<LedDeviceCommands::Cmd> m_cmdQueue;
-    QList<CommandRunner> m_cmdQueue;
-
-    CommandContext m_context;
-
     QList<AbstractLedDevice *> m_ledDevices;
     QtUtils::ThreadedObject<AbstractLedDevice> m_ledDevice;
-    QTimer *m_cmdTimeoutTimer;
     const SettingsScope::SettingsReader* const m_settings;
+    QScopedPointer<CommandDispatcher> m_commandDispatcher;
 };

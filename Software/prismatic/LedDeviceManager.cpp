@@ -25,6 +25,7 @@
  */
 
 #include <qglobal.h>
+#include <type_traits>
 
 #include "LedDeviceManager.hpp"
 #include "devices/LedDeviceLightpack.hpp"
@@ -42,29 +43,176 @@
 using namespace SettingsScope;
 
 namespace {
-struct SetRefreshDelay {
-    static void run(LedDeviceManager& manager,
-                    LedDeviceManager::CommandContext& context) {
-        emit manager.ledDeviceSetRefreshDelay(context.savedRefreshDelay);
+struct CommandContext {
+    QList<QRgb> savedColors;
+    bool isColorsSaved;
+    int savedRefreshDelay;
+    int savedColorDepth;
+    int savedSmoothSlowdown;
+    double savedGamma;
+    int savedBrightness;
+    int savedLuminosityThreshold;
+    bool savedIsMinimumLuminosityEnabled;
+    QString savedColorSequence;
+};
+
+template <void (LedDeviceManager::*signal)()>
+struct VoidCommandRunner {
+    static void run(LedDeviceManager& manager, const CommandContext&) {
+        emit (manager.*signal)();
     }
 
-    static void saveContext(LedDeviceManager::CommandContext& context, int value) {
-        context.savedRefreshDelay = value;
+    static void saveContext(CommandContext&) {}
+};
+
+template <void (LedDeviceManager::*signal)()>
+struct VoidCommandRunnerNoEmit {
+    static void run(LedDeviceManager& manager, const CommandContext&) {
+        (manager.*signal)();
+    }
+
+    static void saveContext(CommandContext&) {}
+};
+
+template <typename T>
+struct ParamBaseType {
+    typedef typename std::remove_const<
+        typename std::remove_reference<T>::type
+    >::type Type;
+};
+
+template <typename TParam,
+          void (LedDeviceManager::*signal)(TParam),
+          typename ParamBaseType<TParam>::Type CommandContext::* contextMember>
+struct BaseCommandRunner {
+    typedef TParam ParamType;
+
+    static void run(LedDeviceManager& manager, const CommandContext& context) {
+        emit (manager.*signal)(context.*contextMember);
+    }
+
+    static void saveContext(CommandContext& context, TParam value) {
+        context.*contextMember = value;
+    }
+};
+
+// Base class for custom command SetColors.
+typedef BaseCommandRunner<
+    const QList<QRgb>&,
+    &LedDeviceManager::ledDeviceSetColors,
+    &CommandContext::savedColors>
+SetColorsCommandBase;
+
+// Implementation for custom command SetColors.
+struct SetColorsCommandRunner : private SetColorsCommandBase {
+    typedef SetColorsCommandBase::ParamType ParamType;
+
+    static void run(LedDeviceManager& manager, const CommandContext& context) {
+        Q_ASSERT(context.isColorsSaved);
+        SetColorsCommandBase::run(manager, context);
+    }
+
+    static void saveColors(CommandContext& context, const ParamType& colors) {
+        SetColorsCommandBase::saveContext(context, colors);
+    }
+
+    // No real work.
+    static void saveContext(CommandContext&, const ParamType&) {
     }
 };
 }
 
+class LedDeviceManager::CommandDispatcher {
+public:
+    typedef void (*CommandRunner)(LedDeviceManager&, const CommandContext&);
+
+    CommandDispatcher(LedDeviceManager& owner)
+            : m_isLastCommandCompleted(true)
+            , m_owner(owner) {
+        m_cmdTimeoutTimer.setInterval(100);
+        connect(&m_cmdTimeoutTimer, &QTimer::timeout,
+                &owner, &LedDeviceManager::ledDeviceCommandTimedOut);
+        m_context.isColorsSaved = false;
+    }
+
+    template <typename Command, typename ...ValueTypes>
+    void postCommand(ValueTypes... values) {
+        DEBUG_MID_LEVEL << Q_FUNC_INFO
+                        << "Is last command completed:" << m_isLastCommandCompleted;
+
+        if (m_isLastCommandCompleted) {
+            m_cmdTimeoutTimer.start();
+            m_isLastCommandCompleted = false;
+            Command::run(m_owner, m_context);
+        } else {
+            Command::saveContext(m_context, values...);
+            appendCommand(&Command::run);
+        }
+    }
+
+    void appendCommand(CommandRunner cmdRunner) {
+        DEBUG_MID_LEVEL << Q_FUNC_INFO << cmdRunner;
+        Q_ASSERT(cmdRunner);
+
+        if (!m_cmdQueue.contains(cmdRunner))
+            m_cmdQueue.append(cmdRunner);
+    }
+
+    void commandCompleted(bool ok) {
+        DEBUG_MID_LEVEL << Q_FUNC_INFO << ok;
+
+        m_cmdTimeoutTimer.stop();
+
+        if (ok) {
+            processNextCommand();
+        } else {
+            m_cmdQueue.clear();
+            m_isLastCommandCompleted = true;
+        }
+    }
+
+    void resetState() {
+        commandCompleted(false);
+    }
+
+    bool isColorsSaved() const { return m_context.isColorsSaved; }
+
+    const QList<QRgb>& savedColors() const { return m_context.savedColors; }
+
+    void setSavedColors(const QList<QRgb>& colors) {
+        m_context.savedColors = colors;
+        m_context.isColorsSaved = true;
+    }
+
+private:
+    void processNextCommand() {
+        DEBUG_MID_LEVEL << Q_FUNC_INFO << m_cmdQueue;
+
+        if (!m_cmdQueue.isEmpty()) {
+            const CommandRunner runner = m_cmdQueue.takeFirst();
+            Q_ASSERT(runner);
+
+            DEBUG_HIGH_LEVEL << Q_FUNC_INFO << "processing cmd = " << runner;
+            m_cmdTimeoutTimer.start();
+            runner(m_owner, m_context);
+        }
+    }
+
+    bool m_isLastCommandCompleted;
+    QList<CommandRunner> m_cmdQueue;
+    QTimer m_cmdTimeoutTimer;
+    CommandContext m_context;
+    LedDeviceManager& m_owner;
+};
+
 LedDeviceManager::LedDeviceManager(const SettingsScope::SettingsReader* settings,
                                    QObject *parent)
     : QObject(parent)
-    , m_isLastCommandCompleted(true)
-    , m_isColorsSaved(false)
     , m_backlightStatus(Backlight::StatusOn)
     , m_ledDevice(CURRENT_LOCATION)
-    , m_cmdTimeoutTimer(NULL)
     , m_settings(settings) {
     Q_ASSERT(settings);
-    for (int i = 0; i < SupportedDevices::DeviceTypesCount; i++)
+    for (int i = 0; i < SupportedDevices::DeviceTypesCount; ++i)
         m_ledDevices.append(NULL);
 }
 
@@ -81,18 +229,11 @@ LedDeviceManager::~LedDeviceManager()
     const bool joined = m_ledDevice.join(1000);
     Q_ASSERT(joined);
     Q_UNUSED(joined);
-
-    if (m_cmdTimeoutTimer)
-        delete m_cmdTimeoutTimer;
 }
 
 void LedDeviceManager::init()
 {
-    if (!m_cmdTimeoutTimer)
-        m_cmdTimeoutTimer = new QTimer();
-
-    m_cmdTimeoutTimer->setInterval(100);
-    connect(m_cmdTimeoutTimer, SIGNAL(timeout()), this, SLOT(ledDeviceCommandTimedOut()));
+    m_commandDispatcher.reset(new CommandDispatcher(*this));
 
     initLedDevice();
 }
@@ -112,55 +253,28 @@ void LedDeviceManager::switchOnLeds()
     DEBUG_MID_LEVEL << Q_FUNC_INFO;
 
     m_backlightStatus = Backlight::StatusOn;
-    if (m_isColorsSaved)
-        emit ledDeviceSetColors(m_savedColors);
+    Q_ASSERT(m_commandDispatcher.data());
+    if (m_commandDispatcher->isColorsSaved())
+        emit ledDeviceSetColors(m_commandDispatcher->savedColors());
 }
 
-void LedDeviceManager::setColors(const QList<QRgb> & colors)
+void LedDeviceManager::setColors(const QList<QRgb>& colors)
 {
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << "Is last command completed:" << m_isLastCommandCompleted
-                    << " m_backlightStatus = " << m_backlightStatus;
+    DEBUG_MID_LEVEL << Q_FUNC_INFO << " m_backlightStatus = " << m_backlightStatus;
 
-    if (m_backlightStatus == Backlight::StatusOn)
-    {
-        m_savedColors = colors;
-        m_isColorsSaved = true;
-        if (m_isLastCommandCompleted)
-        {
-            m_cmdTimeoutTimer->start();
-            m_isLastCommandCompleted = false;
-            emit ledDeviceSetColors(colors);
-        } else {
-            cmdQueueAppend(LedDeviceCommands::SetColors);
-        }
-    }
-}
+    if (m_backlightStatus != Backlight::StatusOn)
+        return;
 
-namespace {
-struct SwitchOffLeds {
-    static void run(LedDeviceManager& manager,
-                    LedDeviceManager::CommandContext& context) {
-        emit manager.processOffLeds();
-    }
-
-    static void saveContext(LedDeviceManager::CommandContext& context, int value) {
-        context.savedRefreshDelay = value;
-    }
-};
+    Q_ASSERT(m_commandDispatcher.data());
+    // Always save the colors array.
+    m_commandDispatcher->setSavedColors(colors);
+    m_commandDispatcher->postCommand<SetColorsCommandRunner>(colors);
 }
 
 void LedDeviceManager::switchOffLeds()
 {
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << "Is last command completed:" << m_isLastCommandCompleted;
-
-    if (m_isLastCommandCompleted)
-    {
-        m_cmdTimeoutTimer->start();
-        m_isLastCommandCompleted = false;
-        processOffLeds();
-    } else {
-        cmdQueueAppend(LedDeviceCommands::OffLeds);
-    }
+    typedef VoidCommandRunnerNoEmit<&LedDeviceManager::processOffLeds> SwitchOffLeds;
+    m_commandDispatcher->postCommand<SwitchOffLeds>();
 }
 
 void LedDeviceManager::processOffLeds()
@@ -172,175 +286,104 @@ void LedDeviceManager::processOffLeds()
 
 void LedDeviceManager::setRefreshDelay(int value)
 {
-    postCommand<SetRefreshDelay>(value);
+    typedef BaseCommandRunner<
+        int,
+        &LedDeviceManager::ledDeviceSetRefreshDelay,
+        &CommandContext::savedRefreshDelay> SetRefreshDelay;
+
+    m_commandDispatcher->postCommand<SetRefreshDelay>(value);
 }
 
 void LedDeviceManager::setColorDepth(int value)
 {
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << value << "Is last command completed:" << m_isLastCommandCompleted;
-
-    if (m_isLastCommandCompleted)
-    {
-        m_cmdTimeoutTimer->start();
-        m_isLastCommandCompleted = false;
-        emit ledDeviceSetColorDepth(value);
-    } else {
-        m_savedColorDepth = value;
-        cmdQueueAppend(LedDeviceCommands::SetColorDepth);
-    }
+    typedef BaseCommandRunner<
+        int,
+        &LedDeviceManager::ledDeviceSetColorDepth,
+        &CommandContext::savedColorDepth> SetColorDepth;
+    m_commandDispatcher->postCommand<SetColorDepth>(value);
 }
 
 void LedDeviceManager::setSmoothSlowdown(int value)
 {
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << value << "Is last command completed:" << m_isLastCommandCompleted;
-
-    if (m_isLastCommandCompleted)
-    {
-        m_isLastCommandCompleted = false;
-        m_cmdTimeoutTimer->start();
-        emit ledDeviceSetSmoothSlowdown(value);
-    } else {
-        m_savedSmoothSlowdown = value;
-        cmdQueueAppend(LedDeviceCommands::SetSmoothSlowdown);
-    }
+    typedef BaseCommandRunner<
+        int,
+        &LedDeviceManager::ledDeviceSetSmoothSlowdown,
+        &CommandContext::savedSmoothSlowdown> SetSmoothSlowdown;
+    m_commandDispatcher->postCommand<SetSmoothSlowdown>(value);
 }
 
 void LedDeviceManager::setGamma(double value)
 {
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << value << "Is last command completed:" << m_isLastCommandCompleted;
-
-    if (m_isLastCommandCompleted)
-    {
-        m_isLastCommandCompleted = false;
-        m_cmdTimeoutTimer->start();
-        emit ledDeviceSetGamma(value);
-    } else {
-        m_savedGamma = value;
-        cmdQueueAppend(LedDeviceCommands::SetGamma);
-    }
+    typedef BaseCommandRunner<
+        double,
+        &LedDeviceManager::ledDeviceSetGamma,
+        &CommandContext::savedGamma> SetGamma;
+    m_commandDispatcher->postCommand<SetGamma>(value);
 }
 
 void LedDeviceManager::setBrightness(int value)
 {
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << value << "Is last command completed:" << m_isLastCommandCompleted;
-
-    if (m_isLastCommandCompleted)
-    {
-        m_isLastCommandCompleted = false;
-        m_cmdTimeoutTimer->start();
-        emit ledDeviceSetBrightness(value);
-    } else {
-        m_savedBrightness = value;
-        cmdQueueAppend(LedDeviceCommands::SetBrightness);
-    }
+    typedef BaseCommandRunner<
+        int,
+        &LedDeviceManager::ledDeviceSetBrightness,
+        &CommandContext::savedBrightness> SetBrightness;
+    m_commandDispatcher->postCommand<SetBrightness>(value);
 }
 
 void LedDeviceManager::setLuminosityThreshold(int value)
 {
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << value << "Is last command completed:" << m_isLastCommandCompleted;
-
-    if (m_isLastCommandCompleted)
-    {
-        m_isLastCommandCompleted = false;
-        m_cmdTimeoutTimer->start();
-        emit ledDeviceSetLuminosityThreshold(value);
-    } else {
-        m_savedLuminosityThreshold = value;
-        cmdQueueAppend(LedDeviceCommands::SetLuminosityThreshold);
-    }
+    typedef BaseCommandRunner<
+        int,
+        &LedDeviceManager::ledDeviceSetLuminosityThreshold,
+        &CommandContext::savedLuminosityThreshold> SetLuminosityThreshold;
+    m_commandDispatcher->postCommand<SetLuminosityThreshold>(value);
 }
 
 void LedDeviceManager::setMinimumLuminosityEnabled(bool value)
 {
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << value << "Is last command completed:" << m_isLastCommandCompleted;
-
-    if (m_isLastCommandCompleted)
-    {
-        m_isLastCommandCompleted = false;
-        m_cmdTimeoutTimer->start();
-        emit ledDeviceSetMinimumLuminosityEnabled(value);
-    } else {
-        m_savedIsMinimumLuminosityEnabled = value;
-        cmdQueueAppend(LedDeviceCommands::SetMinimumLuminosityEnabled);
-    }
+    typedef BaseCommandRunner<
+        bool,
+        &LedDeviceManager::ledDeviceSetMinimumLuminosityEnabled,
+        &CommandContext::savedIsMinimumLuminosityEnabled>
+    SetMinimumLuminosityEnabled;
+    m_commandDispatcher->postCommand<SetMinimumLuminosityEnabled>(value);
 }
 
 void LedDeviceManager::setColorSequence(QString value)
 {
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << value << "Is last command completed:" << m_isLastCommandCompleted;
-
-    if (m_isLastCommandCompleted)
-    {
-        m_isLastCommandCompleted = false;
-        m_cmdTimeoutTimer->start();
-        emit ledDeviceSetColorSequence(value);
-    } else {
-        m_savedColorSequence = value;
-        cmdQueueAppend(LedDeviceCommands::SetColorSequence);
-    }
+    typedef BaseCommandRunner<
+        QString,
+        &LedDeviceManager::ledDeviceSetColorSequence,
+        &CommandContext::savedColorSequence> SetColorSequence;
+    m_commandDispatcher->postCommand<SetColorSequence>(value);
 }
 
 void LedDeviceManager::requestFirmwareVersion()
 {
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << "Is last command completed:" << m_isLastCommandCompleted;
-
-    if (m_isLastCommandCompleted)
-    {
-        m_isLastCommandCompleted = false;
-        m_cmdTimeoutTimer->start();
-        emit ledDeviceRequestFirmwareVersion();
-    } else {
-        cmdQueueAppend(LedDeviceCommands::RequestFirmwareVersion);
-    }
+    typedef VoidCommandRunner<
+        &LedDeviceManager::ledDeviceRequestFirmwareVersion> RequestFirmwareVersion;
+    m_commandDispatcher->postCommand<RequestFirmwareVersion>();
 }
 
 void LedDeviceManager::updateDeviceSettings()
 {
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << "Is last command completed:" << m_isLastCommandCompleted;
-
-    if (m_isLastCommandCompleted)
-    {
-        m_isLastCommandCompleted = false;
-        m_cmdTimeoutTimer->start();
-        emit ledDeviceUpdateDeviceSettings();
-    } else {
-        cmdQueueAppend(LedDeviceCommands::UpdateDeviceSettings);
-    }
+    typedef VoidCommandRunner<
+        &LedDeviceManager::ledDeviceUpdateDeviceSettings> UpdateDeviceSettings;
+    m_commandDispatcher->postCommand<UpdateDeviceSettings>();
 }
 
 void LedDeviceManager::updateWBAdjustments()
 {
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << "Is last command completed:" << m_isLastCommandCompleted;
-
-    if (m_isLastCommandCompleted)
-    {
-        m_isLastCommandCompleted = false;
-        m_cmdTimeoutTimer->start();
-        emit ledDeviceUpdateWBAdjustments();
-    } else {
-        cmdQueueAppend(LedDeviceCommands::UpdateWBAdjustments);
-    }
+    typedef VoidCommandRunner<
+        &LedDeviceManager::ledDeviceUpdateWBAdjustments> UpdateWBAdjustments;
+    m_commandDispatcher->postCommand<UpdateWBAdjustments>();
 }
 
 void LedDeviceManager::ledDeviceCommandCompleted(bool ok)
 {
     DEBUG_MID_LEVEL << Q_FUNC_INFO << ok;
 
-    m_cmdTimeoutTimer->stop();
-
-    if (ok)
-    {
-        if (m_cmdQueue.isEmpty() == false)
-            cmdQueueProcessNext();
-        else
-            m_isLastCommandCompleted = true;
-    }
-    else
-    {
-        m_cmdQueue.clear();
-        m_isLastCommandCompleted = true;
-    }
-
+    m_commandDispatcher->commandCompleted(ok);
     emit ioDeviceSuccess(ok);
 }
 
@@ -348,12 +391,11 @@ void LedDeviceManager::initLedDevice()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-    m_isLastCommandCompleted = true;
+    Q_ASSERT(m_commandDispatcher.data());
+    m_commandDispatcher->resetState();
 
-    SupportedDevices::DeviceType connectedDevice = m_settings->getConnectedDevice();
-
-    if (m_ledDevices[connectedDevice] == NULL)
-    {
+    const SupportedDevices::DeviceType connectedDevice = m_settings->getConnectedDevice();
+    if (m_ledDevices[connectedDevice] == NULL) {
         m_ledDevices[connectedDevice] = createLedDevice(connectedDevice);
         connectLedDevice(m_ledDevices[connectedDevice]);
     } else {
@@ -457,8 +499,7 @@ void LedDeviceManager::connectLedDevice(AbstractLedDevice * device) {
 void LedDeviceManager::disconnectCurrentLedDevice()
 {
     const AbstractLedDevice* const device = m_ledDevice.get();
-    if (device == NULL)
-    {
+    if (device == NULL) {
         qWarning() << Q_FUNC_INFO << "device == NULL";
         return;
     }
@@ -487,103 +528,6 @@ void LedDeviceManager::disconnectCurrentLedDevice()
         .disconnect(SIGNAL(ledDeviceRequestFirmwareVersion()), SLOT(requestFirmwareVersion()))
         .disconnect(SIGNAL(ledDeviceUpdateWBAdjustments()), SLOT(updateDeviceSettings()))
         .disconnect(SIGNAL(ledDeviceUpdateDeviceSettings()), SLOT(updateDeviceSettings()));
-}
-
-void LedDeviceManager::cmdQueueAppend(CommandRunner cmd)
-{
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << cmd;
-
-    if (!m_cmdQueue.contains(cmd))
-        m_cmdQueue.append(cmd);
-}
-
-void LedDeviceManager::cmdQueueProcessNext()
-{
-    DEBUG_MID_LEVEL << Q_FUNC_INFO << m_cmdQueue;
-
-    if (m_cmdQueue.isEmpty() == false)
-    {
-        const CommandRunner runner = m_cmdQueue.takeFirst();
-
-        DEBUG_HIGH_LEVEL << Q_FUNC_INFO << "processing cmd = " << cmd;
-        runner(*this, m_context);
-
-        /*
-        switch(cmd)
-        {
-        case LedDeviceCommands::OffLeds:
-            m_cmdTimeoutTimer->start();
-            processOffLeds();
-            break;
-
-        case LedDeviceCommands::SetColors:
-            if (m_isColorsSaved) {
-                m_cmdTimeoutTimer->start();
-                emit ledDeviceSetColors(m_savedColors);
-            }
-            break;
-
-        case LedDeviceCommands::SetRefreshDelay:
-            m_cmdTimeoutTimer->start();
-            emit ledDeviceSetRefreshDelay(m_savedRefreshDelay);
-            break;
-
-        case LedDeviceCommands::SetColorDepth:
-            m_cmdTimeoutTimer->start();
-            emit ledDeviceSetColorDepth(m_savedColorDepth);
-            break;
-
-        case LedDeviceCommands::SetSmoothSlowdown:
-            m_cmdTimeoutTimer->start();
-            emit ledDeviceSetSmoothSlowdown(m_savedSmoothSlowdown);
-            break;
-
-        case LedDeviceCommands::SetGamma:
-            m_cmdTimeoutTimer->start();
-            emit ledDeviceSetGamma(m_savedGamma);
-            break;
-
-        case LedDeviceCommands::SetBrightness:
-            m_cmdTimeoutTimer->start();
-            emit ledDeviceSetBrightness(m_savedBrightness);
-            break;
-
-        case LedDeviceCommands::SetColorSequence:
-            m_cmdTimeoutTimer->start();
-            emit ledDeviceSetColorSequence(m_savedColorSequence);
-            break;
-
-        case LedDeviceCommands::SetLuminosityThreshold:
-            m_cmdTimeoutTimer->start();
-            emit ledDeviceSetLuminosityThreshold(m_savedLuminosityThreshold);
-            break;
-
-        case LedDeviceCommands::SetMinimumLuminosityEnabled:
-            m_cmdTimeoutTimer->start();
-            emit ledDeviceSetMinimumLuminosityEnabled(m_savedIsMinimumLuminosityEnabled);
-            break;
-
-        case LedDeviceCommands::RequestFirmwareVersion:
-            m_cmdTimeoutTimer->start();
-            emit ledDeviceRequestFirmwareVersion();
-            break;
-
-        case LedDeviceCommands::UpdateDeviceSettings:
-            m_cmdTimeoutTimer->start();
-            emit ledDeviceUpdateDeviceSettings();
-            break;
-
-        case LedDeviceCommands::UpdateWBAdjustments:
-            m_cmdTimeoutTimer->start();
-            emit ledDeviceUpdateWBAdjustments();
-            break;
-
-        default:
-            qCritical() << Q_FUNC_INFO << "fail process cmd =" << cmd;
-            break;
-        }
-        //*/
-    }
 }
 
 void LedDeviceManager::ledDeviceCommandTimedOut()
