@@ -43,7 +43,8 @@ void Plugin::readPluginInfo(const QSettings& settings, PluginInfo* info) {
 
 Plugin::Plugin(const QString& name, const QString& path, QObject *parent)
     : QObject(parent)
-    , m_pathPlugin(path) {
+    , m_pathPlugin(path)
+    , m_processState(QProcess::NotRunning) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << name << path;
     const QDir pluginPath(m_pathPlugin);
     const QString fileName = pluginPath.absoluteFilePath(name+".ini");
@@ -54,11 +55,11 @@ Plugin::Plugin(const QString& name, const QString& path, QObject *parent)
     m_info.icon = pluginPath.absoluteFilePath(m_info.icon);
     settings.endGroup();
 
-    m_process.reset(new QProcess(this));
     qRegisterMetaType<QProcess::ProcessState>("QProcess::ProcessState");
 }
 
 Plugin::~Plugin() {
+    DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     Stop();
 }
 
@@ -110,11 +111,17 @@ void Plugin::setEnabled(bool enable) {
 void Plugin::Start() {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << m_info.exec;
 
-    m_process->disconnect();
-    connect(m_process.data(), &QProcess::stateChanged,
-            this, &Plugin::stateChanged);
+    if (m_process) {
+        DEBUG_LOW_LEVEL << "Starting plugin process while it's still running!";
+        Stop();
+    }
 
     if (!m_info.exec.isEmpty()) {
+        m_process.reset(new QProcess(this));
+        connect(m_process.data(), &QProcess::stateChanged,
+                this, &Plugin::processStateChanged);
+        connect(m_process.data(), SIGNAL(finished(int )),
+                this, SLOT(processFinished(int )));
         m_process->setWorkingDirectory(m_pathPlugin);
         m_process->setEnvironment(QProcess::systemEnvironment());
         // process->setProcessChannelMode(QProcess::ForwardedChannels);
@@ -123,10 +130,32 @@ void Plugin::Start() {
 }
 
 void Plugin::Stop() {
-    m_process->kill();
+    DEBUG_LOW_LEVEL << Q_FUNC_INFO;
+
+    if (m_process) {
+        m_process->disconnect();
+        m_process->kill();
+        processFinished(1);
+    }
+}
+
+void Plugin::processFinished(int) {
+    m_process.take()->deleteLater();
+    m_processState = QProcess::NotRunning;
+    emit stateChanged(m_processState);
+}
+
+void Plugin::processStateChanged(QProcess::ProcessState newState) {
+    DEBUG_LOW_LEVEL << Q_FUNC_INFO << newState;
+    if (newState == QProcess::NotRunning) {
+        Stop();
+    } else {
+        m_processState = newState;
+        emit stateChanged(m_processState);
+    }
 }
 
 QProcess::ProcessState Plugin::state() const {
-    return m_process->state();
+    return m_processState;
 }
 
