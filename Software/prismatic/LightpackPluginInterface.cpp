@@ -11,7 +11,9 @@
 
 using namespace SettingsScope;
 
-const int LightpackPluginInterface::SignalWaitTimeoutMs = 1000; // 1 second
+namespace {
+static const int kSignalWaitTimeoutMs = 1000;  // 1 second
+}
 
 LightpackPluginInterface::LightpackPluginInterface(QObject *parent) :
     QObject(parent)
@@ -494,9 +496,9 @@ int LightpackPluginInterface::GetStatus()
         // Wait signal from SettingsWindow with status of backlight
         // or if timeout -- result will be unknown
         m_time.restart();
-        while (m_isRequestBacklightStatusDone == false && m_time.elapsed() < SignalWaitTimeoutMs)
+        while (m_isRequestBacklightStatusDone == false && m_time.elapsed() < kSignalWaitTimeoutMs)
         {
-            QApplication::processEvents(QEventLoop::WaitForMoreEvents, SignalWaitTimeoutMs);
+            QApplication::processEvents(QEventLoop::WaitForMoreEvents, kSignalWaitTimeoutMs);
         }
 
         if (m_isRequestBacklightStatusDone)
@@ -590,25 +592,3 @@ QString LightpackPluginInterface::GetPluginsDir()
     return QString(Settings::instance()->getApplicationDirPath() + "Plugins");
 }
 
-/*
-// TODO: settings (global or profile?)
-void LightpackPluginInterface::SetSettingProfile(QString key, QVariant value)
-{
-    Settings::instance()->setValue(key,value);
-}
-
-QVariant LightpackPluginInterface::GetSettingProfile(QString key)
-{
-    return Settings::instance()->value(key);
-}
-
-void LightpackPluginInterface::SetSettingMain(QString key, QVariant value)
-{
-    Settings::instance()->setValueMain(key,value);
-}
-
-QVariant LightpackPluginInterface::GetSettingMain(QString key)
-{
-    return Settings::instance()->valueMain(key);
-}
-//*/
