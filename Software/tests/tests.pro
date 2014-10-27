@@ -70,6 +70,7 @@ HEADERS += \
     ../prismatic/LightpackCommandLineParser.hpp \
     ../prismatic/LightpackPluginInterface.hpp \
     ../prismatic/Plugin.hpp \
+    ../prismatic/PluginsManager.hpp \
     ../prismatic/settings/Settings.hpp \
     ../prismatic/settings/SettingsSignals.hpp \
     ../prismatic/UpdatesProcessor.hpp \
@@ -84,6 +85,7 @@ SOURCES += \
     ../prismatic/LightpackCommandLineParser.cpp \
     ../prismatic/LightpackPluginInterface.cpp \
     ../prismatic/Plugin.cpp \
+    ../prismatic/PluginsManager.cpp \
     ../prismatic/settings/ConfigurationProfile.cpp \
     ../prismatic/settings/DeviceTypesInfo.cpp \
     ../prismatic/settings/Settings.cpp \
@@ -105,7 +107,8 @@ SOURCES += \
     QtUtilsTests.cpp \
     mocks/SignalAndSlotObject.cpp \
     CommandSetColorParsingTests.cpp \
-    PluginTest.cpp
+    PluginTest.cpp \
+    PluginsManagerTest.cpp
 
 win32{
     HEADERS += \
@@ -125,6 +128,6 @@ win32{
 }
 
 OTHER_FILES += \
-    data/plugins/info/plugin.ini \
-    data/plugins/simple/plugin.ini \
-    data/plugins/kill/plugin.ini
+    data/plugins/info/info.ini \
+    data/plugins/simple/simple.ini \
+    data/plugins/kill/kill.ini
