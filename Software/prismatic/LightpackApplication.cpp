@@ -538,7 +538,8 @@ void LightpackApplication::startLedDeviceManager()
         makeQueuedConnector(m_settingsWindow, ledManager)
             .connect(SIGNAL(requestFirmwareVersion()), SLOT(requestFirmwareVersion()))
             .connect(SIGNAL(switchOffLeds()), SLOT(switchOffLeds()))
-            .connect(SIGNAL(switchOnLeds()), SLOT(switchOnLeds()))
+            .connect(SIGNAL(switchOnLeds()), SLOT(switchOnLeds()));
+        makeQueuedConnector(ledManager, m_settingsWindow)
             .connect(SIGNAL(openDeviceSuccess(bool)), SLOT(ledDeviceOpenSuccess(bool)))
             .connect(SIGNAL(ioDeviceSuccess(bool)), SLOT(ledDeviceCallSuccess(bool)))
             .connect(SIGNAL(firmwareVersion(QString)),
@@ -704,6 +705,8 @@ void LightpackApplication::requestBacklightStatus()
 void LightpackApplication::free() {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
+    disconnect(this, SIGNAL(focusChanged(QWidget*,QWidget*)),
+               this, SLOT(onFocusChanged(QWidget*,QWidget*)));
     if (m_moodlampManager)
         m_moodlampManager->start(false);
 

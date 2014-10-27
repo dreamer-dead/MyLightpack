@@ -64,7 +64,7 @@ public:
             bool force;
         };
 
-        void setValue(const QString & key, const QVariant& value, bool force = true)
+        void setValue(const QString & key, const QVariant& value, bool force = false)
         {
             const OverridingValue overridingValue = {value, force};
             m_overrides.insert(key, overridingValue);
