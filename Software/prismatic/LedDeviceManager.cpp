@@ -58,7 +58,11 @@ struct CommandContext {
 
 template <void (LedDeviceManager::*signal)()>
 struct VoidCommandRunner {
-    static void run(LedDeviceManager& manager, const CommandContext&) {
+    static void runDeferred(LedDeviceManager& manager, const CommandContext&) {
+        emit (manager.*signal)();
+    }
+
+    static void runImmediate(LedDeviceManager& manager) {
         emit (manager.*signal)();
     }
 
@@ -67,7 +71,11 @@ struct VoidCommandRunner {
 
 template <void (LedDeviceManager::*signal)()>
 struct VoidCommandRunnerNoEmit {
-    static void run(LedDeviceManager& manager, const CommandContext&) {
+    static void runDeferred(LedDeviceManager& manager, const CommandContext&) {
+        (manager.*signal)();
+    }
+
+    static void runImmediate(LedDeviceManager& manager) {
         (manager.*signal)();
     }
 
@@ -87,7 +95,11 @@ template <typename TParam,
 struct BaseCommandRunner {
     typedef TParam ParamType;
 
-    static void run(LedDeviceManager& manager, const CommandContext& context) {
+    static void runImmediate(LedDeviceManager& manager, TParam value) {
+        emit (manager.*signal)(value);
+    }
+
+    static void runDeferred(LedDeviceManager& manager, const CommandContext& context) {
         emit (manager.*signal)(context.*contextMember);
     }
 
@@ -107,9 +119,13 @@ SetColorsCommandBase;
 struct SetColorsCommandRunner : private SetColorsCommandBase {
     typedef SetColorsCommandBase::ParamType ParamType;
 
-    static void run(LedDeviceManager& manager, const CommandContext& context) {
+    static void runImmediate(LedDeviceManager& manager, const QList<QRgb>& value) {
+        SetColorsCommandBase::runImmediate(manager, value);
+    }
+
+    static void runDeferred(LedDeviceManager& manager, const CommandContext& context) {
         Q_ASSERT(context.isColorsSaved);
-        SetColorsCommandBase::run(manager, context);
+        SetColorsCommandBase::runDeferred(manager, context);
     }
 
     static void saveColors(CommandContext& context, const ParamType& colors) {
@@ -143,10 +159,10 @@ public:
         if (m_isLastCommandCompleted) {
             m_cmdTimeoutTimer.start();
             m_isLastCommandCompleted = false;
-            Command::run(m_owner, m_context);
+            Command::runImmediate(m_owner, values...);
         } else {
             Command::saveContext(m_context, values...);
-            appendCommand(&Command::run);
+            appendCommand(&Command::runDeferred);
         }
     }
 
@@ -164,7 +180,7 @@ public:
         m_cmdTimeoutTimer.stop();
 
         if (ok) {
-            processNextCommand();
+            m_isLastCommandCompleted = !processNextCommand();
         } else {
             m_cmdQueue.clear();
             m_isLastCommandCompleted = true;
@@ -185,7 +201,7 @@ public:
     }
 
 private:
-    void processNextCommand() {
+    bool processNextCommand() {
         DEBUG_MID_LEVEL << Q_FUNC_INFO << m_cmdQueue;
 
         if (!m_cmdQueue.isEmpty()) {
@@ -195,7 +211,9 @@ private:
             DEBUG_HIGH_LEVEL << Q_FUNC_INFO << "processing cmd = " << runner;
             m_cmdTimeoutTimer.start();
             runner(m_owner, m_context);
+            return true;
         }
+        return false;
     }
 
     bool m_isLastCommandCompleted;
@@ -470,11 +488,11 @@ void LedDeviceManager::connectLedDevice(AbstractLedDevice * device) {
 
     QtUtils::makeQueuedConnector(device, this)
         .connect(SIGNAL(commandCompleted(bool)), SLOT(ledDeviceCommandCompleted(bool)))
-        .connect(SIGNAL(firmwareVersion(QString)), SLOT(firmwareVersion(QString)))
-        .connect(SIGNAL(ioDeviceSuccess(bool)), SLOT(ioDeviceSuccess(bool)))
-        .connect(SIGNAL(openDeviceSuccess(bool)), SLOT(openDeviceSuccess(bool)))
+        .connect(SIGNAL(firmwareVersion(QString)), SIGNAL(firmwareVersion(QString)))
+        .connect(SIGNAL(ioDeviceSuccess(bool)), SIGNAL(ioDeviceSuccess(bool)))
+        .connect(SIGNAL(openDeviceSuccess(bool)), SIGNAL(openDeviceSuccess(bool)))
         .connect(SIGNAL(colorsUpdated(QList<QRgb>)),
-                 SLOT(setColors_VirtualDeviceCallback(QList<QRgb>)));
+                 SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)));
 
     QtUtils::makeQueuedConnector(this, device)
         .connect(SIGNAL(ledDeviceOpen()), SLOT(open()))
@@ -506,11 +524,11 @@ void LedDeviceManager::disconnectCurrentLedDevice()
 
     QtUtils::makeConnector(device, this)
         .disconnect(SIGNAL(commandCompleted(bool)), SLOT(ledDeviceCommandCompleted(bool)))
-        .disconnect(SIGNAL(firmwareVersion(QString)), SLOT(firmwareVersion(QString)))
-        .disconnect(SIGNAL(ioDeviceSuccess(bool)), SLOT(ioDeviceSuccess(bool)))
-        .disconnect(SIGNAL(openDeviceSuccess(bool)), SLOT(openDeviceSuccess(bool)))
+        .disconnect(SIGNAL(firmwareVersion(QString)), SIGNAL(firmwareVersion(QString)))
+        .disconnect(SIGNAL(ioDeviceSuccess(bool)), SIGNAL(ioDeviceSuccess(bool)))
+        .disconnect(SIGNAL(openDeviceSuccess(bool)), SIGNAL(openDeviceSuccess(bool)))
         .disconnect(SIGNAL(colorsUpdated(QList<QRgb>)),
-                    SLOT(setColors_VirtualDeviceCallback(QList<QRgb>)));
+                    SIGNAL(setColors_VirtualDeviceCallback(QList<QRgb>)));
 
     QtUtils::makeConnector(this, device)
         .disconnect(SIGNAL(ledDeviceOpen()), SLOT(open()))
