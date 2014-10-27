@@ -104,7 +104,8 @@ SOURCES += \
     ConnectorTests.cpp \
     QtUtilsTests.cpp \
     mocks/SignalAndSlotObject.cpp \
-    CommandSetColorParsingTests.cpp
+    CommandSetColorParsingTests.cpp \
+    PluginTest.cpp
 
 win32{
     HEADERS += \
@@ -122,3 +123,8 @@ win32{
         ../hooks/ProxyFuncVFTable.cpp \
         ../hooks/Logger.cpp
 }
+
+OTHER_FILES += \
+    data/plugins/info/plugin.ini \
+    data/plugins/simple/plugin.ini \
+    data/plugins/kill/plugin.ini

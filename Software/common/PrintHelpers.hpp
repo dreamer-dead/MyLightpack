@@ -25,6 +25,7 @@
 #pragma once
 
 #include <qglobal.h>
+#include <QColor>
 #include <QRect>
 #include <QString>
 #include <iostream>

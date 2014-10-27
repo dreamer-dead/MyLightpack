@@ -2,8 +2,8 @@
 
 #include <QSettings>
 #include <QIcon>
-#include <QFileInfo>
 #include <QDir>
+#include <QFile>
 
 #include "Settings.hpp"
 #include "common/DebugOut.hpp"
@@ -11,127 +11,122 @@
 
 using namespace SettingsScope;
 
+namespace {
 #if defined(Q_OS_WIN)
-    const QString kOsSpecificExecuteKey = "ExecuteOnWindows";
+static const QString kOsSpecificExecuteKey = "ExecuteOnWindows";
 #elif defined(MAC_OS)
-    const QString kOsSpecificExecuteKey = "ExecuteOnOSX";
+static const QString kOsSpecificExecuteKey = "ExecuteOnOSX";
 #elif defined(Q_OS_UNIX)
-    const QString kOsSpecificExecuteKey = "ExecuteOnNix";
+static const QString kOsSpecificExecuteKey = "ExecuteOnNix";
 #endif
 
-namespace {
 static const QString kPriorityKey("Priority");
 static const QString kEnableKey("Enable");
+static const QString kDefaultIconPath(":/icons/plugins.png");
+static const QString kDefaultInfoValue("");
 }
 
-Plugin::Plugin(QString name, QString path, QObject *parent) :
-    QObject(parent)
-{
-    DEBUG_LOW_LEVEL << Q_FUNC_INFO << name << path;
-    _pathPlugin = path;
-    QDir pluginPath(_pathPlugin);
-
-    QString fileName = path+"/"+name+".ini";
-    QSettings settings( fileName, QSettings::IniFormat );
-    settings.beginGroup("Main");
-    this->_name = settings.value( "Name", "Error").toString();
+// static
+void Plugin::readPluginInfo(const QSettings& settings, PluginInfo* info) {
+    info->name = settings.value("Name", "Error").toString();
     if (settings.contains(kOsSpecificExecuteKey)) {
-        this->_exec = settings.value( kOsSpecificExecuteKey, "").toString();
+        info->exec = settings.value( kOsSpecificExecuteKey, kDefaultInfoValue).toString();
     } else {
-        this->_exec = settings.value( "Execute", "").toString();
+        info->exec = settings.value("Execute", kDefaultInfoValue).toString();
     }
-    this->_guid = settings.value( "Guid", "").toString();
-    this->_author = settings.value( "Author", "").toString();
-    this->_description = settings.value( "Description", "").toString();
-    this->_version = settings.value( "Version", "").toString();
-    this->_icon = pluginPath.absoluteFilePath(settings.value( "Icon", "").toString());
+    info->guid = settings.value("Guid", kDefaultInfoValue).toString();
+    info->author = settings.value("Author", kDefaultInfoValue).toString();
+    info->description = settings.value("Description", kDefaultInfoValue).toString();
+    info->version = settings.value("Version", kDefaultInfoValue).toString();
+    info->icon = settings.value("Icon", kDefaultInfoValue).toString();
+}
+
+Plugin::Plugin(const QString& name, const QString& path, QObject *parent)
+    : QObject(parent)
+    , m_pathPlugin(path) {
+    DEBUG_LOW_LEVEL << Q_FUNC_INFO << name << path;
+    const QDir pluginPath(m_pathPlugin);
+    const QString fileName = pluginPath.absoluteFilePath(name+".ini");
+    Q_ASSERT(QFile(fileName).exists());
+    QSettings settings(fileName, QSettings::IniFormat);
+    settings.beginGroup("Main");
+    readPluginInfo(settings, &m_info);
+    m_info.icon = pluginPath.absoluteFilePath(m_info.icon);
     settings.endGroup();
 
-    process = new QProcess(this);
-
+    m_process.reset(new QProcess(this));
+    qRegisterMetaType<QProcess::ProcessState>("QProcess::ProcessState");
 }
 
-Plugin::~Plugin()
-{
+Plugin::~Plugin() {
     Stop();
 }
 
-QString Plugin::Name() const
-{
-    return _name;
+QString Plugin::Name() const {
+    return m_info.name;
 }
 
-QString Plugin::Guid() const
-{
-    return _guid;
+QString Plugin::Guid() const {
+    return m_info.guid;
 }
 
 QString Plugin::Author() const  {
-    return _author;
+    return m_info.author;
 }
 
-QString Plugin::Description() const  {
-    return _description;
+QString Plugin::Description() const {
+    return m_info.description;
 }
 
-QString Plugin::Version() const  {
-    return _version;
+QString Plugin::Version() const {
+    return m_info.version;
 }
 
-
-QIcon Plugin::Icon() const  {
-   QFileInfo f(_icon);
-   if (f.exists())
-       return QIcon(_icon);
-   return QIcon(":/icons/plugins.png");
+QIcon Plugin::Icon() const {
+   if (QFile(m_info.icon).exists())
+       return QIcon(m_info.icon);
+   return QIcon(kDefaultIconPath);
 }
 
 int Plugin::getPriority() const {
-    return Settings::instance()->pluginValue(this->_name, kPriorityKey).toInt();
+    return Settings::instance()->pluginValue(m_info.name, kPriorityKey).toInt();
 }
 
 void Plugin::setPriority(int priority) {
-    Settings::instance()->setPluginValue(this->_name, kPriorityKey, priority);
+    Settings::instance()->setPluginValue(m_info.name, kPriorityKey, priority);
 }
 
 bool Plugin::isEnabled() const {
-    return Settings::instance()->pluginValue(this->_name, kEnableKey).toBool();
+    return Settings::instance()->pluginValue(m_info.name, kEnableKey).toBool();
 }
 
-void Plugin::setEnabled(bool enable){
+void Plugin::setEnabled(bool enable) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << enable;
-    Settings::instance()->setPluginValue(this->_name, kEnableKey, enable);
+    Settings::instance()->setPluginValue(m_info.name, kEnableKey, enable);
     if (!enable) this->Stop();
     if (enable) this->Start();
 }
 
+void Plugin::Start() {
+    DEBUG_LOW_LEVEL << Q_FUNC_INFO << m_info.exec;
 
-void Plugin::Start()
-{
-    DEBUG_LOW_LEVEL << Q_FUNC_INFO << _exec;
+    m_process->disconnect();
+    connect(m_process.data(), &QProcess::stateChanged,
+            this, &Plugin::stateChanged);
 
-    QString program = _exec;
-    //QStringList arguments;
-    //arguments << "-style" << "fusion";
-
-    QDir dir(_pathPlugin);
-    QDir::setCurrent(dir.absolutePath());
-
-    process->disconnect();
-    connect(process, SIGNAL(stateChanged(QProcess::ProcessState)), this, SIGNAL(stateChanged(QProcess::ProcessState)));
-
-    process->setEnvironment(QProcess::systemEnvironment());
-//    process->setProcessChannelMode(QProcess::ForwardedChannels);
-    process->start(program,NULL);
+    if (!m_info.exec.isEmpty()) {
+        m_process->setWorkingDirectory(m_pathPlugin);
+        m_process->setEnvironment(QProcess::systemEnvironment());
+        // process->setProcessChannelMode(QProcess::ForwardedChannels);
+        m_process->start(m_info.exec, NULL);
+    }
 }
 
-void Plugin::Stop()
-{
-    process->kill();
+void Plugin::Stop() {
+    m_process->kill();
 }
 
-QProcess::ProcessState Plugin::state() const
-{
-    return process->state();
+QProcess::ProcessState Plugin::state() const {
+    return m_process->state();
 }
 
