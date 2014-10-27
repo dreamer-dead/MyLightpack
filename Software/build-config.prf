@@ -2,16 +2,26 @@ include( build-vars.prf )
 #------------------------------------------------------------------------------
 # Warnings
 #------------------------------------------------------------------------------
-    win32: {
-        isEmpty( QTDIR ) {
-            error("QTDIR is empty, please make sure you have correctly defined QTDIR in your build-vars.prf")
-        }
-        isEmpty( DIRECTX_SDK_DIR ):isEmpty( WIN81_SDK_DIR ) {
-            error("please make sure you have defined DIRECTX_SDK_DIR or WIN81_SDK_DIR in your build-vars.prf file")
-        }
-        CONFIG(debug, debug|release) {
-            DEBUG_EXT = d
-        } else {
-            DEBUG_EXT =
-        }
+win32: {
+    isEmpty( QTDIR ) {
+        error("QTDIR is empty, please make sure you have correctly defined QTDIR in your build-vars.prf")
     }
+    isEmpty( DIRECTX_SDK_DIR ):isEmpty( WIN81_SDK_DIR ) {
+        error("please make sure you have defined DIRECTX_SDK_DIR or WIN81_SDK_DIR in your build-vars.prf file")
+    }
+    CONFIG(debug, debug|release) {
+        DEBUG_EXT = d
+    } else {
+        DEBUG_EXT =
+    }
+}
+
+macx {
+    !isEmpty( MACOS_VERSION_MIN_OVERRIDE ) {
+        message( "Overriding default option -mmacosx-version-min with value $${MACOS_VERSION_MIN_OVERRIDE}" )
+        QMAKE_MAC_SDK = $${QMAKE_MAC_SDK_OVERRIDE}
+        QMAKE_CXXFLAGS += -mmacosx-version-min=$${MACOS_VERSION_MIN_OVERRIDE}
+        QMAKE_LFLAGS += -mmacosx-version-min=$${MACOS_VERSION_MIN_OVERRIDE}
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = $${MACOS_VERSION_MIN_OVERRIDE}
+    }
+}

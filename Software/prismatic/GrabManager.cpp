@@ -60,8 +60,8 @@ GrabManager::GrabManager(const SettingsScope::SettingsReader *settings,
     , m_timerGrab(this)
     , m_timerUpdateFPS(this)
     , m_parentWidget(parent)
-    , m_fpsMs(0)
     , m_isPauseGrabWhileResizeOrMoving(false)
+    , m_fpsMs(0)
     , m_isGrabWidgetsVisible(false)
     , m_settings(settings)
 {
