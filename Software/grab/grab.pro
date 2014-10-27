@@ -22,6 +22,12 @@ INCLUDEPATH += ./include \
                ../math/include \
                ..
 
+CONFIG(gcc):QMAKE_CXXFLAGS += -std=c++11
+CONFIG(clang) {
+    QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++
+    LIBS += -stdlib=libc++
+}
+
 DEFINES += $${SUPPORTED_GRABBERS}
 # Linux/UNIX platform
 unix:!macx {
@@ -113,14 +119,7 @@ win32 {
 }
 
 macx {
-    #QMAKE_LFLAGS += -F/System/Library/Frameworks
-
     INCLUDEPATH += /System/Library/Frameworks
-
-    #LIBS += \
-    #        -framework CoreGraphics
-    #        -framework CoreFoundation
-    #QMAKE_MAC_SDK = macosx10.8
 }
 
 OTHER_FILES += \
