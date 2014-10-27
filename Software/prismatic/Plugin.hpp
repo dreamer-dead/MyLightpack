@@ -2,12 +2,29 @@
 
 #include <QObject>
 #include <QProcess>
+#include <QScopedPointer>
+#include <QString>
+
+class QSettings;
+
+struct PluginInfo {
+    QString guid;
+    QString name;
+    QString description;
+    QString author;
+    QString version;
+    QString icon;
+    QString exec;
+    QString arguments;
+};
 
 class Plugin : public QObject
 {
     Q_OBJECT
 public:
-    Plugin(QString name, QString path,QObject *parent = 0);
+    static void readPluginInfo(const QSettings&, PluginInfo* info);
+
+    Plugin(const QString& name, const QString& path, QObject *parent = 0);
     ~Plugin();
 
     void Start();
@@ -29,24 +46,12 @@ public:
 
 
 signals:
-
     void stateChanged(QProcess::ProcessState);
-    
-public slots:
-    
+
 private:
-
-    QString _guid;
-    QString _name;
-    QString _description;
-    QString _author;
-    QString _version;
-    QString _icon;
-    QString _exec;
-    QString _arguments;
-    QString _pathPlugin;
-    QProcess *process;
-
+    QString m_pathPlugin;
+    PluginInfo m_info;
+    QScopedPointer<QProcess> m_process;
 };
 
 
