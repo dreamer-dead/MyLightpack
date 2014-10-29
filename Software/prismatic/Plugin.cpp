@@ -140,22 +140,24 @@ void Plugin::Stop() {
 }
 
 void Plugin::processFinished(int) {
+    Q_ASSERT(m_process);
     m_process.take()->deleteLater();
     m_processState = QProcess::NotRunning;
     emit stateChanged(m_processState);
 }
 
 void Plugin::processStateChanged(QProcess::ProcessState newState) {
-    DEBUG_LOW_LEVEL << Q_FUNC_INFO << newState;
-    if (newState == QProcess::NotRunning) {
-        Stop();
-    } else {
-        m_processState = newState;
-        emit stateChanged(m_processState);
-    }
+    DEBUG_LOW_LEVEL << Q_FUNC_INFO << newState << this << Name();
+    m_processState = newState;
+    emit stateChanged(m_processState);
 }
 
 QProcess::ProcessState Plugin::state() const {
+    if (m_process) {
+        Q_ASSERT(m_processState == m_process->state());
+    } else {
+        Q_ASSERT(m_processState == QProcess::NotRunning);
+    }
     return m_processState;
 }
 

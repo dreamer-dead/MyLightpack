@@ -76,7 +76,8 @@ HEADERS += \
     ../prismatic/UpdatesProcessor.hpp \
     mocks/SettingsSourceMockup.hpp \
     mocks/SettingsWindowMockup.hpp \
-    mocks/SignalAndSlotObject.hpp
+    mocks/SignalAndSlotObject.hpp \
+    mocks/ProcessWaiter.hpp
 
 SOURCES += \
     ../third_party/gtest/src/gtest-all.cc \
@@ -108,7 +109,8 @@ SOURCES += \
     mocks/SignalAndSlotObject.cpp \
     CommandSetColorParsingTests.cpp \
     PluginTest.cpp \
-    PluginsManagerTest.cpp
+    PluginsManagerTest.cpp \
+    mocks/ProcessWaiter.cpp
 
 win32{
     HEADERS += \

@@ -8,6 +8,7 @@
 #include "common/PrintHelpers.hpp"
 #include "gtest/gtest.h"
 #include "mocks/SettingsSourceMockup.hpp"
+#include "mocks/ProcessWaiter.hpp"
 
 using namespace SettingsScope;
 
@@ -75,19 +76,18 @@ TEST(PluginsManagerTest, LoadAndStartPlugins) {
     longRunningPlugin->setEnabled(true);
     EXPECT_TRUE(longRunningPlugin->isEnabled());
 
+    manager.stopPlugins();
     QTimer::singleShot(0, &manager, SLOT(reloadPlugins()));
     EXPECT_TRUE(managerSpy.wait(500));
     longRunningPlugin = manager.getPlugin("kill");
     ASSERT_TRUE(longRunningPlugin);
-    QSignalSpy processSpy(longRunningPlugin, SIGNAL(stateChanged(QProcess::ProcessState)));
+    ProcessWaiter processSpy(longRunningPlugin, SIGNAL(stateChanged(QProcess::ProcessState)));
     EXPECT_TRUE(longRunningPlugin->isEnabled());
-    processSpy.wait(500);
-    processSpy.wait(500);
-    EXPECT_EQ(QProcess::Running, longRunningPlugin->state());
+    processSpy.wait(QProcess::Running, 500);
+    EXPECT_EQ(QProcess::Running, longRunningPlugin->state()) << longRunningPlugin;
 
     QTimer::singleShot(0, &manager, SLOT(stopPlugins()));
-    EXPECT_TRUE(processSpy.wait(100));
-    EXPECT_EQ(QProcess::NotRunning, longRunningPlugin->state());
+    EXPECT_TRUE(processSpy.wait(QProcess::NotRunning, 300));
 
     Settings::Shutdown();
     ConfigurationProfile::setSourceFabric(NULL);
