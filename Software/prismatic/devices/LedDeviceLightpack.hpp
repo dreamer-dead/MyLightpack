@@ -25,25 +25,13 @@
  */
 
 
-#include <QtGui>
+#include <QIODevice>
+#include <QTimer>
 
 #include "AbstractLedDevice.hpp"
 #include "TimeEvaluations.hpp"
-#include "PrismatikMath.hpp"
 
-#include "../../CommonHeaders/USB_ID.h"     /* For device VID, PID, vendor name and product name */
-#include "hidapi.h" /* USB HID API */
-
-#include "../../CommonHeaders/COMMANDS.h"   /* CMD defines */
-
-// This defines using in all data transfers to determine indexes in write_buffer[]
-// In device COMMAND have index 0, data 1 and so on, report id isn't using
-#define WRITE_BUFFER_INDEX_REPORT_ID    0
-#define WRITE_BUFFER_INDEX_COMMAND      1
-#define WRITE_BUFFER_INDEX_DATA_START   2
-
-class LedDeviceLightpack : public AbstractLedDevice
-{
+class LedDeviceLightpack : public AbstractLedDevice {
     Q_OBJECT
 public:
     LedDeviceLightpack(QObject *parent = 0);
@@ -65,30 +53,22 @@ public slots:
     virtual size_t defaultLedsCount() { return maxLedsCount(); }
     size_t lightpacksFound() { return m_devices.size(); }
 
-private: 
-    bool readDataFromDevice();
-    bool writeBufferToDevice(int command, hid_device *phid_device);
-    bool tryToReopenDevice();
-    bool readDataFromDeviceWithCheck();
-    bool writeBufferToDeviceWithCheck(int command, hid_device *phid_device);
-    void resizeColorsBuffer(int buffSize);
-    void closeDevices();
-
 private slots:
     void restartPingDevice(bool isSuccess);
     void timerPingDeviceTimeout();
 
 private:
+    bool readDataFromDevice();
+    bool writeBufferToDevice(int command, QIODevice *device, bool tryAgain = true);
+    bool tryToReopenDevice();
+    bool readDataFromDeviceWithCheck();
+    bool writeBufferToDeviceWithCheck(int command, QIODevice *device);
+    void resizeColorsBuffer(int buffSize);
+    void closeDevices();
     void open(unsigned short vid, unsigned short pid);
 
-    QList<hid_device*> m_devices;
-//    hid_device *m_hidDevice;
-
+    QTimer m_timerPingDevice;
+    QList<QIODevice*> m_devices;
     unsigned char m_readBuffer[65];    /* 0-ReportID, 1..65-data */
     unsigned char m_writeBuffer[65];   /* 0-ReportID, 1..65-data */
-
-    QTimer *m_timerPingDevice;
-
-    static const int kPingDeviceInterval;
-    static const int kLedsPerDevice;
 };
