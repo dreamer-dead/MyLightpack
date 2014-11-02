@@ -222,6 +222,7 @@ SOURCES += \
     ui/GrabWidget.cpp \
     ui/SelectWidget.cpp \
     ui/SettingsWindow.cpp \
+    LedWidgetsController.cpp
 
 HEADERS += \
     ../third_party/alienfx/LFXDecl.h \
@@ -285,6 +286,7 @@ HEADERS += \
     ui/GrabConfigWidget.hpp \
     ui/SettingsWindow.hpp \
     ui/SelectWidget.hpp \
+    LedWidgetsController.hpp
 
 !contains(DEFINES,UNITY_DESKTOP) {
     HEADERS += systrayicon/SysTrayIcon_qt_p.hpp

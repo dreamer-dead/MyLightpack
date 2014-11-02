@@ -28,8 +28,7 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QDesktopWidget>
 
-#include "common/DebugOut.hpp"
-#include "PrismatikMath.hpp"
+#include "GrabberBase.hpp"
 #include "SettingsReader.hpp"
 #include "WinAPIGrabber.hpp"
 #include "WinAPIGrabberEachWidget.hpp"
@@ -40,6 +39,7 @@
 #include "D3D9Grabber.hpp"
 #include "D3D10Grabber.hpp"
 #include "GrabManager.hpp"
+#include "common/DebugOut.hpp"
 #include "ui/GrabWidget.hpp"
 
 using namespace SettingsScope;
@@ -59,12 +59,10 @@ GrabManager::GrabManager(const SettingsScope::SettingsReader *settings,
     : QObject(parent)
     , m_timerGrab(this)
     , m_timerUpdateFPS(this)
-    , m_parentWidget(parent)
-    , m_isPauseGrabWhileResizeOrMoving(false)
+    , m_widgetsController(parent)
     , m_fpsMs(0)
     , m_isGrabWidgetsVisible(false)
-    , m_settings(settings)
-{
+    , m_settings(settings) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
     qRegisterMetaType<GrabResult>("GrabResult");
@@ -82,7 +80,7 @@ GrabManager::GrabManager(const SettingsScope::SettingsReader *settings,
     m_timerUpdateFPS.start(500);
 
     initColorLists(MaximumNumberOfLeds::Default);
-    initLedWidgets(MaximumNumberOfLeds::Default);
+    m_widgetsController.initLedWidgets(MaximumNumberOfLeds::Default);
 
     connect(QApplication::desktop(), SIGNAL(resized(int)), this, SLOT(scaleLedWidgets(int)));
     connect(QApplication::desktop(), SIGNAL(screenCountChanged(int)), this, SLOT(onScreenCountChanged(int)));
@@ -94,21 +92,13 @@ GrabManager::GrabManager(const SettingsScope::SettingsReader *settings,
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "initialized";
 }
 
-GrabManager::~GrabManager()
-{
+GrabManager::~GrabManager() {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
     m_grabber = NULL;
 
-    for (int i = 0; i < m_ledWidgets.size(); i++)
-    {
-        delete m_ledWidgets[i];
-    }
-
-    m_ledWidgets.clear();
-    m_ledWidgetsToAreas.clear();
     for (int i = 0; i < m_grabbers.size(); i++) {
-        if (m_grabbers[i]){
+        if (m_grabbers[i]) {
             DEBUG_OUT << "deleting " << m_grabbers[i]->name();
             delete m_grabbers[i];
             m_grabbers[i] = NULL;
@@ -123,8 +113,7 @@ GrabManager::~GrabManager()
 #endif
 }
 
-void GrabManager::start(bool isGrabEnabled)
-{
+void GrabManager::start(bool isGrabEnabled) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << isGrabEnabled;
 
     clearColorsNew();
@@ -143,8 +132,7 @@ void GrabManager::start(bool isGrabEnabled)
     }
 }
 
-void GrabManager::onGrabberTypeChanged(const Grab::GrabberType grabberType)
-{
+void GrabManager::onGrabberTypeChanged(const Grab::GrabberType grabberType) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << grabberType;
 
     bool isStartNeeded = false;
@@ -191,8 +179,7 @@ void GrabManager::onGrabberStateChangeRequested(bool isStartRequested) {
 #endif
 }
 
-void GrabManager::onGrabSlowdownChanged(int ms)
-{
+void GrabManager::onGrabSlowdownChanged(int ms) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << ms;
     if (m_grabber)
         m_grabber->setGrabInterval(ms);
@@ -200,142 +187,106 @@ void GrabManager::onGrabSlowdownChanged(int ms)
         qWarning() << Q_FUNC_INFO << "trying to change grab slowdown while there is no grabber";
 }
 
-void GrabManager::onGrabAvgColorsEnabledChanged(bool state)
-{
+void GrabManager::onGrabAvgColorsEnabledChanged(bool state) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << state;
     m_avgColorsOnAllLeds = state;
 }
 
-void GrabManager::onSendDataOnlyIfColorsEnabledChanged(bool state)
-{
+void GrabManager::onSendDataOnlyIfColorsEnabledChanged(bool state) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << state;
     m_isSendDataOnlyIfColorsChanged = state;
 }
 
-void GrabManager::setNumberOfLeds(int numberOfLeds)
-{
+void GrabManager::setNumberOfLeds(int numberOfLeds) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << numberOfLeds;
 
     initColorLists(numberOfLeds);
-    initLedWidgets(numberOfLeds);
-
-    for (int i = 0; i < m_ledWidgets.size(); i++)
-    {
-        m_ledWidgets[i]->settingsProfileChanged();
-        m_ledWidgets[i]->setVisible(m_isGrabWidgetsVisible);
-    }
+    m_widgetsController.toggleLedsVisibility(numberOfLeds, m_isGrabWidgetsVisible);
 }
 
-void GrabManager::reset()
-{
+void GrabManager::reset() {
     clearColorsCurrent();
 }
 
-void GrabManager::settingsProfileChanged(const QString &profileName)
-{
+void GrabManager::settingsProfileChanged(const QString& profileName) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
     Q_UNUSED(profileName)
 
     initFromProfileSettings();
 }
 
-void GrabManager::setVisibleLedWidgets(bool state)
-{
+void GrabManager::setVisibleLedWidgets(bool state) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << state;
 
     m_isGrabWidgetsVisible = state;
-
-    for (int i = 0; i < m_ledWidgets.size(); i++)
-    {
-        if (state)
-        {
-            m_ledWidgets[i]->show();
-        } else {
-            m_ledWidgets[i]->hide();
-        }
-    }
+    m_widgetsController.showWidgets(m_isGrabWidgetsVisible);
 }
 
-void GrabManager::setColoredLedWidgets(bool state)
-{
+void GrabManager::setColoredLedWidgets(bool state) {
+    // This slot is directly connected to radioButton toggled(bool) signal
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-    // This slot is directly connected to radioButton toggled(bool) signal
     if (state)
-    {
-        for (int i = 0; i < m_ledWidgets.size(); i++)
-            m_ledWidgets[i]->fillBackgroundColored();
-    }
+        m_widgetsController.fillLedsBackgroundColored();
 }
 
 void GrabManager::setWhiteLedWidgets(bool state)
 {
+    // This slot is directly connected to radioButton toggled(bool) signal
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-    // This slot is directly connected to radioButton toggled(bool) signal
     if (state)
-    {
-        for (int i = 0; i < m_ledWidgets.size(); i++)
-            m_ledWidgets[i]->fillBackgroundWhite();
-    }
+        m_widgetsController.fillLedsBackgroundWhite();
 }
 
-void GrabManager::handleGrabbedColors()
-{
+void GrabManager::handleGrabbedColors() {
     DEBUG_MID_LEVEL << Q_FUNC_INFO;
 
-    if (m_grabber == NULL)
-    {
+    if (m_grabber == NULL) {
         qCritical() << Q_FUNC_INFO << "m_grabber == NULL";
         return;
     }
 
     // Temporary switch off updating colors
     // if one of LED widgets resizing or moving
-    if (m_isPauseGrabWhileResizeOrMoving)
-    {
+    if (m_widgetsController.inResizingOrMoving()) {
         m_timerGrab.start(50); // check in 50 ms
         return;
     }    
 
     bool isColorsChanged = false;
-
     int avgR = 0, avgG = 0, avgB = 0;
     int countGrabEnabled = 0;
 
-    const int colorsListSize = m_ledWidgets.size();
+    const int colorsListSize = m_widgetsController.widgetsCount();
     if (m_colorsNew.size() != colorsListSize) {
         m_colorsNew.clear();
-        for (int i = 0; i < colorsListSize; i++)
-        {
+        for (int i = 0; i < colorsListSize; i++) {
             m_colorsNew << 0;
         }
     }
 
-    if (m_avgColorsOnAllLeds)
-    {
-        for (int i = 0; i < colorsListSize; i++)
-        {
-            if (m_ledWidgets[i]->isAreaEnabled())
-            {
+    if (m_avgColorsOnAllLeds) {
+        for (int i = 0; i < colorsListSize; i++) {
+            if (m_widgetsController.widget(i).isAreaEnabled()) {
                     avgR += qRed(m_colorsNew[i]);
                     avgG += qGreen(m_colorsNew[i]);
                     avgB += qBlue(m_colorsNew[i]);
                     countGrabEnabled++;
             }
         }
-        if (countGrabEnabled != 0)
-        {
+
+        if (countGrabEnabled != 0) {
             avgR /= countGrabEnabled;
             avgG /= countGrabEnabled;
             avgB /= countGrabEnabled;
         }
+
         // Set one AVG color to all LEDs
-        for (int ledIndex = 0; ledIndex < colorsListSize; ledIndex++)
-        {
-            if (m_ledWidgets[ledIndex]->isAreaEnabled())
-            {
-                m_colorsNew[ledIndex] = qRgb(avgR, avgG, avgB);
+        const QRgb avgColor = qRgb(avgR, avgG, avgB);
+        for (int ledIndex = 0; ledIndex < colorsListSize; ++ledIndex) {
+            if (m_widgetsController.widget(ledIndex).isAreaEnabled()) {
+                m_colorsNew[ledIndex] = avgColor;
             }
         }
     }
@@ -381,18 +332,6 @@ void GrabManager::timeoutUpdateFPS()
     emit ambilightTimeOfUpdatingColors(m_fpsMs);
 }
 
-void GrabManager::pauseWhileResizeOrMoving()
-{
-    DEBUG_MID_LEVEL << Q_FUNC_INFO;
-    m_isPauseGrabWhileResizeOrMoving = true;
-}
-
-void GrabManager::resumeAfterResizeOrMoving()
-{
-    DEBUG_MID_LEVEL << Q_FUNC_INFO;
-    m_isPauseGrabWhileResizeOrMoving = false;
-}
-
 void GrabManager::updateScreenGeometry()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
@@ -414,66 +353,26 @@ void GrabManager::onScreenCountChanged(int)
     updateScreenGeometry();
 }
 
-void GrabManager::scaleLedWidgets(int screenIndexResized)
-{
+void GrabManager::scaleLedWidgets(int screenIndexResized) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "screenIndexResized:" << screenIndexResized;
 
-    QRect screenGeometry = QApplication::desktop()->screenGeometry(screenIndexResized);
-    QRect lastScreenGeometry = m_lastScreenGeometry[screenIndexResized];
+    Q_ASSERT(screenIndexResized <= m_lastScreenGeometry.size());
+    const QRect screenGeometry = QApplication::desktop()->screenGeometry(screenIndexResized);
+    const QRect lastScreenGeometry = m_lastScreenGeometry[screenIndexResized];
 
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "screen " << screenIndexResized << " is resized to " << screenGeometry;
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "was " << lastScreenGeometry;
 
-    // Move LedWidgets
-    int deltaX = lastScreenGeometry.x() - screenGeometry.x();
-    int deltaY = lastScreenGeometry.y() - screenGeometry.y();
-
-    double scaleX = (double) screenGeometry.width() / lastScreenGeometry.width();
-    double scaleY = (double) screenGeometry.height() / lastScreenGeometry.height();
-
-    DEBUG_LOW_LEVEL << Q_FUNC_INFO << "deltaX =" << deltaX << "deltaY =" << deltaY;
-    DEBUG_LOW_LEVEL << Q_FUNC_INFO << "scaleX =" << scaleX << "scaleY =" << scaleY;
-
+    m_widgetsController.scaleLedWidgets(screenGeometry, lastScreenGeometry);
     m_lastScreenGeometry[screenIndexResized] = screenGeometry;
-
-    for(int i=0; i < m_ledWidgets.size(); i++){
-
-        if (!lastScreenGeometry.contains(m_ledWidgets[i]->geometry().center()))
-            continue;
-
-        int width  = PrismatikMath::round(scaleX * m_ledWidgets[i]->width());
-        int height = PrismatikMath::round(scaleY * m_ledWidgets[i]->height());
-
-        int x = m_ledWidgets[i]->x();
-        int y = m_ledWidgets[i]->y();
-
-        x -= screenGeometry.x();
-        y -= screenGeometry.y();
-
-        x = PrismatikMath::round(scaleX * x);
-        y = PrismatikMath::round(scaleY * y);
-
-        x += screenGeometry.x();
-        y += screenGeometry.y();
-
-        x -= deltaX;
-        y -= deltaY;
-
-        m_ledWidgets[i]->move(x,y);
-        m_ledWidgets[i]->resize(width, height);
-
-        m_ledWidgets[i]->saveSizeAndPosition();
-
-        DEBUG_LOW_LEVEL << Q_FUNC_INFO << "new values [" << i << "]" << "x =" << x << "y =" << y << "w =" << width << "h =" << height;
-    }
-
 }
 
 void GrabManager::initGrabbers()
 {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO;
 
-    m_grabberContext.grabWidgets = &m_ledWidgetsToAreas;
+    // We need an address of the QList to write into.
+    m_grabberContext.grabWidgets = &m_widgetsController.grabbedAreas();
     m_grabberContext.grabResult = &m_colorsNew;
 
     for (int i = 0; i < Grab::GrabbersCount; i++)
@@ -518,8 +417,7 @@ GrabberBase *GrabManager::initGrabber(GrabberBase * grabber) {
     return grabber;
 }
 
-GrabberBase *GrabManager::queryGrabber(Grab::GrabberType grabberType)
-{
+GrabberBase *GrabManager::queryGrabber(Grab::GrabberType grabberType) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << "grabberType:" << grabberType;
     GrabberBase *result;
 
@@ -541,95 +439,32 @@ void GrabManager::onFrameGrabAttempted(GrabResult grabResult) {
     }
 }
 
-void GrabManager::initColorLists(int numberOfLeds)
-{
+void GrabManager::initColorLists(int numberOfLeds) {
     DEBUG_LOW_LEVEL << Q_FUNC_INFO << numberOfLeds;
 
     m_colorsCurrent.clear();
     m_colorsNew.clear();
 
-    for (int i = 0; i < numberOfLeds; i++)
-    {
+    for (int i = 0; i < numberOfLeds; i++) {
         m_colorsCurrent << 0;
         m_colorsNew     << 0;
     }
 }
 
-void GrabManager::clearColorsNew()
-{
+void GrabManager::clearColorsNew() {
     DEBUG_MID_LEVEL << Q_FUNC_INFO;
 
-    for (int i = 0; i < m_colorsNew.size(); i++)
-    {
+    for (int i = 0; i < m_colorsNew.size(); i++) {
         m_colorsNew[i] = 0;
     }
 }
 
-void GrabManager::clearColorsCurrent()
-{
+void GrabManager::clearColorsCurrent() {
     DEBUG_MID_LEVEL << Q_FUNC_INFO;
 
-    for (int i = 0; i < m_colorsCurrent.size(); i++)
-    {
+    for (int i = 0; i < m_colorsCurrent.size(); i++) {
         m_colorsCurrent[i] = 0;
     }
-}
-
-void GrabManager::initLedWidgets(int numberOfLeds)
-{
-    DEBUG_LOW_LEVEL << Q_FUNC_INFO << numberOfLeds;
-
-    if (m_ledWidgets.size() == 0)
-    {
-        DEBUG_LOW_LEVEL << Q_FUNC_INFO << "First widget initialization";
-
-        GrabWidget * ledWidget = new GrabWidget(m_ledWidgets.size(), m_parentWidget);
-
-        connect(ledWidget, SIGNAL(resizeOrMoveStarted()), this, SLOT(pauseWhileResizeOrMoving()));
-        connect(ledWidget, SIGNAL(resizeOrMoveCompleted(int)), this, SLOT(resumeAfterResizeOrMoving()));
-
-// TODO: Check out this line!
-//         First LED widget using to determine grabbing-monitor in WinAPI version of Grab
-//        connect(ledWidget, SIGNAL(resizeOrMoveCompleted(int)), this, SLOT(firstWidgetPositionChanged()));
-
-        m_ledWidgets << ledWidget;
-
-//        firstWidgetPositionChanged();
-    }
-
-    int diff = numberOfLeds - m_ledWidgets.size();
-
-    if (diff > 0)
-    {
-        DEBUG_LOW_LEVEL << Q_FUNC_INFO << "Append" << diff << "grab widgets";
-
-        for (int i = 0; i < diff; i++)
-        {
-            GrabWidget * ledWidget = new GrabWidget(m_ledWidgets.size(), m_parentWidget);
-
-            connect(ledWidget, SIGNAL(resizeOrMoveStarted()), this, SLOT(pauseWhileResizeOrMoving()));
-            connect(ledWidget, SIGNAL(resizeOrMoveCompleted(int)), this, SLOT(resumeAfterResizeOrMoving()));
-
-            m_ledWidgets << ledWidget;
-        }
-    } else {
-        diff *= -1;
-        DEBUG_LOW_LEVEL << Q_FUNC_INFO << "Remove last" << diff << "grab widgets";
-
-        while (diff --> 0)
-        {
-            m_ledWidgets.last()->deleteLater();
-            m_ledWidgets.removeLast();
-        }
-    }
-
-    m_ledWidgetsToAreas.clear();
-    for (int i = 0; i < m_ledWidgets.size(); ++i) {
-        m_ledWidgetsToAreas << m_ledWidgets[i];
-    }
-
-    if (m_ledWidgets.size() != numberOfLeds)
-        qCritical() << Q_FUNC_INFO << "Fail: m_ledWidgets.size()" << m_ledWidgets.size() << " != numberOfLeds" << numberOfLeds;
 }
 
 void GrabManager::initFromProfileSettings() {

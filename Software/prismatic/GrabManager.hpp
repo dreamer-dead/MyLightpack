@@ -25,18 +25,15 @@
 
 #pragma once
 
-#include <QtGui>
 #include <QTimer>
+#include <QList>
 
-#include "GrabberBase.hpp"
 #include "GrabberContext.hpp"
 #include "TimeEvaluations.hpp"
+#include "LedWidgetsController.hpp"
 #include "enums.hpp"
 
-class GrabberContext;
-class GrabbedArea;
-class GrabWidget;
-class TimeEvaluations;
+class GrabberBase;
 class D3D10Grabber;
 
 namespace SettingsScope {
@@ -78,8 +75,6 @@ public slots:
 private slots:
     void handleGrabbedColors();
     void timeoutUpdateFPS();
-    void pauseWhileResizeOrMoving();
-    void resumeAfterResizeOrMoving();
     void scaleLedWidgets(int screenIndexResized);
     void onFrameGrabAttempted(GrabResult result);
     void updateScreenGeometry();
@@ -107,19 +102,13 @@ private:
 
     QTimer m_timerGrab;
     QTimer m_timerUpdateFPS;
-    QWidget *m_parentWidget;
-    QList<GrabWidget *> m_ledWidgets;
-    QList<const GrabbedArea *> m_ledWidgetsToAreas;
+    LedWidgetsController m_widgetsController;
     QList<QRgb> m_grabResult;
     TimeEvaluations m_timeEval;
 
     QList<QRgb> m_colorsCurrent;
     QList<QRgb> m_colorsNew;
 
-    QRect m_screenSavedRect;
-    int m_screenSavedIndex;
-
-    bool m_isPauseGrabWhileResizeOrMoving;
     bool m_isSendDataOnlyIfColorsChanged;
     bool m_avgColorsOnAllLeds;
 
