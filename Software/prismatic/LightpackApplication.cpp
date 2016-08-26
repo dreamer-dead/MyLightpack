@@ -502,8 +502,9 @@ void LightpackApplication::startLedDeviceManager()
         .connect(SIGNAL(updateBrightness(int)), SLOT(setBrightness(int)))
         .connect(SIGNAL(updateSmooth(int)), SLOT(setSmoothSlowdown(int)));
 
-    lightpackPlugin2this.connect(SIGNAL(requestBacklightStatus()),
-                                 SLOT(requestBacklightStatus()));
+    lightpackPlugin2this
+        .connect(SIGNAL(requestBacklightStatus()), SLOT(requestBacklightStatus()))
+        .connect(&LightpackPluginInterface::updateBacklight, &LightpackApplication::setBacklightChanged);
 
     // LedDeviceManager connections.
     makeQueuedConnector(settings(), ledManager.data())
@@ -584,17 +585,17 @@ void LightpackApplication::initGrabManager()
 
     m_moodlampManager->initFromSettings();
 
-    connect(settings(), SIGNAL(grabberTypeChanged(const Grab::GrabberType &)),
-            grabManager(), SLOT(onGrabberTypeChanged(const Grab::GrabberType &)), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(grabSlowdownChanged(int)),
-            grabManager(), SLOT(onGrabSlowdownChanged(int)), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(grabAvgColorsEnabledChanged(bool)),
-            grabManager(), SLOT(onGrabAvgColorsEnabledChanged(bool)), Qt::QueuedConnection);
-
-    connect(settings(), SIGNAL(profileLoaded(const QString &)),
-            grabManager(), SLOT(settingsProfileChanged(const QString &)), Qt::QueuedConnection);
-    connect(settings(), SIGNAL(currentProfileInited(const QString &)),
-            grabManager(), SLOT(settingsProfileChanged(const QString &)), Qt::QueuedConnection);
+    makeQueuedConnector(settings(), grabManager())
+        .connect(SIGNAL(grabberTypeChanged(const Grab::GrabberType &)),
+                 SLOT(onGrabberTypeChanged(const Grab::GrabberType &)))
+        .connect(SIGNAL(grabSlowdownChanged(int)),
+                 SLOT(onGrabSlowdownChanged(int)))
+        .connect(SIGNAL(grabAvgColorsEnabledChanged(bool)),
+                 SLOT(onGrabAvgColorsEnabledChanged(bool)))
+        .connect(SIGNAL(profileLoaded(const QString &)),
+                 SLOT(settingsProfileChanged(const QString &)))
+        .connect(SIGNAL(currentProfileInited(const QString &)),
+                 SLOT(settingsProfileChanged(const QString &)));
     // Connections to signals which will be connected to ILedDevice
     if (!m_noGui)
     {
