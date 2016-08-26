@@ -175,6 +175,7 @@ void GrabberBase::grab()
             const int bytesPerPixel = 4;
             QRgb avgColor;
             if (_context->grabWidgets->at(i)->isEnabled()) {
+                Q_ASSERT(grabbedScreen->imgData);
                 Calculations::calculateAvgColor(&avgColor, grabbedScreen->imgData, grabbedScreen->imgFormat, grabbedScreen->screenInfo.rect.width() * bytesPerPixel, preparedRect );
                 _context->grabResult->append(avgColor);
             } else {
