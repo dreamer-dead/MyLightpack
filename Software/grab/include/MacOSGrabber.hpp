@@ -29,8 +29,6 @@
 
 #ifdef MAC_OS_CG_GRAB_SUPPORT
 
-#include <CoreGraphics/CGColorSpace.h>
-#include <CoreGraphics/CGContext.h>
 #include <CoreGraphics/CGImage.h>
 
 #include "GrabberBase.hpp"
